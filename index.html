@@ -2,22 +2,125 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Robert Munro</title>
+<title>Robert Munro – One‑Page Site</title>
+
 <style>
-  body{
-    font-family: Arial, Helvetica, sans-serif;
+/* ────────────────────── base styles ───────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+    font-family:Arial,Helvetica,sans-serif;
     background:#f4f4f4;
-    margin:0;
-    padding:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:100vh;
-  }
-  h1{color:#333;}
+    color:#333;
+}
+
+/* ────────────────────── navigation bar ───────────────────── */
+nav{
+    width:100%;
+    background:#222;
+    padding:10px 0;
+    text-align:center;
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+nav a{
+    color:#fff;
+    text-decoration:none;
+    margin:0 15px;
+    font-weight:bold;
+    transition:.3s ease;
+}
+nav a:hover{color:#ffdd00}
+
+/* ────────────────────── section styling ───────────────────── */
+section{
+    max-width:800px;
+    width:90%;
+    margin:30px auto;
+    background:white;
+    padding:20px 25px;
+    border-radius:6px;
+    box-shadow:0 4px 8px rgba(0,0,0,.05);
+    display:none;                /* hide all by default */
+}
+section.active{display:block;}   /* only the active one shows */
+
+/* Make images responsive */
+section img{
+    max-width:100%;
+    height:auto;
+    display:block;
+    margin:20px auto;
+}
+
+/* Smooth fade‑in (optional) */
+section{
+    opacity:0;
+    transition:opacity .3s ease;
+}
+section.active{opacity:1}
+
+/* ────────────────────── responsive tweak ───────────────────── */
+@media (max-width:600px){
+    nav a{margin:0 10px;font-size:.9rem}
+}
 </style>
 </head>
+
 <body>
-<h1>Hello! Welcome to robertmunro.ca!</h1>
+
+<!-- Navigation – each link tells JS which section to show -->
+<nav>
+  <a href="#" data-target="section1">Section 1</a>
+  <a href="#" data-target="section2">Section 2</a>
+  <a href="#" data-target="section3">Section 3</a>
+  <a href="#" data-target="section4">Section 4</a>
+</nav>
+
+<!-- Page content – four distinct sections -->
+<section id="section1" class="active">
+  <h2>Section 1 – Overview</h2>
+  <!-- YOUR IMAGE -->
+  <img src="pic.png" alt="A descriptive caption of pic.png">
+  <p>This is the first section. Add any text you like here.</p>
+</section>
+
+<section id="section2">
+  <h2>Section 2 – Details</h2>
+  <p>This is the second section. Keep building your story.</p>
+</section>
+
+<section id="section3">
+  <h2>Section 3 – Portfolio</h2>
+  <p>This is the third section. Showcase projects, images, or whatever fits.</p>
+</section>
+
+<section id="section4">
+  <h2>Section 4 – Contact</h2>
+  <p>This is the fourth section. Add a contact form or social links here.</p>
+</section>
+
+<script>
+/* ────────────────────── show/hide sections on click ─────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('nav a[data-target]');
+    const sections  = document.querySelectorAll('section');
+
+    // Helper to hide all sections
+    const hideAll = () => sections.forEach(s => s.classList.remove('active'));
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', e => {
+            e.preventDefault();               // stop default anchor jump
+            const targetId = link.getAttribute('data-target');
+            hideAll();
+            document.getElementById(targetId).classList.add('active');
+        });
+    });
+
+    /* Optional: if you want the first section to show automatically */
+    hideAll();
+    document.getElementById(navLinks[0].getAttribute('data-target')).classList.add('active');
+});
+</script>
+
 </body>
 </html>
