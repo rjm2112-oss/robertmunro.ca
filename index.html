@@ -144,6 +144,12 @@ section.active{opacity:1}
     height:100%;                  /* fill the container completely */
 }
 
+/* Add rule to center the title inside flex container */
+.cv-header-wrapper h2 {
+  flex:1;           /* allow it to grow and fill remaining space */
+  text-align:center;
+}
+
 /* ────────────────────── Blog layout ───────────────────── */
 
 /* two‑column wrapper (duplicate section for safety) */
@@ -296,17 +302,13 @@ section.active{opacity:1}
 
 <!-- ===== CV Section Starts Here ===== -->
 <section id="section3">
-  <div class="cv-header-wrapper" style="
-        display:flex;
-        align-items:center;
-        justify-content:space-between;   /* keep the three items apart */
-        gap:0.5rem;                        /* optional space between them */
-        margin-bottom:.5rem;">
-    <h2 style="margin:0;">Curriculum Vitae</h2>
-
-    <p style="margin:0;">View my CV below or download it directly here:</p>
-
-    <!-- Keep the button in line with them -->
+  <div class="cv-header-wrapper"
+       style="
+         display:flex;
+         align-items:center;   /* vertical centering */
+         gap:0.5rem;          /* space between items   */
+         margin-bottom:.5rem;">
+    <!-- 1️⃣ Download button (leftmost) -->
     <a href="assets/cv.pdf" target="_blank"
        style="
          display:inline-block;
@@ -318,14 +320,25 @@ section.active{opacity:1}
          font-size:.9rem;">
       Download CV
     </a>
+
+    <!-- 2️⃣ Title (spaces adjust centering) -->
+    <h2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Curriculum Vitae</h2>
+
+    <!-- 3️⃣ Description paragraph (right) -->
+    <p style="
+          justify-self:end; /* right side of its cell */
+          text-align:right;">
+      View below or download directly
+    </p>
   </div>
 
   <!-- Existing embedded preview – replace embed with iframe -->
-  <div class="cv-container" style="
-        margin-top:0;
-        max-width:1000px;
-        margin-left:auto;
-        margin-right:auto;">
+  <div class="cv-container"
+       style="
+         margin-top:0;
+         max-width:1000px;
+         margin-left:auto;
+         margin-right:auto;">
     <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
       <!-- iframe replaces the old embed -->
       <iframe src="assets/cv.pdf"
