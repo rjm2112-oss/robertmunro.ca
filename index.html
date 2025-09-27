@@ -64,7 +64,7 @@ section.active{opacity:1}
 }
 
 
-/* ────────────────────── Blog layout (new) ───────────────────── */
+/* ────────────────────── Blog layout ───────────────────── */
 
 /* two‑column wrapper */
 .blog-container{
@@ -263,53 +263,81 @@ section.active{opacity:1}
 </section>
 
 <script>
-/* ────────────────────── show/hide sections on click ─────────── */
+/* ==============================================================
+   Show/hide sections + auto‑expand first blog post
+   ============================================================== */
 document.addEventListener('DOMContentLoaded', () => {
-    const navLinks = document.querySelectorAll('nav a[data-target]');
-    const sections  = document.querySelectorAll('section');
+  /* ---------- Elements --------------------------------------- */
+  const navLinks = document.querySelectorAll('nav a[data-target]');
+  const sections = document.querySelectorAll('section');
 
-    // Helper to hide all sections
-    const hideAll = () => sections.forEach(s => s.classList.remove('active'));
+  const previewList = document.querySelector('.preview-list');
+  const detailArea  = document.querySelector('.post-detail');
+  let currentArticle = null;   // currently expanded post
 
-    navLinks.forEach(link => {
-        link.addEventListener('click', e => {
-            e.preventDefault();               // stop default anchor jump
-            const targetId = link.getAttribute('data-target');
-            hideAll();
-            document.getElementById(targetId).classList.add('active');
-        });
+  /* ---------- Helpers ---------------------------------------- */
+  // Hide all sections
+  const hideAll = () => sections.forEach(s => s.classList.remove('active'));
+
+  // Expand a specific article into the right column
+  function expandArticle(article) {
+    const title = article.querySelector('h3').outerHTML;
+    const meta  = article.querySelector('.meta').outerHTML;
+    const body  = article.querySelector('.full-body').innerHTML;
+
+    detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+    currentArticle = article;
+  }
+
+  // Expand the very first post in the preview list
+  function expandFirstPost() {
+    const first = previewList.querySelector('.post');
+    if (first) expandArticle(first);
+  }
+
+  /* ---------- Navigation click handling --------------------- */
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const targetId = link.getAttribute('data-target');
+
+      hideAll();                                // close all sections
+      document.getElementById(targetId).classList.add('active'); // show clicked one
+
+      if (targetId === 'section2') {            // Blog section?
+        expandFirstPost();                      // auto‑expand first post
+      } else {
+        detailArea.innerHTML = '';               // clear right column when leaving Blog
+        currentArticle = null;
+      }
     });
+  });
 
-    /* Optional: if you want the first section to show automatically */
-    hideAll();
-    document.getElementById(navLinks[0].getAttribute('data-target')).classList.add('active');
+  /* ---------- Default active section ------------------------ */
+  hideAll();
+  const defaultTarget = navLinks[0].getAttribute('data-target');
+  document.getElementById(defaultTarget).classList.add('active');
 
-    /* ────────────────────── Blog post preview → detail logic ──────── */
-    const previewList = document.querySelector('.preview-list');
-    const detailArea  = document.querySelector('.post-detail');
-    let currentArticle = null;   // keeps track of the currently expanded post
+  // If the default section is Blog, show first post immediately
+  if (defaultTarget === 'section2') expandFirstPost();
 
-    previewList.addEventListener('click', e => {
-        const article = e.target.closest('.post');
-        if (!article) return;          // click was outside a post
+  /* ---------- Preview list click handling ------------------- */
+  previewList.addEventListener('click', e => {
+    const article = e.target.closest('.post');
+    if (!article) return;                      // clicked outside a post
 
-        /* If this same post is clicked again, collapse it */
-        if (currentArticle === article) {
-            detailArea.innerHTML = '';
-            currentArticle = null;
-            return;
-        }
+    // Collapse if the same article is clicked again
+    if (currentArticle === article) {
+      detailArea.innerHTML = '';
+      currentArticle = null;
+      return;
+    }
 
-        /* Build the content for the right column */
-        const title   = article.querySelector('h3').outerHTML;      // keep <h3> markup
-        const meta    = article.querySelector('.meta').outerHTML;   // keep <p class="meta">
-        const body    = article.querySelector('.full-body').innerHTML;
-
-        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
-        currentArticle = article;
-    });
+    expandArticle(article);                    // show selected post
+  });
 });
 </script>
+
 
 </body>
 </html>
