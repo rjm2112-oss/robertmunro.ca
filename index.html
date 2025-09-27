@@ -66,7 +66,7 @@ section.active{opacity:1}
 
 /* ────────────────────── Blog layout (new) ───────────────────── */
 
-/* NEW – two‑column wrapper */
+/* two‑column wrapper */
 .blog-container{
     display:flex;
 }
@@ -121,7 +121,7 @@ section.active{opacity:1}
 
 .post h3 {
     margin: 0 0 .25rem 0;
-    font-size: 1.25rem;
+    font-size:1.25rem;
 }
 
 /* Optional – hover lift effect for the whole panel */
@@ -164,7 +164,7 @@ section.active{opacity:1}
         <h3>How to Build a Minimalist Portfolio Site</h3>
         <p class="meta">Posted on 12 August 2025</p>
 
-        <!-- NEW: short preview (visible before clicking) -->
+        <!-- short preview (visible before clicking) -->
         <div class="preview">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta.
         </div>
@@ -214,41 +214,50 @@ section.active{opacity:1}
 
 </section>
 
-<section id="section3">
-  <h2>Section 3 – Portfolio</h2>
-  <p>This is the third section. Showcase projects, images, or whatever fits.</p>
-
   <!-- ===== CV Section Starts Here ===== -->
-  <div class="cv-container" style="margin-top:1.5rem;max-width:800px;margin-left:auto;margin-right:auto;">
-    <h3>Curriculum Vitae (PDF)</h3>
-    <p>You can view my CV below or download it directly:</p>
 
-    <!-- Download button -->
+<section id="section3">
+  <h2>Section 3 - Curriculum Vitae</h2>
+
+  <!-- Intro + button side‑by‑side -->
+  <div class="cv-header"
+       style="
+         display:flex;
+         align-items:center;
+         justify-content:space-between;
+         margin-bottom:1rem;">
+    <p>You can view my CV below or download it directly.</p>
     <a href="assets/cv.pdf" target="_blank"
        style="
          display:inline-block;
-         padding:0.6rem 1.2rem;
+         padding:.6rem 1.2rem;
          background:#222;
          color:#fff;
          text-decoration:none;
          border-radius:4px;
          font-size:.9rem;
-         margin-bottom:.8rem;">
+         margin-left:auto;">
       Download CV
     </a>
+  </div>
 
-    <!-- Embedded preview – falls back to <object> if <embed> is not supported -->
-    <div style="border:1px solid #ccc;border-radius:6px;overflow:hidden;">
+  <div class="cv-container"
+       style="
+         margin-top:1.5rem;
+         max-width:1000px;
+         margin-left:auto;
+         margin-right:auto;">
+    <!-- Embedded preview -->
+    <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
       <embed src="assets/cv.pdf"
              type="application/pdf"
              width="100%"
-             height="600px"
+             height="800px"
              style="display:block;">
       </embed>
     </div>
   </div>
   <!-- ===== CV Section Ends Here ===== -->
-
 </section>
 
 <section id="section4">
