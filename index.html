@@ -215,18 +215,21 @@ section.active{opacity:1}
 </section>
 <!-- ===== Blog Section Ends Here ===== -->
 
-
 <!-- ===== CV Section Starts Here ===== -->
 <section id="section3">
-  <h2>Section 3 - Curriculum Vitae</h2>
-
-  <!-- Intro + button side‑by‑side -->
-  <div class="cv-header" style="
+  <!-- NEW: Flex wrapper for title + info + button -->
+  <div class="cv-header-wrapper" style="
         display:flex;
         align-items:center;
-        justify-content:space-between;
-        margin-bottom:.5rem;">   <!-- reduced -->
-    <p>You can view my CV below or download it directly.</p>
+        justify-content:space-between;   /* keep the three items apart */
+        gap:0.5rem;                        /* optional space between them */
+        margin-bottom:.5rem;">
+    <h2 style="margin:0;">Curriculum Vitae</h2>
+
+    <!-- The text you want up, next to the title -->
+    <p style="margin:0;">View my CV below or download it directly here:</p>
+
+    <!-- Keep the button in line with them -->
     <a href="assets/cv.pdf" target="_blank"
        style="
          display:inline-block;
@@ -240,12 +243,12 @@ section.active{opacity:1}
     </a>
   </div>
 
+  <!-- Existing embedded preview -->
   <div class="cv-container" style="
         margin-top:0;
         max-width:1000px;
         margin-left:auto;
         margin-right:auto;">
-    <!-- Embedded preview -->
     <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
       <embed src="assets/cv.pdf"
              type="application/pdf"
@@ -255,7 +258,6 @@ section.active{opacity:1}
   </div>
 </section>
 <!-- ===== CV Section Ends Here ===== -->
-
 
 <section id="section4">
   <h2>Section 4 – Contact</h2>
