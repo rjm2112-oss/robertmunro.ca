@@ -217,6 +217,38 @@ section.active{opacity:1}
 <section id="section3">
   <h2>Section 3 – Portfolio</h2>
   <p>This is the third section. Showcase projects, images, or whatever fits.</p>
+
+  <!-- ===== CV Section Starts Here ===== -->
+  <div class="cv-container" style="margin-top:1.5rem;max-width:800px;margin-left:auto;margin-right:auto;">
+    <h3>Curriculum Vitae (PDF)</h3>
+    <p>You can view my CV below or download it directly:</p>
+
+    <!-- Download button -->
+    <a href="assets/cv.pdf" target="_blank"
+       style="
+         display:inline-block;
+         padding:0.6rem 1.2rem;
+         background:#222;
+         color:#fff;
+         text-decoration:none;
+         border-radius:4px;
+         font-size:.9rem;
+         margin-bottom:.8rem;">
+      Download CV
+    </a>
+
+    <!-- Embedded preview – falls back to <object> if <embed> is not supported -->
+    <div style="border:1px solid #ccc;border-radius:6px;overflow:hidden;">
+      <embed src="assets/cv.pdf"
+             type="application/pdf"
+             width="100%"
+             height="600px"
+             style="display:block;">
+      </embed>
+    </div>
+  </div>
+  <!-- ===== CV Section Ends Here ===== -->
+
 </section>
 
 <section id="section4">
