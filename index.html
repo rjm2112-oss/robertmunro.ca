@@ -27,31 +27,35 @@ body{
    Navigation
 ------------------------------------------------------------------- */
 header nav{
-  width:100%;
-  background:var(--nav-bg);
-  padding:18px 0;           /* increased from 10px to 18px */
-  text-align:center;
-  box-shadow:0 2px 5px rgba(0,0,0,.1);
-  line-height:1.2;
+    width:100%;
+    background:var(--nav-bg);
+    /* Adjust size of bottom padding in Nav bar */
+    padding:2px;
+    /* Make the bar a fixed height – tweak the value to taste */
+    height:38px;                     /* <- adjust as needed */
+
+    /* Flexbox magic -----------------------------------------------------*/
+    display:flex;                    /* turn nav into flex container   */
+    justify-content:center;          /* keep links centered horizontally */
+    align-items:flex-end;            /* push items toward the bottom   */
+
+    box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
+
+/* ------------- Link styling  ---------*/
 header nav a{
-  color:#fff;
-  text-decoration:none;
-  margin:0 15px;
-  font-weight:bold;
-  transition:.3s ease;
-  padding:8px 12px;          /* larger tap target */
-  font-size:1.3rem;           /* increased from 1.5rem to 1.3rem (~30% bigger) */
+    color:#fff;
+    text-decoration:none;
+    margin:0 15px;                   /* horizontal spacing */
+    font-weight:bold;
+    transition:.3s ease;
+    font-size:1.4rem;
+
+    /* Drop the old `line-height` – it’s no longer needed */
 }
+
 header nav a:hover{color:var(--nav-hover);}
 
-@media(max-width:600px){
-  header nav a{
-    margin:0 10px;
-    font-size:1.17rem;        /* maintain the same relative reduction (≈90%) from default */
-  }
-  #nav-toggle{display:block;}
-}
 
 /* ------------------------------------------------------------------
    Sections
