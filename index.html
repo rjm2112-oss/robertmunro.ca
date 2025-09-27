@@ -136,12 +136,12 @@ section.active{opacity:1}
 
 /* ────────────────────── CV Section – responsive embed ───────────────────── */
 .cv-container{
-    height: calc(100vh - 200px);
+    height: calc(100vh - 220px);
     overflow:auto;                /* keep internal scrolling if PDF is tall */
 }
 .cv-container embed{
     width:100%;
-    height:calc(100vh - 210px);                  /* fill the container completely */
+    height:calc(100vh - 230px);                  /* fill the container completely */
 }
 
 /* ────────────────────── Blog layout ───────────────────── */
@@ -203,12 +203,11 @@ section.active{opacity:1}
     font-size:1.25rem;
 }
 
-/* Optional – hover lift effect for the whole panel */
+/* hover lift effect for the whole panel */
 .post:hover {
     transform: translateY(-2px);
     transition: transform .15s ease-out;
 }
-
 </style>
 </head>
 
@@ -321,17 +320,18 @@ section.active{opacity:1}
     </a>
   </div>
 
-  <!-- Existing embedded preview – no inline height -->
+  <!-- Existing embedded preview – replace embed with iframe -->
   <div class="cv-container" style="
         margin-top:0;
         max-width:1000px;
         margin-left:auto;
         margin-right:auto;">
     <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
-      <embed src="assets/cv.pdf"
-             type="application/pdf"
-             width="100%">
-      </embed>
+      <!-- iframe replaces the old embed -->
+      <iframe src="assets/cv.pdf"
+              width="100%"
+              height=840vh
+              frameborder="0"></iframe>
     </div>
   </div>
 </section>
@@ -341,9 +341,6 @@ section.active{opacity:1}
   <h2>Section 4 – Contact</h2>
   <p>This is the fourth section. Add a contact form or social links here.</p>
 </section>
-
-
-
 
 <script>
 /*   Show/hide sections + auto‑expand first blog post */
@@ -374,16 +371,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function expandFirstPost() {
     const first = previewList.querySelector('.post');
     if (first) expandArticle(first);
-  }
-
-  /** Reload the PDF so it renders again on mobile. */
-  function reloadCVEmbed() {
-    const embed = document.querySelector('.cv-container embed');
-    if (!embed) return;
-    const src = embed.getAttribute('src');
-    // Reset to force a reload
-    embed.setAttribute('src', '');
-    setTimeout(() => embed.setAttribute('src', src), 0);
   }
 
   /* ---------- Navigation click handling --------------------- */
@@ -428,7 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 
 </body>
 </html>
