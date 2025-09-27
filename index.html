@@ -74,9 +74,7 @@ section{
 }
 section.active{opacity:1}
 
-/* ────────────────────── responsive tweak ───────────────────── */
-
-/* Blog layout – two‑column wrapper */
+/* ────────────────────── Blog layout and style ───────────────────── */
 .blog-container{
     display:flex;
 }
@@ -136,15 +134,14 @@ section.active{opacity:1}
     transition: transform .15s ease-out;
 }
 
-/* CV Section – responsive embed */
-/* Removed old hard‑coded height; new rules below */
+/* ────────────────────── CV Section – responsive embed ───────────────────── */
 .cv-container{
-    height: calc(102vh - 200px);   /* adjust “200px” to match your layout */
+    height: calc(100vh - 200px);
     overflow:auto;                /* keep internal scrolling if PDF is tall */
 }
 .cv-container embed{
     width:100%;
-    height:calc(102vh - 210px);                  /* fill the container completely */
+    height:calc(100vh - 210px);                  /* fill the container completely */
 }
 
 /* ────────────────────── Blog layout ───────────────────── */
@@ -212,15 +209,12 @@ section.active{opacity:1}
     transition: transform .15s ease-out;
 }
 
-/* ---------------------- CV preview height ------------------------------------------- */
-/* Removed hard‑coded height; handled by new rules above */
-
 </style>
 </head>
 
 <body>
 
-<!-- Navigation – each link tells JS which section to show -->
+<!-- ────────────────────── Navigation – each link tells JS which section to show ───────────────────── -->
 <nav>
   <a href="#" data-target="section1">Section 1</a>
   <a href="#" data-target="section2">Section 2</a>   <!-- renamed -->
@@ -303,7 +297,6 @@ section.active{opacity:1}
 
 <!-- ===== CV Section Starts Here ===== -->
 <section id="section3">
-  <!-- NEW: Flex wrapper for title + info + button -->
   <div class="cv-header-wrapper" style="
         display:flex;
         align-items:center;
@@ -312,7 +305,6 @@ section.active{opacity:1}
         margin-bottom:.5rem;">
     <h2 style="margin:0;">Curriculum Vitae</h2>
 
-    <!-- The text you want up, next to the title -->
     <p style="margin:0;">View my CV below or download it directly here:</p>
 
     <!-- Keep the button in line with them -->
@@ -350,10 +342,11 @@ section.active{opacity:1}
   <p>This is the fourth section. Add a contact form or social links here.</p>
 </section>
 
+
+
+
 <script>
-/* ==============================================================
-   Show/hide sections + auto‑expand first blog post
-   ============================================================== */
+/*   Show/hide sections + auto‑expand first blog post */
 document.addEventListener('DOMContentLoaded', () => {
   /* ---------- Elements --------------------------------------- */
   const navLinks = document.querySelectorAll('nav a[data-target]');
@@ -381,6 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
   function expandFirstPost() {
     const first = previewList.querySelector('.post');
     if (first) expandArticle(first);
+  }
+
+  /** Reload the PDF so it renders again on mobile. */
+  function reloadCVEmbed() {
+    const embed = document.querySelector('.cv-container embed');
+    if (!embed) return;
+    const src = embed.getAttribute('src');
+    // Reset to force a reload
+    embed.setAttribute('src', '');
+    setTimeout(() => embed.setAttribute('src', src), 0);
   }
 
   /* ---------- Navigation click handling --------------------- */
