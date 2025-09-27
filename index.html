@@ -27,8 +27,24 @@ nav a{
     margin:0 15px;
     font-weight:bold;
     transition:.3s ease;
+    padding:8px 12px;          /* larger tap target */
 }
 nav a:hover{color:#ffdd00}
+
+/* Optional hamburger button (mobile only) */
+#nav-toggle{
+    display:none;
+    background:none;
+    border:none;
+    font-size:1.5rem;
+    color:#fff;
+    margin-left:auto;
+}
+
+@media (max-width:600px){
+    nav a{margin:0 10px;font-size:.9rem}
+    #nav-toggle{display:block;}   /* show button on small screens */
+}
 
 /* ────────────────────── section styling ───────────────────── */
 section{
@@ -38,7 +54,7 @@ section{
     background:white;
     padding:20px 25px;
     border-radius:6px;
-    box-shadow:0 4x8px rgba(0,0,0,.05);
+    box-shadow:0 4px 8px rgba(0,0,0,.05);
     display:none;                /* hide all by default */
 }
 section.active{display:block;}   /* only the active one shows */
@@ -59,21 +75,82 @@ section{
 section.active{opacity:1}
 
 /* ────────────────────── responsive tweak ───────────────────── */
-@media (max-width:600px){
-    nav a{margin:0 10px;font-size:.9rem}
+
+/* Blog layout – two‑column wrapper */
+.blog-container{
+    display:flex;
 }
 
+.preview-list{
+    width:280px;            /* fixed width for preview pane   */
+    flex-shrink:0;          /* never let it shrink below 280 px  */
+    max-height:100vh;       /* full viewport height              */
+    overflow-y:auto;        /* scroll if the list is taller      */
+    padding-right:20px;     /* space between preview & detail   */
+}
+
+.post-detail{
+    flex-grow:1;            /* take all remaining horizontal space */
+    padding-left:20px;
+    background:#fff;
+    border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+
+/* Stacked layout on narrow screens */
+@media (max-width:800px){
+    .blog-container{
+        flex-direction:column;      /* stack vertically   */
+    }
+    .preview-list,
+    .post-detail{
+        width:100%;
+        padding-right:0;
+        padding-left:0;
+    }
+    .preview-list > article{
+        margin-bottom:1rem;
+    }
+}
+
+/* Post styling */
+.post{
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: #ffffff;
+    border-radius: 8px;
+}
+.preview-list .post .full-body{display:none;}
+.preview-list .post{cursor:pointer;}
+.meta{
+    font-size:.9rem;
+    color:#777;
+    margin-bottom:.75rem;
+}
+.post h3 {
+    margin: 0 0 .25rem 0;
+    font-size:1.25rem;
+}
+.post:hover {
+    transform: translateY(-2px);
+    transition: transform .15s ease-out;
+}
+
+/* CV Section – responsive embed */
+.cv-container embed{
+    width:100%;
+    height:auto;                /* will be overridden by our rule below */
+}
 
 /* ────────────────────── Blog layout ───────────────────── */
 
-/* two‑column wrapper */
+/* two‑column wrapper (duplicate section for safety) */
 .blog-container{
     display:flex;
 }
 
 /* LEFT column – list of previews --------------------------------- */
 .preview-list{
-    /* Fixed width for the preview pane   */
     width:280px;            /* <-- keep this value as you like   */
     flex-shrink:0;          /* never let it shrink below 280 px  */
     max-height:100vh;       /* full viewport height              */
@@ -128,6 +205,11 @@ section.active{opacity:1}
 .post:hover {
     transform: translateY(-2px);
     transition: transform .15s ease-out;
+}
+
+/* ---------------------- CV preview height ------------------------------------------- */
+.cv-container embed{
+    height:900px;
 }
 </style>
 </head>
@@ -252,8 +334,8 @@ section.active{opacity:1}
     <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
       <embed src="assets/cv.pdf"
              type="application/pdf"
-             width="100%"
-             height="800px"></embed>
+             width="100%">
+      </embed>
     </div>
   </div>
 </section>
