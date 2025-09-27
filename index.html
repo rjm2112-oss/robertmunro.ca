@@ -137,9 +137,14 @@ section.active{opacity:1}
 }
 
 /* CV Section – responsive embed */
+/* Removed old hard‑coded height; new rules below */
+.cv-container{
+    height: calc(102vh - 200px);   /* adjust “200px” to match your layout */
+    overflow:auto;                /* keep internal scrolling if PDF is tall */
+}
 .cv-container embed{
     width:100%;
-    height:auto;                /* will be overridden by our rule below */
+    height:calc(102vh - 210px);                  /* fill the container completely */
 }
 
 /* ────────────────────── Blog layout ───────────────────── */
@@ -208,9 +213,8 @@ section.active{opacity:1}
 }
 
 /* ---------------------- CV preview height ------------------------------------------- */
-.cv-container embed{
-    height:900px;
-}
+/* Removed hard‑coded height; handled by new rules above */
+
 </style>
 </head>
 
@@ -325,7 +329,7 @@ section.active{opacity:1}
     </a>
   </div>
 
-  <!-- Existing embedded preview -->
+  <!-- Existing embedded preview – no inline height -->
   <div class="cv-container" style="
         margin-top:0;
         max-width:1000px;
