@@ -5,259 +5,193 @@
 <title>Robert Munro</title>
 
 <style>
-/* ────────────────────── base styles ───────────────────── */
-*{box-sizing:border-box;margin:0;padding:0}
+/* ------------------------------------------------------------------
+   Variables & Reset
+------------------------------------------------------------------- */
+:root{
+  --primary-bg:#f4f4f4;
+  --text-color:#333;
+  --nav-bg:#222;
+  --nav-hover:#ffdd00;
+}
+
+*, *::before, *::after{box-sizing:border-box;margin:0;padding:0;}
+
 body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f4f4f4;
-    color:#333;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--primary-bg);
+  color:var(--text-color);
 }
 
-/* ────────────────────── navigation bar ───────────────────── */
-nav{
-    width:100%;
-    background:#222;
-    padding:10px 0;
-    text-align:center;
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
-}
-nav a{
-    color:#fff;
-    text-decoration:none;
-    margin:0 15px;
-    font-weight:bold;
-    transition:.3s ease;
-    padding:8px 12px;          /* larger tap target */
-}
-nav a:hover{color:#ffdd00}
-
-/* Optional hamburger button (mobile only) */
-#nav-toggle{
-    display:none;
-    background:none;
-    border:none;
-    font-size:1.5rem;
-    color:#fff;
-    margin-left:auto;
-}
-
-@media (max-width:600px){
-    nav a{margin:0 10px;font-size:.9rem}
-    #nav-toggle{display:block;}   /* show button on small screens */
-}
-
-/* ────────────────────── section styling ───────────────────── */
-section{
-    max-width:1000px;
-    width:90%;
-    margin:30px auto;
-    background:white;
-    padding:20px 25px;
-    border-radius:6px;
-    box-shadow:0 4px 8px rgba(0,0,0,.05);
-    display:none;                /* hide all by default */
-}
-section.active{display:block;}   /* only the active one shows */
-
-/* Make images responsive */
-section img{
-    max-width:100%;
-    height:auto;
-    display:block;
-    margin:20px auto;
-}
-
-/* Smooth fade‑in (optional) */
-section{
-    opacity:0;
-    transition:opacity .3s ease;
-}
-section.active{opacity:1}
-
-/* ────────────────────── Blog layout and style ───────────────────── */
-.blog-container{
-    display:flex;
-}
-
-.preview-list{
-    width:280px;            /* fixed width for preview pane   */
-    flex-shrink:0;          /* never let it shrink below 280 px  */
-    max-height:100vh;       /* full viewport height              */
-    overflow-y:auto;        /* scroll if the list is taller      */
-    padding-right:20px;     /* space between preview & detail   */
-}
-
-.post-detail{
-    flex-grow:1;            /* take all remaining horizontal space */
-    padding-left:20px;
-    background:#fff;
-    border-radius:8px;
-    box-shadow:0 2px 6px rgba(0,0,0,.08);
-}
-
-/* Stacked layout on narrow screens */
-@media (max-width:800px){
-    .blog-container{
-        flex-direction:column;      /* stack vertically   */
-    }
-    .preview-list,
-    .post-detail{
-        width:100%;
-        padding-right:0;
-        padding-left:0;
-    }
-    .preview-list > article{
-        margin-bottom:1rem;
-    }
-}
-
-/* Post styling */
-.post{
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    background: #ffffff;
-    border-radius: 8px;
-}
-.preview-list .post .full-body{display:none;}
-.preview-list .post{cursor:pointer;}
-.meta{
-    font-size:.9rem;
-    color:#777;
-    margin-bottom:.75rem;
-}
-.post h3 {
-    margin: 0 0 .25rem 0;
-    font-size:1.25rem;
-}
-.post:hover {
-    transform: translateY(-2px);
-    transition: transform .15s ease-out;
-}
-
-/* ────────────────────── CV Section – responsive embed ───────────────────── */
-.cv-container{
-    height: calc(100vh - 220px);
-    overflow:auto;                /* keep internal scrolling if PDF is tall */
-}
-.cv-container embed{
-    width:100%;
-    height:100%;                  /* fill the container completely */
-}
-
-/* Add rule to center the title inside flex container */
-.cv-header-wrapper h2 {
-  flex:1;           /* allow it to grow and fill remaining space */
+/* ------------------------------------------------------------------
+   Navigation
+------------------------------------------------------------------- */
+header nav{
+  width:100%;
+  background:var(--nav-bg);
+  padding:10px 0;
   text-align:center;
+  box-shadow:0 2px 5px rgba(0,0,0,.1);
+}
+header nav a{
+  color:#fff;
+  text-decoration:none;
+  margin:0 15px;
+  font-weight:bold;
+  transition:.3s ease;
+  padding:8px 12px;          /* larger tap target */
+}
+header nav a:hover{color:var(--nav-hover);}
+
+@media(max-width:600px){
+  header nav a{margin:0 10px;font-size:.9rem}
+  #nav-toggle{display:block;}
 }
 
-/* ────────────────────── Blog layout ───────────────────── */
+/* ------------------------------------------------------------------
+   Sections
+------------------------------------------------------------------- */
+main section{
+  max-width:1000px;
+  width:90%;
+  margin:30px auto;
+  background:white;
+  padding:20px 25px;
+  border-radius:6px;
+  box-shadow:0 4px 8px rgba(0,0,0,.05);
+  display:none;                /* hide all by default */
+}
+main section.active{display:block;}
+main section{
+  opacity:0;
+  transition:opacity .3s ease;
+}
+main section.active{opacity:1}
 
-/* two‑column wrapper (duplicate section for safety) */
-.blog-container{
-    display:flex;
+/* Images inside sections */
+section img{
+  max-width:100%;
+  height:auto;
+  margin:20px auto;
+  display:block;
 }
 
-/* LEFT column – list of previews --------------------------------- */
+/* ------------------------------------------------------------------
+   Blog layout
+------------------------------------------------------------------- */
+.blog-container{display:flex}
 .preview-list{
-    width:280px;            /* <-- keep this value as you like   */
-    flex-shrink:0;          /* never let it shrink below 280 px  */
-    max-height:100vh;       /* full viewport height              */
-    overflow-y:auto;        /* scroll if the list is taller      */
-    padding-right:20px;     /* space between preview & detail   */
+  width:280px; flex-shrink:0;
+  padding-right:20px;
+  max-height:calc(100vh - 160px); /* keep space for header */
+  overflow-y:auto;
 }
-
-/* RIGHT column – detailed article --------------------------------- */
 .post-detail{
-    flex-grow:1;            /* take all remaining horizontal space */
-    padding-left:20px;
-    background:#fff;
-    border-radius:8px;
-    box-shadow:0 2x6px rgba(0,0,0,.08);
+  flex-grow:1;
+  background:#fff;
+  border-radius:8px;
+  margin-left:20px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
 
-}
-.post-detail article{
-    padding:1.5rem;
-    margin-bottom:1.5rem;
-    background:white;
-    border-radius:8px;
-    box-shadow:0 2x6px rgba(0,0,0,.08);
+/* Stack on narrow screens */
+@media(max-width:800px){
+  .blog-container{flex-direction:column}
+  .preview-list,.post-detail{width:100%;margin:0;padding:0;}
+  .preview-list article{margin-bottom:1rem}
 }
 
-/* Keep the heading as a block‑level element inside the panel */
-.post {
-    padding: 1.5rem;          /* inner space inside the panel   */
-    margin-bottom: 1.5rem;    /* space between panels           */
-
-    background: #ffffff;      /* solid white background         */
-    border-radius: 8px;       /* rounded corners                */
+/* Post preview styling */
+.post{
+  padding:1.5rem;
+  margin-bottom:1.5rem;
+  background:white;
+  border-radius:8px;
+  cursor:pointer;
+}
+.preview-list .post .full-body{display:none}
+.meta{font-size:.9rem;color:#777;margin-bottom:.75rem}
+.post h3{margin:0 0 .25rem;font-size:1.25rem}
+.post:hover{
+  transform:translateY(-2px);
+  transition:transform .15s ease-out;
 }
 
-/* Show only preview text in left column */
-.preview-list .post .full-body{display:none;}
-/* Hover effect for the preview items */
-.preview-list .post{cursor:pointer;}
+/* ------------------------------------------------------------------
+   CV section
+------------------------------------------------------------------- */
+.cv-header-wrapper{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  margin-bottom:.5rem;
+}
+.cv-header-wrapper a.download-btn{
+  display:inline-block;
+  padding:.6rem 1.2rem;
+  background:#222;
+  color:#fff;
+  text-decoration:none;
+  border-radius:4px;
+  font-size:.9rem;
+}
+.cv-header-wrapper h2{flex:1;text-align:center}
+.cv-header-wrapper p{margin-left:auto;text-align:right}
 
-.meta{
-    font-size:.9rem;
-    color:#777;
-    margin-bottom:.75rem;
+.cv-container{
+  height:calc(100vh - 220px);
+  overflow:auto;
+  margin:0 auto;
+  max-width:1000px;
+  border:3px solid #ccc;
+  border-radius:8px;
+}
+.cv-container iframe{
+  width:100%;
+  height:calc(100vh - 230px);
+  border:none;
 }
 
-.post h3 {
-    margin: 0 0 .25rem 0;
-    font-size:1.25rem;
-}
-
-/* hover lift effect for the whole panel */
-.post:hover {
-    transform: translateY(-2px);
-    transition: transform .15s ease-out;
-}
+/* ------------------------------------------------------------------
+   ------------------ Sections ----------------------
+------------------------------------------------------------------- */
 </style>
 </head>
 
 <body>
-
-<!-- ────────────────────── Navigation – each link tells JS which section to show ───────────────────── -->
+<header>
 <nav>
   <a href="#" data-target="section1">Section 1</a>
-  <a href="#" data-target="section2">Section 2</a>   <!-- renamed -->
+  <a href="#" data-target="section2">Section 2</a>
   <a href="#" data-target="section3">Section 3</a>
   <a href="#" data-target="section4">Section 4</a>
 </nav>
+</header>
 
-<!-- Page content – four distinct sections -->
+<main>
+<!-- Section 1 -->
 <section id="section1" class="active">
   <h2>Section 1 – Overview</h2>
-  <!-- YOUR IMAGE -->
   <img src="assets/pic.png" alt="A descriptive caption of pic.png">
   <p>This is the first section. Add any text you like here.</p>
 </section>
 
-<!-- ===== Blog Section Starts Here ===== -->
+<!-- Section 2 – Blog -->
 <section id="section2">
   <h2>Blog</h2>
-
-  <!-- two‑column layout -->
   <div class="blog-container">
 
-    <!-- Left column – previews -->
+    <!-- Left column: previews -->
     <div class="preview-list">
-
       <!-- Post #1 -->
       <article class="post">
         <h3>How to Build a Minimalist Portfolio Site</h3>
         <p class="meta">Posted on 12 August 2025</p>
-
-        <!-- short preview (visible before clicking) -->
         <div class="preview">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta.
         </div>
-
-        <!-- Full body – hidden until expanded -->
         <div class="full-body">
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta. Integer non turpis eu ligulaipsum dolor sit amet, consectetur adipiscing elit. </p>
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta. Integer non turpis eu ligulaipsum dolor sit amet, consectetur adipiscing elit.</p>
         </div>
       </article>
 
@@ -265,11 +199,9 @@ section.active{opacity:1}
       <article class="post">
         <h3>The Art of Responsive Design</h3>
         <p class="meta">Posted on 5 July 2025</p>
-
         <div class="preview">
           Aenean eget orci a mauris ultricies condimentum. Donec non velit at ligula facilisis interdum.
         </div>
-
         <div class="full-body">
           <p>Phasellus sit amet ex ut dolor porta tempus. Fusce sed libero eget nulla tempor blandit. Morbi vehicula, purus in malesuada gravida, urna leo finibus justo, et commodo lorem arcu vel nisl.</p>
         </div>
@@ -279,102 +211,59 @@ section.active{opacity:1}
       <article class="post">
         <h3>Why I Love CSS Grid</h3>
         <p class="meta">Posted on 22 June 2025</p>
-
         <div class="preview">
           Nullam vel leo id odio gravida sodales. Suspendisse potenti.
         </div>
-
         <div class="full-body">
           <p>Integer sit amet felis eu justo. Proin dictum, ligula at bibendum finibus, dolor purus fermentum risus, in convallis mauris libero non metus. Curabitur vitae elit et nisl ullamcorper tincidunt a ut enim.</p>
         </div>
       </article>
-
-    </div> <!-- /preview-list -->
-
-    <!-- Right column – full article -->
-    <div class="post-detail">
-      <!-- the expanded post will be injected here by JavaScript -->
     </div>
 
-  </div> <!-- /blog-container -->
+    <!-- Right column: expanded post -->
+    <div class="post-detail"></div>
+  </div>
 </section>
-<!-- ===== Blog Section Ends Here ===== -->
 
-<!-- ===== CV Section Starts Here ===== -->
+<!----------------------------- Section 3 – CV ---------------------------------->
 <section id="section3">
-  <div class="cv-header-wrapper"
-       style="
-         display:flex;
-         align-items:center;   /* vertical centering */
-         gap:0.5rem;          /* space between items   */
-         margin-bottom:.5rem;">
-    <!-- 1️⃣ Download button (leftmost) -->
-    <a href="assets/cv.pdf" target="_blank"
-       style="
-         display:inline-block;
-         padding:.6rem 1.2rem;
-         background:#222;
-         color:#fff;
-         text-decoration:none;
-         border-radius:4px;
-         font-size:.9rem;">
-      Download CV
-    </a>
-
-    <!-- 2️⃣ Title (spaces adjust centering) -->
-    <h2>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Curriculum Vitae</h2>
-
-    <!-- 3️⃣ Description paragraph (right) -->
-    <p style="
-          justify-self:end; /* right side of its cell */
-          text-align:right;">
-      View below or download directly
-    </p>
+  <div class="cv-header-wrapper">
+    <a href="assets/cv.pdf" target="_blank" class="download-btn">Download CV</a>
+    <h2>Curriculum Vitae</h2>
+    <p>View below or download directly</p>
   </div>
 
-  <!-- Existing embedded preview – replace embed with iframe -->
-  <div class="cv-container"
-       style="
-         margin-top:0;
-         max-width:1000px;
-         margin-left:auto;
-         margin-right:auto;">
-    <div style="border:3px solid #ccc; border-radius:8px; box-shadow:0 2x6px rgba(0,0,0,.08); overflow:hidden;">
-      <!-- iframe replaces the old embed -->
-      <iframe src="assets/cv.pdf"
-              width="100%"
-              height=840vh
-              frameborder="0"></iframe>
-    </div>
+  <div class="cv-container">
+    <iframe src="assets/cv.pdf"></iframe>
   </div>
 </section>
-<!-- ===== CV Section Ends Here ===== -->
 
+<!-- Section 4 -->
 <section id="section4">
   <h2>Section 4 – Contact</h2>
   <p>This is the fourth section. Add a contact form or social links here.</p>
 </section>
+</main>
 
 <script>
-/*   Show/hide sections + auto‑expand first blog post */
+/* ------------------------------------------------------------------
+   Show/hide sections + auto‑expand first blog post
+------------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-  /* ---------- Elements --------------------------------------- */
   const navLinks = document.querySelectorAll('nav a[data-target]');
   const sections = document.querySelectorAll('section');
-
   const previewList = document.querySelector('.preview-list');
   const detailArea  = document.querySelector('.post-detail');
-  let currentArticle = null;   // currently expanded post
+  let currentArticle = null;
 
-  /* ---------- Helpers ---------------------------------------- */
   // Hide all sections
   const hideAll = () => sections.forEach(s => s.classList.remove('active'));
 
   // Expand a specific article into the right column
   function expandArticle(article) {
     const title = article.querySelector('h3').outerHTML;
-    const meta  = article.querySelector('.meta').outerHTML;
-    const body  = article.querySelector('.full-body').innerHTML;
+    const meta   = article.querySelector('.meta').outerHTML;
+    const body   = article.querySelector('.full-body').innerHTML;
 
     detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
     currentArticle = article;
@@ -386,48 +275,43 @@ document.addEventListener('DOMContentLoaded', () => {
     if (first) expandArticle(first);
   }
 
-  /* ---------- Navigation click handling --------------------- */
+  /* Navigation click handling */
   navLinks.forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
-      const targetId = link.getAttribute('data-target');
+      const targetId = link.dataset.target;
 
-      hideAll();                                // close all sections
-      document.getElementById(targetId).classList.add('active'); // show clicked one
+      hideAll();
+      document.getElementById(targetId).classList.add('active');
 
-      if (targetId === 'section2') {            // Blog section?
-        expandFirstPost();                      // auto‑expand first post
+      if (targetId === 'section2') {
+        expandFirstPost();          // auto‑expand first post
       } else {
-        detailArea.innerHTML = '';               // clear right column when leaving Blog
+        detailArea.innerHTML = '';
         currentArticle = null;
       }
     });
   });
 
-  /* ---------- Default active section ------------------------ */
+  /* Default active section */
   hideAll();
-  const defaultTarget = navLinks[0].getAttribute('data-target');
+  const defaultTarget = navLinks[0].dataset.target;
   document.getElementById(defaultTarget).classList.add('active');
-
-  // If the default section is Blog, show first post immediately
   if (defaultTarget === 'section2') expandFirstPost();
 
-  /* ---------- Preview list click handling ------------------- */
+  /* Preview list click handling – toggle the right column */
   previewList.addEventListener('click', e => {
     const article = e.target.closest('.post');
-    if (!article) return;                      // clicked outside a post
+    if (!article) return;
 
-    // Collapse if the same article is clicked again
-    if (currentArticle === article) {
+    if (currentArticle === article) {      // collapse
       detailArea.innerHTML = '';
       currentArticle = null;
-      return;
+    } else {                               // expand new one
+      expandArticle(article);
     }
-
-    expandArticle(article);                    // show selected post
   });
 });
 </script>
-
 </body>
 </html>
