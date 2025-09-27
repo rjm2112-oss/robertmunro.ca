@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Robert Munro – One‑Page Site</title>
+<title>Robert Munro</title>
 
 <style>
 /* ────────────────────── base styles ───────────────────── */
@@ -32,13 +32,13 @@ nav a:hover{color:#ffdd00}
 
 /* ────────────────────── section styling ───────────────────── */
 section{
-    max-width:800px;
+    max-width:1000px;
     width:90%;
     margin:30px auto;
     background:white;
     padding:20px 25px;
     border-radius:6px;
-    box-shadow:0 4px 8px rgba(0,0,0,.05);
+    box-shadow:0 4x8px rgba(0,0,0,.05);
     display:none;                /* hide all by default */
 }
 section.active{display:block;}   /* only the active one shows */
@@ -62,6 +62,73 @@ section.active{opacity:1}
 @media (max-width:600px){
     nav a{margin:0 10px;font-size:.9rem}
 }
+
+
+/* ────────────────────── Blog layout (new) ───────────────────── */
+
+/* NEW – two‑column wrapper */
+.blog-container{
+    display:flex;
+}
+
+/* LEFT column – list of previews --------------------------------- */
+.preview-list{
+    /* Fixed width for the preview pane   */
+    width:280px;            /* <-- keep this value as you like   */
+    flex-shrink:0;          /* never let it shrink below 280 px  */
+    max-height:100vh;       /* full viewport height              */
+    overflow-y:auto;        /* scroll if the list is taller      */
+    padding-right:20px;     /* space between preview & detail   */
+}
+
+/* RIGHT column – detailed article --------------------------------- */
+.post-detail{
+    flex-grow:1;            /* take all remaining horizontal space */
+    padding-left:20px;
+    background:#fff;
+    border-radius:8px;
+    box-shadow:0 2x6px rgba(0,0,0,.08);
+}
+
+}
+.post-detail article{
+    padding:1.5rem;
+    margin-bottom:1.5rem;
+    background:white;
+    border-radius:8px;
+    box-shadow:0 2x6px rgba(0,0,0,.08);
+}
+
+/* Keep the heading as a block‑level element inside the panel */
+.post {
+    padding: 1.5rem;          /* inner space inside the panel   */
+    margin-bottom: 1.5rem;    /* space between panels           */
+
+    background: #ffffff;      /* solid white background         */
+    border-radius: 8px;       /* rounded corners                */
+}
+
+/* Show only preview text in left column */
+.preview-list .post .full-body{display:none;}
+/* Hover effect for the preview items */
+.preview-list .post{cursor:pointer;}
+
+.meta{
+    font-size:.9rem;
+    color:#777;
+    margin-bottom:.75rem;
+}
+
+.post h3 {
+    margin: 0 0 .25rem 0;
+    font-size: 1.25rem;
+}
+
+/* Optional – hover lift effect for the whole panel */
+.post:hover {
+    transform: translateY(-2px);
+    transition: transform .15s ease-out;
+}
 </style>
 </head>
 
@@ -70,7 +137,7 @@ section.active{opacity:1}
 <!-- Navigation – each link tells JS which section to show -->
 <nav>
   <a href="#" data-target="section1">Section 1</a>
-  <a href="#" data-target="section2">Section 2</a>
+  <a href="#" data-target="section2">Section 2</a>   <!-- renamed -->
   <a href="#" data-target="section3">Section 3</a>
   <a href="#" data-target="section4">Section 4</a>
 </nav>
@@ -84,8 +151,67 @@ section.active{opacity:1}
 </section>
 
 <section id="section2">
-  <h2>Section 2 – Details</h2>
-  <p>This is the second section. Keep building your story.</p>
+  <h2>Blog</h2>
+
+  <!-- NEW: two‑column layout -->
+  <div class="blog-container">
+
+    <!-- Left column – previews -->
+    <div class="preview-list">
+
+      <!-- Post #1 -->
+      <article class="post">
+        <h3>How to Build a Minimalist Portfolio Site</h3>
+        <p class="meta">Posted on 12 August 2025</p>
+
+        <!-- NEW: short preview (visible before clicking) -->
+        <div class="preview">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta.
+        </div>
+
+        <!-- Full body – hidden until expanded -->
+        <div class="full-body">
+          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta. Integer non turpis eu ligulaipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta. Integer non turpis eu ligulaipsum dolor sit amet, consectetur.</p>
+        </div>
+      </article>
+
+      <!-- Post #2 -->
+      <article class="post">
+        <h3>The Art of Responsive Design</h3>
+        <p class="meta">Posted on 5 July 2025</p>
+
+        <div class="preview">
+          Aenean eget orci a mauris ultricies condimentum. Donec non velit at ligula facilisis interdum.
+        </div>
+
+        <div class="full-body">
+          <p>Phasellus sit amet ex ut dolor porta tempus. Fusce sed libero eget nulla tempor blandit. Morbi vehicula, purus in malesuada gravida, urna leo finibus justo, et commodo lorem arcu vel nisl.</p>
+        </div>
+      </article>
+
+      <!-- Post #3 -->
+      <article class="post">
+        <h3>Why I Love CSS Grid</h3>
+        <p class="meta">Posted on 22 June 2025</p>
+
+        <div class="preview">
+          Nullam vel leo id odio gravida sodales. Suspendisse potenti.
+        </div>
+
+        <div class="full-body">
+          <p>Integer sit amet felis eu justo. Proin dictum, ligula at bibendum finibus, dolor purus fermentum risus, in convallis mauris libero non metus. Curabitur vitae elit et nisl ullamcorper tincidunt a ut enim.</p>
+        </div>
+      </article>
+
+    </div> <!-- /preview-list -->
+
+    <!-- Right column – full article -->
+    <div class="post-detail">
+      <!-- the expanded post will be injected here by JavaScript -->
+    </div>
+
+  </div> <!-- /blog-container -->
+
 </section>
 
 <section id="section3">
@@ -119,6 +245,31 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Optional: if you want the first section to show automatically */
     hideAll();
     document.getElementById(navLinks[0].getAttribute('data-target')).classList.add('active');
+
+    /* ────────────────────── Blog post preview → detail logic ──────── */
+    const previewList = document.querySelector('.preview-list');
+    const detailArea  = document.querySelector('.post-detail');
+    let currentArticle = null;   // keeps track of the currently expanded post
+
+    previewList.addEventListener('click', e => {
+        const article = e.target.closest('.post');
+        if (!article) return;          // click was outside a post
+
+        /* If this same post is clicked again, collapse it */
+        if (currentArticle === article) {
+            detailArea.innerHTML = '';
+            currentArticle = null;
+            return;
+        }
+
+        /* Build the content for the right column */
+        const title   = article.querySelector('h3').outerHTML;      // keep <h3> markup
+        const meta    = article.querySelector('.meta').outerHTML;   // keep <p class="meta">
+        const body    = article.querySelector('.full-body').innerHTML;
+
+        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+        currentArticle = article;
+    });
 });
 </script>
 
