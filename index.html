@@ -9,16 +9,16 @@
    Variables & Reset
 ------------------------------------------------------------------- */
 :root{
-  --primary-bg:#f4f4f4;
-  --text-color:#333;
-  --nav-bg:#222;
-  --nav-hover:#ffdd00;
+  --primary-bg:#f9f9f9;
+  --text-color:#222;
+  --nav-bg:#2c3e50;
+  --nav-hover:#d4af37;
 }
 
 *, *::before, *::after{box-sizing:border-box;margin:0;padding:0;}
 
 body{
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:'Arial', Arial, serif;
   background:var(--primary-bg);
   color:var(--text-color);
 }
@@ -32,43 +32,39 @@ header nav{
     /* Adjust size of bottom padding in Nav bar */
     padding:1px;
     /* Make the bar a fixed height – tweak the value to taste */
-    height:38px;                     /* <- adjust as needed */
-
+    height:60px;                     /* <- adjust as needed */
     /* Flexbox magic -----------------------------------------------------*/
     display:flex;                    /* turn nav into flex container   */
     justify-content:center;          /* keep links centered horizontally */
     align-items:flex-end;            /* push items toward the bottom   */
-
     box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
 
-/* ------------- Link styling  ---------*/
 header nav a{
     color:#fff;
     text-decoration:none;
-    margin:0 15px;                   /* horizontal spacing */
+    margin:0 20px;
     font-weight:bold;
     transition:.3s ease;
-    font-size:1.5rem;
-
-    /* Drop the old `line-height` – it’s no longer needed */
+    font-size:1.3rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
 }
 
 header nav a:hover{color:var(--nav-hover);}
-
 
 /* ------------------------------------------------------------------
    Sections
 ------------------------------------------------------------------- */
 main section{
-  max-width:1000px;
+  max-width:800px;
   width:90%;
-  margin:30px auto;
+  margin:40px auto;
   background:white;
-  padding:20px 25px;
-  border-radius:6px;
-  box-shadow:0 4px 8px rgba(0,0,0,.05);
-  display:none;                /* hide all by default */
+  padding:30px 35px;
+  border-radius:8px;
+  box-shadow:0 4px 10px rgba(0,0,0,.05);
+  display:none;
 }
 main section.active{display:block;}
 main section{
@@ -90,9 +86,9 @@ section img{
 ------------------------------------------------------------------- */
 .blog-container{display:flex}
 .preview-list{
-  width:280px; flex-shrink:0;
-  padding-right:20px;
-  max-height:calc(100vh - 160px); /* keep space for header */
+  width:260px; flex-shrink:0;
+  padding-right:15px;
+  max-height:calc(100vh - 200px);
   overflow-y:auto;
 }
 .post-detail{
@@ -112,18 +108,20 @@ section img{
 
 /* Post preview styling */
 .post{
-  padding:1.5rem;
-  margin-bottom:1.5rem;
+  padding:15px;
+  margin-bottom:15px;
   background:white;
   border-radius:8px;
   cursor:pointer;
+  border:1px solid #eaeaea;
 }
 .preview-list .post .full-body{display:none}
-.meta{font-size:.9rem;color:#777;margin-bottom:.75rem}
-.post h3{margin:0 0 .25rem;font-size:1.25rem}
+.meta{font-size:.9rem;color:#555;margin-bottom:.75rem}
+.post h3{margin:0 0 .25rem;font-size:1.2rem}
 .post:hover{
   transform:translateY(-2px);
   transition:transform .15s ease-out;
+  background:#f8f8f8;
 }
 
 /* ------------------------------------------------------------------
@@ -138,26 +136,31 @@ section img{
 .cv-header-wrapper a.download-btn{
   display:inline-block;
   padding:.6rem 1.2rem;
-  background:#222;
+  background:#2c3e50;
   color:#fff;
   text-decoration:none;
   border-radius:4px;
-  font-size:.9rem;
+  font-size:1.1rem;
+  border:1px solid #d4af37;
+}
+.cv-header-wrapper a.download-btn:hover{
+  background:#d4af37;
+  color:#222;
 }
 .cv-header-wrapper h2{flex:1;text-align:center}
 .cv-header-wrapper p{margin-left:auto;text-align:right}
 
 .cv-container{
-  height:calc(100vh - 220px);
+  height:calc(100vh - 250px);
   overflow:auto;
   margin:0 auto;
-  max-width:1000px;
-  border:3px solid #ccc;
+  max-width:800px;
+  border:3px solid #eaeaea;
   border-radius:8px;
 }
 .cv-container iframe{
   width:100%;
-  height:calc(100vh - 230px);
+  height:calc(100vh - 260px);
   border:none;
 }
 /* ------------------------------------------------------------------
@@ -214,7 +217,7 @@ section img{
 <body>
 <header>
 <nav>
-  <a href="#" data-target="section1">Section 1</a>
+  <a href="#" data-target="section1">Home</a>
   <a href="#" data-target="section2">Section 2</a>
   <a href="#" data-target="section3">Section 3</a>
   <a href="#" data-target="section4">Tic‑Tac‑Toe</a>
@@ -396,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 /* ----------------------------------------------------
-   Tic‑Tac‑Toe game logic (Section 4)
+   Tic‑Tac‑Toe game logic
 ---------------------------------------------------- */
 const boardEl   = document.querySelector('.board');
 const messageEl = document.querySelector('.message');
@@ -407,7 +410,7 @@ let currentPlayer = 'X';
 let gameOver = false;
 
 /* ----------------------------------------------------
-   Helper functions
+  Tic‑Tac‑Toe Helper functions
 ---------------------------------------------------- */
 function initBoard() {
   boardState.fill(null);
@@ -443,7 +446,7 @@ function checkTie() {
 }
 
 /* ----------------------------------------------------
-   Event handlers
+   Tic‑Tac‑Toe Event handlers
 ---------------------------------------------------- */
 boardEl.addEventListener('click', e => {
   if (gameOver) return;
@@ -473,11 +476,10 @@ boardEl.addEventListener('click', e => {
 
 resetBtn.addEventListener('click', initBoard);
 
-/* ----------------------------------------------------
-   Initialise once
----------------------------------------------------- */
 initBoard();
-
+/* ----------------------------------------------------
+   Tic‑Tac‑Toe End
+---------------------------------------------------- */
 
 });
 </script>
