@@ -164,17 +164,19 @@ section img{
    Tic‑Tac‑Toe styles
 ------------------------------------------------------------------- */
 .tictactoe-game { text-align:center; margin-top:20px; }
+
 .board {
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:5px;
-  max-width:320px;
+  gap:8px;                /* 5 px → 8 px (≈ 1.5×) – optional but keeps the look proportional */
+  max-width:480px;         /* 320 px × 1.5 = 480 px  (was 320 px) */
   margin:auto;
 }
+
 .cell {
   background:#fff;
   border:2px solid #333;
-  height:80px;
+  height:120px;           /* 80 px × 1.5 = 120 px  (was 80 px) */
   font-size:3rem;
   display:flex;
   align-items:center;
@@ -182,11 +184,13 @@ section img{
   cursor:pointer;
   user-select:none;
 }
+
+/* The rest of the original styles stay unchanged */
 .message{
   font-weight:bold;
   font-size:1.8rem;
   margin-top:15px;
-  min-height:1.8em;          /* keep the space while the turn text is shown */
+  min-height:1.8em;          /* keep space while turn text is shown */
 }
 .win{ color:#e74c3c; text-shadow:0 0 10px #e74c3c; }
 .draw{ color:#f39c12; text-shadow:0 0 10px #f39c12; }
@@ -198,6 +202,7 @@ section img{
 .win, .draw{
   animation:pulse 2s infinite;
 }
+
 
 
 /* ------------------------------------------------------------------
@@ -212,7 +217,7 @@ section img{
   <a href="#" data-target="section1">Section 1</a>
   <a href="#" data-target="section2">Section 2</a>
   <a href="#" data-target="section3">Section 3</a>
-  <a href="#" data-target="section4">Section 4</a>
+  <a href="#" data-target="section4">Tic‑Tac‑Toe</a>
 </nav>
 </header>
 
@@ -309,7 +314,7 @@ section img{
    Section 4 – Tic‑Tac‑Toe
 ------------------------------------------------------------------- -->
 <section id="section4" class="active">
-  <h2>Section 4 – Fourth</h2>
+  <h2>Tic‑Tac‑Toe</h2>
 
   <!-- The game container ------------------------------------------>
   <div class="tictactoe-game">
