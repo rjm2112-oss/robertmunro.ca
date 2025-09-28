@@ -11,12 +11,21 @@
 :root{
   --primary-bg:#f9f9f9;
   --text-color:#222;
-  --nav-bg:#2c3e50;
-  --nav-hover:#d4af37;
+  --nav-bg:#2c3e50;          /* dark‑blue background */
+  --nav-text:#ecf0f1;        /* light gray link colour */
+  --nav-hover:#f39c12;       /* bright orange hover accent */
 }
 
-*, *::before, *::after{box-sizing:border-box;margin:0;padding:0;}
+*, *::before, *::after{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
+/* ------------------------------------------------------------------
+   Body
+------------------------------------------------------------------- */
+/* 1️⃣ Reset the body’s default margin so nothing shows above the header */
 body{
   font-family:'Arial', Arial, serif;
   background:var(--primary-bg);
@@ -24,34 +33,54 @@ body{
 }
 
 /* ------------------------------------------------------------------
-   Navigation
+    Header & Navigation
 ------------------------------------------------------------------- */
+
+
+header{
+  padding-top:20px;
+  background-color:var(--nav-bg);
+}
+
 header nav{
-    width:100%;
-    background:var(--nav-bg);
-    /* Adjust size of bottom padding in Nav bar */
-    padding:1px;
-    /* Make the bar a fixed height – tweak the value to taste */
-    height:60px;                     /* <- adjust as needed */
-    /* Flexbox magic -----------------------------------------------------*/
-    display:flex;                    /* turn nav into flex container   */
-    justify-content:center;          /* keep links centered horizontally */
-    align-items:flex-end;            /* push items toward the bottom   */
-    box-shadow:0 2px 5px rgba(0,0,0,.1);
+  width:100%;
+  height:90px;
+  background:var(--nav-bg);
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  box-shadow:
+    inset 0 -4px 10px rgba(0,0,0,.15),
+    0 6px 12px rgba(0,0,0,.25);
+  font-family:'Montserrat',sans-serif;
 }
 
 header nav a{
-    color:#fff;
-    text-decoration:none;
-    margin:0 20px;
-    font-weight:bold;
-    transition:.3s ease;
-    font-size:1.3rem;
-    letter-spacing:0.05em;
-    text-transform:uppercase;
+  color:var(--nav-text);
+  text-decoration:none;
+  margin:0 22px;
+  font-weight:bold;
+  font-size:1.35rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  transition:color .3s ease;        /* no transform on <a> */
 }
 
-header nav a:hover{color:var(--nav-hover);}
+/* Colour change stays on the link itself */
+header nav a:hover{
+  color:var(--nav-hover);
+}
+
+/* Lift only the inner text – the span is an inline‑block */
+header nav a > span{
+  display:inline-block;
+  transition:transform .2s ease;   /* lift timing matches the colour change */
+}
+header nav a:hover > span{
+  transform:translateY(-4px);      /* moves just the text up */
+}
+
+
 
 /* ------------------------------------------------------------------
    Sections
@@ -59,7 +88,7 @@ header nav a:hover{color:var(--nav-hover);}
 main section{
   max-width:800px;
   width:90%;
-  margin:40px auto;
+  margin:30px auto;
   background:white;
   padding:30px 35px;
   border-radius:8px;
@@ -82,15 +111,15 @@ section img{
 }
 
 /* ------------------------------------------------------------------
-   Blog layout – half‑size outer gaps, normal inner padding
+   Blog layout
 ------------------------------------------------------------------- */
 .blog-container{display:flex}
 
 /* Sidebar with the list of posts */
 .preview-list{
   width:260px; flex-shrink:0;
-  /* Outer right gutter (kept at ~7.5 px) */
-  padding-right:7.5px;          /* or 8px if you prefer whole‑number values */
+  /* Outer right gutter */
+  padding-right:7.5px;
   max-height:calc(100vh - 200px);
   overflow-y:auto;
 }
@@ -105,8 +134,6 @@ section img{
   box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
 
-/* Post preview styling – restore the original inner padding
-   while keeping the reduced outer margin. */
 .post{
   /* Inner content spacing (back to 15 px) */
   padding:15px;                 /* <-- restored */
@@ -124,14 +151,14 @@ section img{
 }
 .post h3{margin:0 0 .25rem;font-size:1.2rem}
 
-/* Hover effect stays the same */
+/* Hover effect  */
 .post:hover{
   transform:translateY(-2px);
   transition:transform .15s ease-out;
   background:#f8f8f8;
 }
 
-/* Stack on narrow screens – unchanged */
+/* Stack on narrow screens  */
 @media(max-width:800px){
   .blog-container{flex-direction:column}
   .preview-list,.post-detail{width:100%;margin:0;padding:0;}
@@ -166,7 +193,7 @@ section img{
 .cv-header-wrapper p{margin-left:auto;text-align:right}
 
 .cv-container{
-  height:calc(100vh - 250px);
+  height:calc(100vh - 300px);
   overflow:auto;
   margin:0 auto;
   max-width:800px;
@@ -175,7 +202,7 @@ section img{
 }
 .cv-container iframe{
   width:100%;
-  height:calc(100vh - 260px);
+  height:calc(100vh - 310px);
   border:none;
 }
 /* ------------------------------------------------------------------
@@ -301,11 +328,11 @@ section img{
 <body>
 <header>
 <nav>
-  <a href="#" data-target="section1">Home</a>
-  <a href="#" data-target="section2">Section 2</a>
-  <a href="#" data-target="section3">Section 3</a>
-  <a href="#" data-target="section4">Tic‑Tac‑Toe</a>
-  <a href="#" data-target="section5">Connect 4</a>
+    <a href="#" data-target="section1"><span>Home</span></a>
+    <a href="#" data-target="section2"><span>Section 2</span></a>
+    <a href="#" data-target="section3"><span>Section 3</span></a>
+    <a href="#" data-target="section4"><span>Tic‑Tac‑Toe</span></a>
+    <a href="#" data-target="section5"><span>Connect 4</span></a>
 </nav>
 </header>
 
