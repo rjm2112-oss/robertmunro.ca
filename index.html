@@ -259,7 +259,7 @@ section img{
   box-shadow:0 0 15px #ffeb3b;
 }
 .connect4-game .message{
-  font-weight:bold; font-size:1.5rem;
+  font-weight:bold; font-size:1.8rem;
   margin-top:10px; min-height:2em;
 }
 .connect4-game .win,.connect4-game .draw{color:#e74c3c;}
@@ -414,7 +414,6 @@ section img{
 
 
 
-
 </main>
 
 <script>
@@ -484,246 +483,243 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-/* ----------------------------------------------------
-   Tic‑Tac‑Toe game logic
----------------------------------------------------- */
-const boardEl   = document.querySelector('.board');
-const messageEl = document.querySelector('.message');
-const resetBtn  = document.querySelector('.reset');
-
-let boardState = Array(9).fill(null);
-let currentPlayer = 'X';
-let gameOver = false;
-
-/* ----------------------------------------------------
-  Tic‑Tac‑Toe Helper functions
----------------------------------------------------- */
-function initBoard() {
-  boardState.fill(null);
-  boardEl.innerHTML = '';
-  for (let i = 0; i < 9; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'cell';
-    cell.dataset.index = i;
-    boardEl.appendChild(cell);
-  }
-  messageEl.textContent = `${currentPlayer}'s turn`;
-  messageEl.className = "message";
-  currentPlayer = 'X';
-  gameOver = false;
-}
-
-function checkWin() {
-  const combos = [
-    [0,1,2],[3,4,5],[6,7,8],
-    [0,3,6],[1,4,7],[2,5,8],
-    [0,4,8],[2,4,6]
-  ];
-  for (const [a,b,c] of combos) {
-    if (boardState[a] && boardState[a]==boardState[b] && boardState[a]==boardState[c]) {
-      return boardState[a];
-    }
-  }
-  return null;
-}
-
-function checkTie() {
-  return boardState.every(cell => cell !== null);
-}
-
-/* ----------------------------------------------------
-   Tic‑Tac‑Toe Event handlers
----------------------------------------------------- */
-boardEl.addEventListener('click', e => {
-  if (gameOver) return;
-
-  const cell = e.target.closest('.cell');
-  if (!cell || boardState[cell.dataset.index]) return; // already taken
-
-  const idx = Number(cell.dataset.index);
-  boardState[idx] = currentPlayer;
-  cell.textContent = currentPlayer;
-
-  const winner = checkWin();
-  if (winner) {
-    gameOver = true;
-    messageEl.textContent = `🎉 ${winner} WINS! 🎉`;
-    messageEl.classList.add('win');
-  } else if (checkTie()) {
-    gameOver = true;
-    messageEl.textContent = "💥 It's a Draw! 💥";
-    messageEl.classList.add('draw');
-  } else {
-    // Switch player and show the next turn
-    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    messageEl.textContent = `${currentPlayer}'s turn`;
-  }
-});
-
-resetBtn.addEventListener('click', initBoard);
-
-initBoard();
-/* ----------------------------------------------------
-   Tic‑Tac‑Toe End
----------------------------------------------------- */
 (() => {
-  'use strict';
+  /* ----------------------------------------------------
+     Tic‑Tac‑Toe – module
+  ---------------------------------------------------- */
+  (() => {
+    const boardEl   = document.querySelector('.board');
+    const messageEl = document.querySelector('.message');
+    const resetBtn  = document.querySelector('.reset');
 
-  const connect4Container = document.querySelector('#section5 .connect4-game');
-  if (!connect4Container) return;
-
-  const boardEl   = connect4Container.querySelector('.board');
-  const messageEl = connect4Container.querySelector('.message');
-  const resetBtn  = connect4Container.querySelector('.reset');
-
-  /* ----- constants & state --------------------------------------- */
-  const ROWS = 6, COLS = 7;
-  let boardState = Array.from({ length: ROWS }, () => new Array(COLS).fill(null));
-
-  // Cached DOM references – created once
-  let cells = Array.from({ length: ROWS }, () => new Array(COLS));
-  let currentPlayer = 'red';
-  let gameOver = false;
-
-  /* ----- helpers ---------------------------------------------------- */
-  const initConnect4 = () => {
-    boardState.forEach(row => row.fill(null));
-
-    if (!cells[0][0]) {          // first run – create the cells
-      const frag = document.createDocumentFragment();
-
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cell = document.createElement('div');
-          cell.className   = 'cell';
-          cell.dataset.row = r;
-          cell.dataset.col = c;
-          cell.col         = c; // handy numeric reference
-          frag.appendChild(cell);
-          cells[r][c] = cell;
-        }
-      }
-
-      boardEl.innerHTML = '';
-      boardEl.appendChild(frag);
-
-    } else {                      // subsequent resets – clear discs only
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cell = cells[r][c];
-          while (cell.firstChild) cell.removeChild(cell.firstChild);
-        }
-      }
-    }
-
-    messageEl.textContent = `${capitalize(currentPlayer)}'s turn`;
-    messageEl.className   = 'message';
-    currentPlayer = 'red';
-    gameOver = false;
-  };
-
-  const dropDisc = col => {
-    for (let r = ROWS - 1; r >= 0; r--) {
-      if (!boardState[r][col]) {
-        boardState[r][col] = currentPlayer;
-
-        // Fast lookup – no querySelector
-        const cell = cells[r][col];
-        const disc = document.createElement('div');
-        disc.className = `disc ${currentPlayer}`;
-
-        /* ---- NEW: no delay, just let the CSS animation run immediately */
-        // disc.style.animationDelay = '0s';   // optional – default is 0
-
-        cell.appendChild(disc);
-        return true;
-      }
-    }
-    return false; // column full
-  };
-
-  const checkConnect4Win = () => {
-    const dirs = [
-      [0, 1],   // horizontal
-      [1, 0],   // vertical
-      [1, 1],   // diagonal down‑right
-      [1, -1]   // diagonal down‑left
+    // Winning combos (static)
+    const COMBOS = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
     ];
 
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        const p = boardState[r][c];
-        if (!p) continue;
+    let boardState;        // 9‑cell array
+    let currentPlayer;     // 'X' | 'O'
+    let gameOver;
 
-        for (const [dr, dc] of dirs) {
-          let count = 1, pos = [[r, c]];
-          for (let i = 1; i < 4; i++) {
-            const nr = r + dr * i,
-                  nc = c + dc * i;
-            if (
-              nr >= 0 && nr < ROWS &&
-              nc >= 0 && nc < COLS &&
-              boardState[nr][nc] === p
-            ) {
-              count++;
-              pos.push([nr, nc]);
-            } else break;
+    const init = () => {
+      boardState   = Array(9).fill(null);
+      currentPlayer = 'X';
+      gameOver     = false;
+      messageEl.textContent = `${currentPlayer}'s turn`;
+      messageEl.className  = 'message';
+
+      // create the cells
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className   = 'cell';
+        cell.dataset.index = i;
+        boardEl.appendChild(cell);
+      }
+    };
+
+    const checkWin = () => {
+      for (const [a,b,c] of COMBOS) {
+        if (
+          boardState[a] &&
+          boardState[a] === boardState[b] &&
+          boardState[a] === boardState[c]
+        ) return boardState[a];
+      }
+      return null;
+    };
+
+    const isTie = () => boardState.every(v => v !== null);
+
+    const setMessage = (text, cls) => {
+      messageEl.textContent = text;
+      messageEl.className   = 'message';
+      if (cls) messageEl.classList.add(cls);
+    };
+
+    boardEl.addEventListener('click', e => {
+      if (gameOver) return;
+
+      const cell = e.target.closest('.cell');
+      if (!cell) return;
+
+      const idx = Number(cell.dataset.index);
+      if (boardState[idx]) return;          // already taken
+
+      boardState[idx] = currentPlayer;
+      cell.textContent = currentPlayer;
+
+      const winner = checkWin();
+      if (winner) {
+        gameOver = true;
+        setMessage(`🎉 ${winner} WINS! 🎉`, 'win');
+      } else if (isTie()) {
+        gameOver = true;
+        setMessage("💥 It's a Draw! 💥", 'draw');
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        setMessage(`${currentPlayer}'s turn`);
+      }
+    });
+
+    resetBtn.addEventListener('click', init);
+
+    init();          // first run
+  })();
+
+  /* ----------------------------------------------------
+     Connect‑4 – module
+  ---------------------------------------------------- */
+  (() => {
+    const container = document.querySelector('#section5 .connect4-game');
+    if (!container) return;
+
+    const boardEl   = container.querySelector('.board');
+    const messageEl = container.querySelector('.message');
+    const resetBtn  = container.querySelector('.reset');
+
+    const ROWS = 6, COLS = 7;
+    let boardState;      // 2‑D array of colours or null
+    let cells;           // cached DOM refs (2‑D)
+    let currentPlayer;   // 'red' | 'blue'
+    let gameOver;
+
+    const init = () => {
+      boardState = Array.from({ length: ROWS }, () =>
+        Array(COLS).fill(null)
+      );
+      currentPlayer = 'red';
+      gameOver     = false;
+      setMessage(`${capitalize(currentPlayer)}'s turn`);
+
+      // Build or clear the grid
+      if (!cells) {                     // first run – create cells
+        cells = Array.from({ length: ROWS }, () => Array(COLS));
+        const frag = document.createDocumentFragment();
+
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.className   = 'cell';
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            frag.appendChild(cell);
+            cells[r][c] = cell;
           }
-          if (count === 4) return { winner: p, positions: pos };
+        }
+
+        boardEl.innerHTML = '';
+        boardEl.appendChild(frag);
+      } else {                           // subsequent resets – clear discs
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = cells[r][c];
+            while (cell.firstChild) cell.removeChild(cell.firstChild);
+          }
         }
       }
-    }
-    return null;
-  };
+    };
 
-  const checkConnect4Tie = () =>
-    boardState.every(row => row.every(cell => cell !== null));
-
-  /* ----- event listeners -------------------------------------------- */
-  boardEl.addEventListener('click', e => {
-    if (gameOver) return;
-
-    const cell = e.target.closest('.cell');
-    if (!cell) return;
-
-    const col = Number(cell.dataset.col); // or `cell.col`
-    if (!dropDisc(col)) return;          // column full – ignore
-
-    const win = checkConnect4Win();
-    if (win) {
-      gameOver = true;
-      messageEl.textContent = `🎉 ${capitalize(win.winner)} Wins! 🎉`;
-      messageEl.classList.add('win');
-
-      /* highlight winning discs using cached cell refs */
-      win.positions.forEach(([r, c]) => {
-        const discCell = cells[r][c];
-        if (discCell && discCell.firstChild) {
-          discCell.firstChild.classList.add('highlight');
+    const dropDisc = col => {
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (!boardState[r][col]) {
+          boardState[r][col] = currentPlayer;
+          const disc = document.createElement('div');
+          disc.className = `disc ${currentPlayer}`;
+          cells[r][col].appendChild(disc);
+          return true;
         }
-      });
+      }
+      return false; // column full
+    };
 
-    } else if (checkConnect4Tie()) {
-      gameOver = true;
-      messageEl.textContent = "💥 It's a Draw! 💥";
-      messageEl.classList.add('draw');
+    const checkWin = () => {
+      const DIRS = [
+        [0, 1],   // horizontal
+        [1, 0],   // vertical
+        [1, 1],   // diagonal down‑right
+        [1, -1]   // diagonal down‑left
+      ];
 
-    } else { // next turn
-      currentPlayer = currentPlayer === 'red' ? 'blue' : 'red';
-      messageEl.textContent = `${capitalize(currentPlayer)}'s turn`;
-    }
-  });
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const p = boardState[r][c];
+          if (!p) continue;
 
-  resetBtn.addEventListener('click', initConnect4);
+          for (const [dr, dc] of DIRS) {
+            let count = 1;
+            const pos   = [[r, c]];
+            for (let i = 1; i < 4; i++) {
+              const nr = r + dr * i,
+                    nc = c + dc * i;
+              if (
+                nr >= 0 && nr < ROWS &&
+                nc >= 0 && nc < COLS &&
+                boardState[nr][nc] === p
+              ) {
+                count++;
+                pos.push([nr, nc]);
+              } else break;
+            }
+            if (count === 4) return { winner: p, positions: pos };
+          }
+        }
+      }
+      return null;
+    };
 
-  function capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+    const isTie = () =>
+      boardState.every(row => row.every(v => v !== null));
 
-  /* ----- kick off --------------------------------------------- */
-  initConnect4();
+    const setMessage = (text, cls) => {
+      messageEl.textContent = text;
+      messageEl.className   = 'message';
+      if (cls) messageEl.classList.add(cls);
+    };
+
+    boardEl.addEventListener('click', e => {
+      if (gameOver) return;
+
+      const cell = e.target.closest('.cell');
+      if (!cell) return;
+
+      const col = Number(cell.dataset.col);
+      if (!dropDisc(col)) return;          // column full
+
+      const win = checkWin();
+      if (win) {
+        gameOver = true;
+        setMessage(`🎉 ${capitalize(win.winner)} Wins! 🎉`, 'win');
+
+        // highlight the winning discs
+        win.positions.forEach(([r, c]) => {
+          const discCell = cells[r][c];
+          if (discCell.firstChild)
+            discCell.firstChild.classList.add('highlight');
+        });
+      } else if (isTie()) {
+        gameOver = true;
+        setMessage("💥 It's a Draw! 💥", 'draw');
+      } else {
+        currentPlayer = currentPlayer === 'red' ? 'blue' : 'red';
+        setMessage(`${capitalize(currentPlayer)}'s turn`);
+      }
+    });
+
+    resetBtn.addEventListener('click', init);
+
+    const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+    init();          // first run
+  })();
+
 })();
 
+/* ----------------------------------------------------
+   Connect 4 End
+---------------------------------------------------- */
 
 
 
