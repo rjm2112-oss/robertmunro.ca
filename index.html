@@ -219,41 +219,49 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   }
 }
 
+/* 400 px breakpoint – only affect Section 1 */
 @media (max-width:400px) {
-  /* Reduce font size for everything that lives inside the preview‑list  */
-  .preview-list,
-  .preview-list * {          /* include all descendants (h3, p, ul, etc.) */
-    font-size:0.9rem;        /* one step smaller than normal (≈ 90 %)   */
-  }
-      #section1 .post h3 {
-        font-size: 1.1rem;
-        line-height: 1.2;           /* keep a little breathing room */
-    }
-  .gallery-item{
-    width:calc(50% - 10px);   /* 10 px accounts for the gap (5px on each side) */
-  }
-      #section1 {
-        margin-left: 0;
-        margin-right: 0;
-        /* keep vertical centering for consistency (optional) */
-        width: 100%;          /* override the 90% width so it truly fills the screen */
-        max-width: none;      /* avoid an extra max‑width restriction */
-    }
-    #section1 {
-        padding-left: calc(var(--section-padding-vertical) / 2);   /* keep top/bottom as is */
-        padding-right: calc(var(--section-padding-vertical) / 2);
-    }
-        #section1,
-    main > section,
-    .blog-container {
-        width: 100%;
-        max-width: none;
-        margin-left: 0 !important;          /* remove any left margin */
-        margin-right: 0 !important;         /* remove any right margin */
-        padding-left: 0 !important;         /* no inner padding on the section */
-        padding-right: 0 !important;
+
+    /* ---------- Font tweaks inside the preview list ----------
+       (only inside #section1) --------------------------------- */
+    #section1 .preview-list,
+    #section1 .preview-list * {
+        font-size: 0.9rem;           /* ~90 % of normal size   */
     }
 
+    #section1 .post h3{
+        font-size: 1.1rem;
+        line-height: 1.2;
+    }
+
+    /* ---------- Gallery items inside Section 1 ----------------- */
+    #section3 .gallery-item{
+        width: calc(50% - 10px);     /* two‑column, small gutter   */
+    }
+
+    /* ---------- Remove left/right padding & margin from section 1
+       (but keep the top/bottom padding that comes from --section-padding-vertical) ----------- */
+    #section1{
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+
+        /* keep vertical padding, but shrink horizontal side‑gaps to zero */
+        padding-left: calc(var(--section-padding-vertical)/2);
+        padding-right: calc(var(--section-padding-vertical)/2);
+    }
+
+    /* ---------- Remove internal spacing from the blog container
+       (only inside #section1) ------------------------------------------- */
+    #section1 .blog-container{
+        width: 100%;
+        max-width: none;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
 }
 
 </style>
