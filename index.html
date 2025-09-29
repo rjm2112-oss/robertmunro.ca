@@ -157,7 +157,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   transform:scale(1.05);
 }
 
-/* Caption styling (consolidated) */
+/* Caption styling */
 .gallery-item .description{
   display:block;
   margin-top:0rem;                /* moved closer to image            */
@@ -191,13 +191,44 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   margin-top:6px;
 }
 
-/* ── Responsive ---------------------------------------------------------- */
-@media(max-width:800px){
-  .blog-container{flex-direction:column;}
-  .preview-list,.post-detail{width:100%;margin:0;padding:0;}
-  .gallery img{width:calc(50% - 10px);}
+/* ── Responsive tweaks for narrowing screens  ------------------- */
+@media (max-width:800px) {
+  .blog-container{
+    display:flex;            /* flexbox keeps columns in a row      */
+    flex-wrap:no-wrap;       /* never wrap – we want the ratio      */
+    gap:10px;                /* small gutter between cols           */
+    overflow-x:auto;        /* let user scroll if container is too narrow */
+  }
+
+  /* ----- 2. Left column (preview list) --------------------------------- */
+  .preview-list{
+    flex-basis:calc(33.333% - 5px);   /* ~2/3 of the width            */
+    min-width:120px;                  /* guarantees at least a chunk of text is visible */
+    max-height:none;                   /* optional – let it grow with content */
+  }
+
+  /* ----- 3. Right column (detail pane) --------------------------------- */
+  .post-detail{
+    flex-basis:calc(66.666% - 5px);   /* 1/3 of the width            */
+    min-width:120px;                  /* guarantees at least a chunk of text is visible */
+  }
+
+  /* ----- 4. Gallery images  */
+  .gallery img{
+    width:calc(100% - 10px);
+  }
 }
 
+@media (max-width:400px) {
+  /* Reduce font size for everything that lives inside the preview‑list  */
+  .preview-list,
+  .preview-list * {          /* include all descendants (h3, p, ul, etc.) */
+    font-size:0.9rem;        /* one step smaller than normal (≈ 90 %)   */
+  }
+  .gallery-item{
+    width:calc(50% - 10px);   /* 10 px accounts for the gap (5px on each side) */
+  }
+}
 
 </style>
 </head>
@@ -207,7 +238,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   <nav>
     <!-- Add more links here – they automatically become new sections -->
     <a href="#" data-target="section1"><span>Home</span></a>
-    <a href="#" data-target="section2"><span>Curriculum Vitae</span></a>
+    <a href="#" data-target="section2"><span>CV</span></a>
     <a href="#" data-target="section3"><span>Gallery</span></a>
   </nav>
 </header>
@@ -215,7 +246,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 <main>
   <!-- Section 1 – Home -->
   <section id="section1">
-    <h2>Home – Overview</h2>
+    <h2></h2>
     <div class="blog-container">
 
       <div class="preview-list">
