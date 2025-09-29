@@ -262,6 +262,19 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         padding-left: 0 !important;
         padding-right: 0 !important;
     }
+        /* 1️⃣ Pull the whole main area higher so it sits flush under the navbar */
+    main{
+        top: -120px !important;          /* 10 px more than before */
+    }
+
+    /* 2️⃣ Make sure #section1 itself has no top margin/padding */
+    #section1{
+        margin-top: 0 !important;         /* close any leftover gap */
+        padding-top: 0 !important;        /* keep the top‑padding zero */
+    }
+        #section1 .post-detail{
+        padding-top: 40px;          /* tweak this value if you want more/less space */
+    }
 }
 
 </style>
