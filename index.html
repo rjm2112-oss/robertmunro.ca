@@ -86,6 +86,17 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     /* Optional: let the browser hyphenate words for smoother flow */
     hyphens: auto;
 }
+
+/* ── Highlight selected preview ------------------------------------ */
+.preview-list .post.active {
+  background: #f0f0f0;          /* light‑grey – change to any shade you like */
+}
+
+/* (Optional) keep the hover effect subtle on an already‑active post */
+.preview-list .post.active:hover {
+  background: #d6d6d6;
+}
+
 /* ── CV --------------------------------------------------------------- */
 .cv-header-wrapper{
   display:flex;align-items:center;gap:.5rem;margin-bottom:var(--section-padding-vertical);
@@ -388,6 +399,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
           </div>
         </article>
 
+
         <!-- Recent project showcase -->
         <article class="post"><h3>Recent Project Showcase</h3>
           <p class="meta">Published 20 Sep 2025</p>
@@ -478,16 +490,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelectorAll('[data-target]');
   const sections = document.querySelectorAll('section');
 
+  /* --------- helper: clear “active” from all previews in a section ----- */
+  function clearActive(sectionId) {
+    document
+      .querySelectorAll(`#${sectionId} .post.active`)
+      .forEach(p => p.classList.remove('active'));
+  }
+
+  /* --------- show a particular section -------------------------------- */
   function showSection(id) {
     sections.forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    expandFirstInSection(id);
+
+    // Drop any old “active” highlight when we change sections
+    clearActive(id);
+
+    expandFirstInSection(id);      // also marks the first post active
   }
 
-  // Expand the first non‑static post in a section (used on load and when switching)
+  /* --------- Expand the first non‑static post in a section (used on load) ----- */
   function expandFirstInSection(sectionId){
-    const firstPost = document.querySelector(`#${sectionId} .post:not(.static)`);
+    const list = document.querySelector(`#${sectionId} .preview-list`);
+    if (!list) return;
+
+    // Clear any previous highlight inside this list
+    list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+
+    const firstPost = list.querySelector('.post:not(.static)');
     if(!firstPost) return;
+
+    // Mark it as active
+    firstPost.classList.add('active');
+
     const detailArea = document.querySelector(`#${sectionId} .post-detail`);
     const title   = firstPost.querySelector('h3').outerHTML;
     const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
@@ -495,10 +529,10 @@ document.addEventListener('DOMContentLoaded', () => {
     detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
   }
 
-  // Default to the first nav link
+  /* --------- Default to the first nav link ----------------------------- */
   showSection(navLinks[0].dataset.target);
 
-  // Nav click handler
+  /* --------- Nav click handler ---------------------------------------- */
   navLinks.forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
@@ -506,21 +540,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Preview list click – swap detail content
+  /* --------- Preview list click – swap detail content ------------------- */
   document.querySelectorAll('.preview-list').forEach(list => {
-    let current = null;
     list.addEventListener('click', e => {
       const post = e.target.closest('.post');
-      if (!post || post.classList.contains('static') || post === current) return;
+      if (!post || post.classList.contains('static')) return;
+
+      // 1️⃣ Remove any previous active preview in this list
+      list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+
+      // 2️⃣ Highlight the newly‑clicked preview
+      post.classList.add('active');
 
       const detailArea = list.nextElementSibling; // .post-detail
       const title   = post.querySelector('h3').outerHTML;
       const meta    = post.querySelector('.meta')?.outerHTML || '';
       const body    = post.querySelector('.full-body')?.innerHTML || '';
       detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
-      current = post;
     });
   });
+
+
+
 
   // ── Gallery modal --------------------------------------------
   const modal = document.getElementById('imageModal');
