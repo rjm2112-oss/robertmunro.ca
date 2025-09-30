@@ -1,761 +1,564 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8"/>
 <title>Robert Munro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-/* ------------------------------------------------------------------
-   Variables & Reset
-------------------------------------------------------------------- */
+/* ── Theme & spacing ----------------------------------------------------- */
 :root{
   --primary-bg:#f9f9f9;
   --text-color:#222;
-  --nav-bg:#2c3e50;          /* dark‑blue background */
-  --nav-text:#ecf0f1;        /* light gray link colour */
-  --nav-hover:#f39c12;       /* bright orange hover accent */
+  --nav-bg:#2c3e50;
+  --nav-text:#ecf0f1;
+  --nav-hover:#f39c12;
+
+  /* Outer spacing for all sections */
+  --section-margin:20px;
+  --section-padding-vertical:20px;
+  --section-padding-horizontal:25px;
 }
 
-*, *::before, *::after{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
-/* ------------------------------------------------------------------
-   Body
-------------------------------------------------------------------- */
+/* ── Normalisation -------------------------------------------------------- */
+*, *::before, *::after{box-sizing:border-box;margin:0;padding:0;}
 body{
-  font-family:'Arial', Arial, serif;
+  font-family:'Arial',sans-serif;
   background:var(--primary-bg);
   color:var(--text-color);
 }
-/* ------------------------------------------------------------------
-    Header & Navigation
-------------------------------------------------------------------- */
+
+/* ── Navigation ----------------------------------------------------------- */
 header nav{
-  padding-top:110px;
-  width:100%;
-  height:90px;
+  padding-top:110px;height:90px;display:flex;justify-content:center;align-items:flex-end;
   background:var(--nav-bg);
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  box-shadow:
-    inset 0 -4px 10px rgba(0,0,0,.15),
-    0 6px 12px rgba(0,0,0,.25);
-  font-family:'Montserrat',sans-serif;
+  box-shadow:inset 0 -4px 10px rgba(0,0,0,.15),0 6px 12px rgba(0,0,0,.25);
 }
-
 header nav a{
-  color:var(--nav-text);
-  text-decoration:none;
-  margin:0 22px;
-  font-weight:bold;
-  font-size:1.35rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  transition:color .3s ease;        /* no transform on <a> */
+  color:var(--nav-text);text-decoration:none;margin:0 22px;font-weight:bold;
+  font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;
+  transition:color .3s ease;
 }
-
-/* Colour change stays on the link itself */
-header nav a:hover{
-  color:var(--nav-hover);
-}
-
-/* Lift only the inner text – the span is an inline‑block */
+header nav a:hover{color:var(--nav-hover);}
 header nav a > span{
-  display:inline-block;
-  transition:transform .2s ease;   /* lift timing matches the colour change */
+  display:inline-block;transition:transform .2s ease;
 }
-header nav a:hover > span{
-  transform:translateY(-4px);      /* moves just the text up */
-}
+header nav a:hover > span{transform:translateY(-4px);}
 
-
-
-/* ------------------------------------------------------------------
-   Sections
-------------------------------------------------------------------- */
+/* ── Sections ------------------------------------------------------------- */
 main section{
-  max-width:800px;
-  width:90%;
-  margin:30px auto;
-  background:white;
-  padding:30px 35px;
-  border-radius:8px;
-  box-shadow:0 4px 10px rgba(0,0,0,.05);
-  display:none;
+  max-width:900px;width:90%;margin:var(--section-margin) auto;background:white;
+  padding:var(--section-padding-vertical) var(--section-padding-horizontal);
+  border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
+  opacity:0;transition:opacity .3s ease;
 }
-main section.active{display:block;}
-main section{
-  opacity:0;
-  transition:opacity .3s ease;
-}
-main section.active{opacity:1}
+main section.active{display:block;opacity:1;}
 
-/* Images inside sections */
-section img{
-  max-width:100%;
-  height:auto;
-  margin:20px auto;
-  display:block;
-}
-
-/* ------------------------------------------------------------------
-   Blog layout
-------------------------------------------------------------------- */
-.blog-container{display:flex}
-
-/* Sidebar with the list of posts */
+/* ── Images & Blog ------------------------------------------------------- */
+img{max-width:100%;height:auto;margin:20px auto;display:block;}
+.blog-container{display:flex;}
 .preview-list{
-  width:260px; flex-shrink:0;
-  /* Outer right gutter */
-  padding-right:7.5px;
-  max-height:calc(100vh - 200px);
-  overflow-y:auto;
+  width:260px;flex-shrink:0;padding-right:7.5px;
+  max-height:calc(100vh - 200px);overflow-y:auto;
 }
-
-/* Main content pane */
-.post-detail{
-  flex-grow:1;
-  background:#fff;
-  border-radius:8px;
-  /* Outer gap between preview list & detail (kept at ~10 px) */
-  margin-left:10px;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
-}
-
+.post-detail{flex-grow:1;background:#fff;border-radius:8px;margin-left:10px;
+  box-shadow:0 2x 6px rgba(0,0,0,.08);}
 .post{
-  /* Inner content spacing (back to 15 px) */
-  padding:15px;                 /* <-- restored */
-  /* Outer gap between cards (kept at ~8 px) */
-  margin-bottom:8px;
-  background:white;
-  border-radius:8px;
-  cursor:pointer;
-  border:1px solid #eaeaea;
+  padding:15px;margin-bottom:4px;background:white;border-radius:8px;cursor:pointer;border:1px solid #eaeaea;
 }
-.preview-list .post .full-body{display:none}
-
-.meta{
-  font-size:.9rem;color:#555;margin-bottom:.75rem
+.preview-list .post .full-body{display:none;}
+.meta{font-size:.9rem;color:#555;margin-bottom:.75rem;}
+.post h3{margin:0 0 .25rem;font-size:1.2rem;}
+.post:not(.static):hover{
+  transform:translateY(-2px);transition:transform .15s ease-out;background:#f8f8f8;
 }
-.post h3{margin:0 0 .25rem;font-size:1.2rem}
+.post.static{cursor:default;background:#f7fafc;border-left:6px solid #2c3e50;
+  border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:4px;border-bottom-left-radius:4px;}
+.post.static h3{font-family:'Arial',serif;font-weight:600;}
 
-/* Hover effect  */
-.post:hover{
-  transform:translateY(-2px);
-  transition:transform .15s ease-out;
-  background:#f8f8f8;
-}
-
-/* Stack on narrow screens  */
-@media(max-width:800px){
-  .blog-container{flex-direction:column}
-  .preview-list,.post-detail{width:100%;margin:0;padding:0;}
-  .preview-list article{margin-bottom:1rem}
-}
-
-
-/* ------------------------------------------------------------------
-   CV section
-------------------------------------------------------------------- */
+/* ── CV --------------------------------------------------------------- */
 .cv-header-wrapper{
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-  margin-bottom:.5rem;
+  display:flex;align-items:center;gap:.5rem;margin-bottom:var(--section-padding-vertical);
 }
 .cv-header-wrapper a.download-btn{
-  display:inline-block;
-  padding:.6rem 1.2rem;
-  background:#2c3e50;
-  color:#fff;
-  text-decoration:none;
-  border-radius:4px;
-  font-size:1.1rem;
+  padding:.6rem 1.2rem;background:#2c3e50;color:#fff;text-decoration:none;border-radius:4px;font-size:1.1rem;
   border:1px solid #d4af37;
 }
-.cv-header-wrapper a.download-btn:hover{
-  background:#d4af37;
-  color:#222;
-}
-.cv-header-wrapper h2{flex:1;text-align:center}
-.cv-header-wrapper p{margin-left:auto;text-align:right}
-
+.cv-header-wrapper a.download-btn:hover{background:#d4af35;color:#222;}
+.cv-header-wrapper h2{flex:1;text-align:center;}
+.cv-header-wrapper p{text-align:right;margin-left:auto;}
 .cv-container{
-  height:calc(100vh - 300px);
-  overflow:auto;
-  margin:0 auto;
-  max-width:800px;
-  border:3px solid #eaeaea;
-  border-radius:8px;
+  overflow:auto;border:3px solid #eaeaea;border-radius:8px;margin-top:var(--section-padding-vertical);
 }
 .cv-container iframe{
-  width:100%;
-  height:calc(100vh - 310px);
-  border:none;
-}
-/* ------------------------------------------------------------------
-   Tic‑Tac‑Toe styles
-------------------------------------------------------------------- */
-.tictactoe-game { text-align:center; margin-top:20px; }
-
-.board {
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;                /* 5 px → 8 px (≈ 1.5×) – optional but keeps the look proportional */
-  max-width:480px;         /* 320 px × 1.5 = 480 px  (was 320 px) */
-  margin:auto;
+  width:100%;height:calc(100vh - 270px);border:none;
 }
 
-.cell {
-  background:#fff;
-  border:2px solid #333;
-  height:120px;           /* 80 px × 1.5 = 120 px  (was 80 px) */
-  font-size:3rem;
+/* ── Image row ---------------------------------------------------------- */
+.image-row{display:flex;flex-wrap:wrap;gap:10px;}
+.image-row img{width:calc(50% - 5px);height:auto;}
+
+/* ── Gallery ------------------------------------------------------------ */
+.gallery{
   display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+/* Modal overlay */
+.modal{
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,.8);
+  display:flex; align-items:center; justify-content:center;
+  visibility:hidden; opacity:0; transition:.3s ease;
+}
+.modal.show{visibility:visible; opacity:1;}
+.modal img{
+  max-width:90vw;
+  max-height:90vh;
+  border-radius:4px;
+}
+
+/* NEW: Caption overlay inside the modal */
+.modal-caption {
+  position:absolute;      /* Overlay on top of the image */
+  bottom:0;
+  left:0;
+  width:100%;
+  background:rgba(0,0,0,.7);   /* Dark, semi‑transparent backdrop */
+  color:#fff;                  /* White text */
+  font-size:1rem;
+  padding:8px 12px;
+  text-align:center;
+  pointer-events:none;        /* So clicks pass through to the modal itself */
+  display:none;               /* Hidden by default – shown when a caption is set */
+}
+
+/* Gallery item wrapper */
+.gallery-item{
+  display:flex;
+  flex-direction:column;
   align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  user-select:none;
+  width:calc(33.333% - 10px);
 }
 
-.message{
-  font-weight:bold;
-  font-size:1.8rem;
-  margin-top:15px;
-  min-height:1.8em;          /* keep space while turn text is shown */
+/* Image inside gallery‑item */
+.gallery-item img{
+  width:100%;
+  height:100%;                     /* natural aspect ratio            */
+  object-fit:cover;
+  border:3px solid #ffffff;
+  box-shadow:
+      0 4px 8px rgba(0,0,0,.25),
+      0 1px 2px rgba(0,0,0,.12);
+  transition:transform .2s ease, box-shadow .2s ease;
 }
-.win{ color:#e74c3c; text-shadow:0 0 10px #e74c3c; }
-.draw{ color:#f39c12; text-shadow:0 0 10px #f39c12; }
-
-@keyframes pulse {
-  from { transform:scale(1); }
-  to   { transform:scale(1.05); }
-}
-.win, .draw{
-  animation:pulse 2s infinite;
+.gallery-item img:hover{
+  transform:scale(1.05);
 }
 
-.reset{
-  padding:.5rem 1rem;
-  background:#2c3e50;
-  color:white;
-  border:none;
+/* Caption styling */
+.gallery-item .description{
+  display:block;
+  margin-top:0rem;                /* moved closer to image            */
+  padding:.5rem .9rem;
+  font-size:.9rem;
+  color:#444;
+  text-align:center;
+  line-height:1.4;
+  background:#ffffff;
+  border:1px solid #e0e0e0;
   border-radius:4px;
-  margin-top:10px;
-}
-.reset:hover{
-  background:#d4af37;
-  color:#222;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
 }
 
-/* ------------------------------------------------------------------
-   Connect 4 styles
-------------------------------------------------------------------- */
-.connect4-game{ text-align:center; margin-top:20px; }
-
-.connect4-game .board{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:5px;
-  max-width:600px;
-  margin:auto;
-}
-.connect4-game .cell{
-  background:#ffeb3b;          /* yellow board */
-  border-radius:50%;
-  width:80px; height:80px;
-  position:relative;
-  overflow:hidden;
-  cursor:pointer;
-  box-shadow:inset 0 0 5px rgba(0,0,0,.2);
-}
-.connect4-game .disc{
-  background:currentColor;     /* color comes from the class */
-  width:70%; height:70%;
-  border-radius:50%;
-  position:absolute;
-  top:50%; left:50%;
-  transform:translate(-50%,-150%);
-  animation:dropDisc .5s ease-out forwards;
-}
-.connect4-game .disc.red{color:#e74c3c;}
-.connect4-game .disc.blue{color:#3498db;}
-
-@keyframes dropDisc{
-  to{transform:translate(-50%,-50%);}
+/* Figure container for positioning */
+.gallery-item figure{
+  position:relative;                /* allows absolute caption arrow    */
 }
 
-.connect4-game .highlight{
-  box-shadow:0 0 15px #ffeb3b;
+/* ── Tweaks for the CV section ---------------------------------------- */
+#section2{
+  /* top padding between Download button and section top */
+  padding-top:12px;
 }
-.connect4-game .message{
-  font-weight:bold; font-size:1.8rem;
-  margin-top:10px; min-height:2em;
+.cv-header-wrapper{
+  /* Keep a modest space below the header – but less than before */
+  margin-bottom:6px;
 }
-.connect4-game .win,.connect4-game .draw{color:#e74c3c;}
-
-.connect4-game button{
-  padding:.5rem 1rem;
-  background:#2c3e50;
-  color:white;
-  border:none;
-  border-radius:4px;
-  margin-top:10px;
-}
-.connect4-game button:hover{
-  background:#d4af37; color:black;
+.cv-container{
+  /* Slightly reduce the gap between header and the embedded PDF */
+  margin-top:6px;
 }
 
+/* ── Responsive tweaks for narrowing screens  ------------------- */
+@media (max-width:800px) {
+  .blog-container{
+    display:flex;            /* flexbox keeps columns in a row      */
+    flex-wrap:no-wrap;       /* never wrap – we want the ratio      */
+    gap:10px;                /* small gutter between cols           */
+    overflow-x:auto;        /* let user scroll if container is too narrow */
+  }
 
-/* ------------------------------------------------------------------
-   ------------------ Sections ----------------------
-------------------------------------------------------------------- */
+  /* ----- 2. Left column (preview list) --------------------------------- */
+  .preview-list{
+    flex-basis:calc(33.333% - 5px);   /* ~2/3 of the width            */
+    min-width:120px;                  /* guarantees at least a chunk of text is visible */
+    max-height:none;                   /* optional – let it grow with content */
+  }
+
+  /* ----- 3. Right column (detail pane) --------------------------------- */
+  .post-detail{
+    flex-basis:calc(66.666% - 5px);   /* 1/3 of the width            */
+    min-width:120px;                  /* guarantees at least a chunk of text is visible */
+  }
+
+  /* ----- 4. Gallery images  */
+  .gallery img{
+    width:calc(100% - 10px);
+  }
+}
+
+/* breakpoint – */
+@media (max-width:550px) {
+    /* ---------- Font tweaks inside the preview list ----------
+       (only inside #section1) --------------------------------- */
+    #section1 .preview-list,
+    #section1 .preview-list * {
+        font-size: 0.8rem;           /* ~90 % of normal size   */
+    }
+    #section1 .post h3{
+        font-size: 1rem;
+        line-height: 1.2;
+    }
+  .preview-list .post,
+  .preview-list .post * {          /* also shrink any nested text/links if needed */
+    padding: 1px !important;      /*  the original is 15 px */
+  }
+    /* ---------- Remove internal spacing from the blog container
+       (only inside #section1) ------------------------------------------- */
+    #section1 .blog-container{
+        width: 100%;
+        max-width: none;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* ---------- Gallery items inside Section 3 ----------------- */
+    #section3 .gallery-item{
+        width: calc(50% - 10px);     /* two‑column, small gutter   */
+    }
+  .gallery-item .description {
+    font-size: 0.8rem;          /* one step smaller than the default .9rem */
+    line-height: 1.3;           /* keep a bit of breathing room if needed */
+  }
+    /* ---------- Remove left/right padding & margin from section 1
+       (but keep the top/bottom padding that comes from --section-padding-vertical) ----------- */
+    #section1{
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+      #section2{
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
+    }
+    #section3{
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        max-width: none;
+        padding-left: 10px;
+        padding-right: 0;
+    }
+
+    /* 2️⃣ top margin/padding for the 3 sections */
+    #section1{
+        margin-top: 0 !important;         /* close any leftover gap */
+        padding-top: 0 !important;        /* keep the top‑padding zero */
+    }
+        #section3{
+        margin-top: 0 !important;         /* close any leftover gap */
+        padding-top: 0 !important;        /* keep the top‑padding zero */
+    }
+            #section2{
+        margin-top: 0 !important;         /* close any leftover gap */
+        padding-top: 0 !important;        /* keep the top‑padding zero */
+    }
+
+        #section1 .post-detail{
+        padding-top: 25px;          /* tweak this value if you want more/less space */
+    }
+
+/* 1️⃣ Force sections & containers to use 100% width (no side‑gaps)  */
+    #section1 {
+    padding-left:0;
+    padding-right:0;
+    margin-left:0;
+    margin-right:0;
+    width:100%;          /* override the max‑width set earlier   */
+  }
+
+
+#section1 .preview-list {
+    padding-right: 0px;
+}
+
+#section1 .post-detail {
+    margin-left: 0px;
+    margin-right: 2px;
+}
+
+}
+
+@media (max-width: 500px) {
+  /* Reduce horizontal margin between the link items */
+  header nav a {
+    margin: 0 16px;          /* from 22 px → 10 px */
+    letter-spacing: .03em;   /* optional – a little tighter lettering */
+  }
+  }
+
+
 </style>
 </head>
 
 <body>
 <header>
-<nav>
+  <nav>
+    <!-- Add more links here – they automatically become new sections -->
     <a href="#" data-target="section1"><span>Home</span></a>
-    <a href="#" data-target="section2"><span>Section 2</span></a>
-    <a href="#" data-target="section3"><span>Section 3</span></a>
-    <a href="#" data-target="section4"><span>Tic‑Tac‑Toe</span></a>
-    <a href="#" data-target="section5"><span>Connect 4</span></a>
-</nav>
+    <a href="#" data-target="section2"><span>CV</span></a>
+    <a href="#" data-target="section3"><span>Gallery</span></a>
+  </nav>
 </header>
 
 <main>
-<!-- Section 1 -->
-<section id="section1" class="active">
-  <h2>Section 1 – Overview</h2>
-  <img src="assets/pic.png" alt="A descriptive caption of pic.png">
-  <p>This is the first section. Add any text you like here.</p>
-</section>
+  <!-- Section 1 – Home -->
+  <section id="section1">
+    <h2></h2>
+    <div class="blog-container">
 
-<!-- Section 2 – Blog -->
-<section id="section2">
-  <h2>Blog</h2>
-  <div class="blog-container">
+      <div class="preview-list">
 
-    <!-- Left column: previews -->
-    <div class="preview-list">
-      <!-- Post #1 -->
-      <article class="post">
-        <h3>How to Build a Minimalist Portfolio Site</h3>
-        <p class="meta">Posted on 12 August 2025</p>
-        <div class="preview">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta.
-        </div>
-        <div class="full-body">
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque vitae libero nec mi commodo porta. Integer non turpis eu ligulaipsum dolor sit amet, consectetur adipiscing elit.</p>
-        </div>
-      </article>
+        <!-- Contact card (static) -->
+        <article class="post static"><h3>Contact</h3>
+          <div class="contact-card">
+            <p><strong>Email:</strong> </p>
+            <p><strong>Phone:</strong> (123) 456‑7890</p>
+            <p><strong>Address:</strong> City, Country</p>
+          </div>
+        </article>
 
-      <!-- Post #2 -->
-      <article class="post">
-        <h3>The Art of Responsive Design</h3>
-        <p class="meta">Posted on 5 July 2025</p>
-        <div class="preview">
-          Aenean eget orci a mauris ultricies condimentum. Donec non velit at ligula facilisis interdum.
-        </div>
-        <div class="full-body">
-          <p>Phasellus sit amet ex ut dolor porta tempus. Fusce sed libero eget nulla tempor blandit. Morbi vehicula, purus in malesuada gravida, urna leo finibus justo, et commodo lorem arcu vel nisl.</p>
-        </div>
-      </article>
+        <!-- Recent project -->
+        <article class="post"><h3>Recent Project</h3>
+          <p class="meta">Published 15 Sep 2025</p>
+          <div class="preview">Short description of the project – click to read more.</div>
+          <div class="full-body">
+            <p>Full details about the recent project, including the tech stack, challenges faced, and lessons learned. This text only appears when you click the post in the preview list.</p>
+          </div>
+        </article>
 
-      <!-- Post #3 -->
-      <article class="post">
-        <h3>Why I Love CSS Grid</h3>
-        <p class="meta">Posted on 22 June 2025</p>
-        <div class="preview">
-          Nullam vel leo id odio gravida sodales. Suspendisse potenti.
-        </div>
-        <div class="full-body">
-          <p>Integer sit amet felis eu justo. Proin dictum, ligula at bibendum finibus, dolor purus fermentum risus, in convallis mauris libero non metus. Curabitur vitae elit et nisl ullamcorper tincidunt a ut enim.</p>
-        </div>
-      </article>
+        <!-- Featured image -->
+        <article class="post"><h3>Featured Image</h3>
+          <div class="preview">Click to view the featured picture.</div>
+          <div class="full-body">
+            <img src="assets/pic.png" alt="A descriptive caption of pic.png">
+            <p>A descriptive caption for pic.png.</p>
+          </div>
+        </article>
 
-      <!-- Post #4 -->
-      <article class="post">
-        <h3>Proin Dictum</h3>
-        <p class="meta">Posted on 22 Oct 2021</p>
-        <div class="preview">
-          Curabitur vitae elit et nisl ullamcorper...
-        </div>
-        <div class="full-body">
-          <p>Integer sit amet felis eu justo. Proin dictum, ligula at bibendum finibus, dolor purus fermentum risus, in convallis mauris libero non metus. Curabitur vitae elit et nisl ullamcorper tincidunt a ut enim.</p>
-        </div>
-      </article>
+        <!-- Portfolio highlights (static) -->
+        <article class="post static"><h3>Portfolio Highlights</h3>
+          <ul>
+            <li><strong>Project A:</strong> <em>A brief tagline.</em></li>
+            <li><strong>Project B:</strong> <em>Another quick note.</em></li>
+            <li><strong>Project C:</strong> <em>And a third one.</em></li>
+          </ul>
+        </article>
 
+        <!-- Testimonials (static) -->
+        <article class="post static"><h3>Testimonials</h3>
+          <blockquote>“Robert’s work exceeded expectations. Highly recommend!” – Jane Doe</blockquote>
+          <blockquote>“Clear communication and fast delivery.” – John Smith</blockquote>
+        </article>
+
+        <!-- Recent project showcase -->
+        <article class="post"><h3>Recent Project Showcase</h3>
+          <p class="meta">Published 20 Sep 2025</p>
+          <div class="preview">A sneak peek of the latest work – click to expand.</div>
+          <div class="full-body">
+            <p>This project involved building a cutting‑edge web application that integrates real‑time data visualisation and AI‑powered analytics.</p>
+            <div class="image-row">
+              <img src="assets/pic2.png" alt="Screenshot of the first feature in the recent project.">
+              <img src="assets/pic3.png" alt="Screenshot of the second feature in the recent project.">
+            </div>
+            <p>Both images illustrate how the user interface adapts across devices, showcasing responsive design and dynamic content loading.</p>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Detail area – shows the currently selected post -->
+      <div class="post-detail"></div>
+    </div>
+  </section>
+
+  <!-- Section 2 – CV -->
+  <section id="section2">
+    <div class="cv-header-wrapper">
+      <a href="assets/cv.pdf" target="_blank" class="download-btn">Download CV</a>
+      <p>View below or download directly</p>
+      <h2></h2>
     </div>
 
-    <!-- Right column: expanded post -->
-    <div class="post-detail"></div>
-  </div>
-</section>
+    <div class="cv-container">
+      <iframe src="assets/cv.pdf"></iframe>
+    </div>
+  </section>
 
-<!-- Section 3 – CV -->
-<section id="section3">
-  <div class="cv-header-wrapper">
+  <!-- Section 3 – Gallery -->
+  <section id="section3">
+    <h2>Gallery</h2>
 
-    <!-- Button first -->
-    <a href="assets/cv.pdf" target="_blank" class="download-btn">Download CV</a>
+    <!-- Updated gallery container -->
+    <div class="gallery" id="gallery">
 
-    <!-- Paragraph immediately to its right -->
-    <p>View below or download directly</p>
+      <!-- Example image 1 -->
+      <figure class="gallery-item">
+        <img src="assets/gallery1.png" alt="Gallery image 1">
+        <figcaption class="description">A brief description of Gallery image 1.</figcaption>
+      </figure>
 
-    <!-- Heading still pushed to the far right -->
-    <h2 style="margin-left:auto;"></h2>
-  </div>
+      <!-- Repeat for the remaining images… -->
+      <figure class="gallery-item">
+        <img src="assets/gallery2.png" alt="Gallery image 2">
+        <figcaption class="description">A brief description of Gallery image 2.</figcaption>
+      </figure>
 
-  <div class="cv-container">
-    <iframe src="assets/cv.pdf"></iframe>
-  </div>
-</section>
+      <figure class="gallery-item">
+        <img src="assets/gallery3.png" alt="Gallery image 3">
+        <figcaption class="description">A brief description of Gallery image 3.</figcaption>
+      </figure>
 
-<!-- ------------------------------------------------------------------
-   Section 4 – Tic‑Tac‑Toe
-------------------------------------------------------------------- -->
-<section id="section4" class="active">
-  <h2>Tic‑Tac‑Toe</h2>
+      <figure class="gallery-item">
+        <img src="assets/gallery4.png" alt="Gallery image 4">
+        <figcaption class="description">A brief description of Gallery image 4.</figcaption>
+      </figure>
 
-  <!-- The game container ------------------------------------------>
-  <div class="tictactoe-game">
-    <div class="board"></div>
-    <p class="message"></p>      <!-- shows turn / result -->
-    <button class="reset">Restart Game</button>
-  </div>
-</section>
+      <figure class="gallery-item">
+        <img src="assets/gallery5.png" alt="Gallery image 5">
+        <figcaption class="description">A brief description of Gallery image 5.</figcaption>
+      </figure>
 
-<!-- ------------------------------------------------------------------
-   Section 5 – Connect 4
-------------------------------------------------------------------- -->
-<section id="section5">
-  <h2>Connect 4</h2>
+      <figure class="gallery-item">
+        <img src="assets/gallery6.png" alt="Gallery image 6">
+        <figcaption class="description">A brief description of Gallery image 6.</figcaption>
+      </figure>
 
-  <div class="connect4-game">
-    <!-- The board will be generated by JavaScript -->
-    <div class="board"></div>
-
-    <p class="message"></p>      <!-- turn / result message -->
-    <button class="reset">Restart Game</button>
-  </div>
-</section>
-
-
-
+    </div>
+  </section>
 </main>
 
+<!-- Modal for enlarged images -->
+<div class="modal" id="imageModal">
+  <img src="" alt="">
+  <!-- NEW: Caption overlay inside the modal -->
+  <div class="modal-caption"></div>
+</div>
+
 <script>
-/* ------------------------------------------------------------------
-   Show/hide sections + auto‑expand first blog post
-------------------------------------------------------------------- */
+// ── Navigation & section activation ------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  const navLinks = document.querySelectorAll('nav a[data-target]');
+  const navLinks = document.querySelectorAll('[data-target]');
   const sections = document.querySelectorAll('section');
-  const previewList = document.querySelector('.preview-list');
-  const detailArea  = document.querySelector('.post-detail');
-  let currentArticle = null;
 
-  // Hide all sections
-  const hideAll = () => sections.forEach(s => s.classList.remove('active'));
+  function showSection(id) {
+    sections.forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    expandFirstInSection(id);
+  }
 
-  // Expand a specific article into the right column
-  function expandArticle(article) {
-    const title = article.querySelector('h3').outerHTML;
-    const meta   = article.querySelector('.meta').outerHTML;
-    const body   = article.querySelector('.full-body').innerHTML;
-
+  // Expand the first non‑static post in a section (used on load and when switching)
+  function expandFirstInSection(sectionId){
+    const firstPost = document.querySelector(`#${sectionId} .post:not(.static)`);
+    if(!firstPost) return;
+    const detailArea = document.querySelector(`#${sectionId} .post-detail`);
+    const title   = firstPost.querySelector('h3').outerHTML;
+    const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
+    const body    = firstPost.querySelector('.full-body')?.innerHTML || '';
     detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
-    currentArticle = article;
   }
 
-  // Expand the very first post in the preview list
-  function expandFirstPost() {
-    const first = previewList.querySelector('.post');
-    if (first) expandArticle(first);
-  }
+  // Default to the first nav link
+  showSection(navLinks[0].dataset.target);
 
-  /* Navigation click handling */
+  // Nav click handler
   navLinks.forEach(link => {
     link.addEventListener('click', e => {
       e.preventDefault();
-      const targetId = link.dataset.target;
-
-      hideAll();
-      document.getElementById(targetId).classList.add('active');
-
-      if (targetId === 'section2') {
-        expandFirstPost();          // auto‑expand first post
-      } else {
-        detailArea.innerHTML = '';
-        currentArticle = null;
-      }
+      showSection(link.dataset.target);
     });
   });
 
-  /* Default active section */
-  hideAll();
-  const defaultTarget = navLinks[0].dataset.target;
-  document.getElementById(defaultTarget).classList.add('active');
-  if (defaultTarget === 'section2') expandFirstPost();
+  // Preview list click – swap detail content
+  document.querySelectorAll('.preview-list').forEach(list => {
+    let current = null;
+    list.addEventListener('click', e => {
+      const post = e.target.closest('.post');
+      if (!post || post.classList.contains('static') || post === current) return;
 
-  /* Preview list click handling – toggle the right column */
-  previewList.addEventListener('click', e => {
-    const article = e.target.closest('.post');
-    if (!article) return;
+      const detailArea = list.nextElementSibling; // .post-detail
+      const title   = post.querySelector('h3').outerHTML;
+      const meta    = post.querySelector('.meta')?.outerHTML || '';
+      const body    = post.querySelector('.full-body')?.innerHTML || '';
+      detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+      current = post;
+    });
+  });
 
-    if (currentArticle === article) {      // collapse
-      detailArea.innerHTML = '';
-      currentArticle = null;
-    } else {                               // expand new one
-      expandArticle(article);
+  // ── Gallery modal --------------------------------------------
+  const modal = document.getElementById('imageModal');
+  const modalImg = modal.querySelector('img');
+  const modalCaption = modal.querySelector('.modal-caption');   // NEW
+
+  document.getElementById('gallery').addEventListener('click', e => {
+    if (e.target.tagName.toLowerCase() !== 'img') return;
+
+    const img = e.target;
+    modalImg.src = img.src;
+    modalImg.alt = img.alt;
+
+    /* Grab the caption text from the closest .gallery-item */
+    const captionEl = img.closest('.gallery-item').querySelector('.description');
+    const captionText = captionEl ? captionEl.innerText : '';
+
+    if (captionText) {
+      modalCaption.textContent = captionText;
+      modalCaption.style.display = 'block';   // Show the caption
+    } else {
+      modalCaption.style.display = 'none';
     }
+
+    modal.classList.add('show');
   });
 
-(() => {
-  /* --------------------------------------------------------------------
-     Tic‑Tac‑Toe – module
-  --------------------------------------------------------------------- */
-  (() => {
-    const boardEl   = document.querySelector('.board');
-    const messageEl = document.querySelector('.message');
-    const resetBtn  = document.querySelector('.reset');
-
-    // Winning combos (static)
-    const COMBOS = [
-      [0,1,2],[3,4,5],[6,7,8],
-      [0,3,6],[1,4,7],[2,5,8],
-      [0,4,8],[2,4,6]
-    ];
-
-    let boardState;        // 9‑cell array
-    let currentPlayer;     // 'X' | 'O'
-    let gameOver;
-
-    const init = () => {
-      boardState   = Array(9).fill(null);
-      currentPlayer = 'X';
-      gameOver     = false;
-      messageEl.textContent = `${currentPlayer}'s turn`;
-      messageEl.className  = 'message';
-
-      // create the cells
-      boardEl.innerHTML = '';
-      for (let i = 0; i < 9; i++) {
-        const cell = document.createElement('div');
-        cell.className   = 'cell';
-        cell.dataset.index = i;
-        boardEl.appendChild(cell);
-      }
-    };
-
-    const checkWin = () => {
-      for (const [a,b,c] of COMBOS) {
-        if (
-          boardState[a] &&
-          boardState[a] === boardState[b] &&
-          boardState[a] === boardState[c]
-        ) return boardState[a];
-      }
-      return null;
-    };
-
-    const isTie = () => boardState.every(v => v !== null);
-
-    const setMessage = (text, cls) => {
-      messageEl.textContent = text;
-      messageEl.className   = 'message';
-      if (cls) messageEl.classList.add(cls);
-    };
-
-    boardEl.addEventListener('click', e => {
-      if (gameOver) return;
-
-      const cell = e.target.closest('.cell');
-      if (!cell) return;
-
-      const idx = Number(cell.dataset.index);
-      if (boardState[idx]) return;          // already taken
-
-      boardState[idx] = currentPlayer;
-      cell.textContent = currentPlayer;
-
-      const winner = checkWin();
-      if (winner) {
-        gameOver = true;
-        setMessage(`🎉 ${winner} WINS! 🎉`, 'win');
-      } else if (isTie()) {
-        gameOver = true;
-        setMessage("💥 It's a Draw! 💥", 'draw');
-      } else {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        setMessage(`${currentPlayer}'s turn`);
-      }
-    });
-
-    resetBtn.addEventListener('click', init);
-
-    init();          // first run
-  })();
-
-  /* ----------------------------------------------------
-     Connect‑4 – module
-  ---------------------------------------------------- */
-  (() => {
-    const container = document.querySelector('#section5 .connect4-game');
-    if (!container) return;
-
-    const boardEl   = container.querySelector('.board');
-    const messageEl = container.querySelector('.message');
-    const resetBtn  = container.querySelector('.reset');
-
-    const ROWS = 6, COLS = 7;
-    let boardState;      // 2‑D array of colours or null
-    let cells;           // cached DOM refs (2‑D)
-    let currentPlayer;   // 'red' | 'blue'
-    let gameOver;
-
-    const init = () => {
-      boardState = Array.from({ length: ROWS }, () =>
-        Array(COLS).fill(null)
-      );
-      currentPlayer = 'red';
-      gameOver     = false;
-      setMessage(`${capitalize(currentPlayer)}'s turn`);
-
-      // Build or clear the grid
-      if (!cells) {                     // first run – create cells
-        cells = Array.from({ length: ROWS }, () => Array(COLS));
-        const frag = document.createDocumentFragment();
-
-        for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < COLS; c++) {
-            const cell = document.createElement('div');
-            cell.className   = 'cell';
-            cell.dataset.row = r;
-            cell.dataset.col = c;
-            frag.appendChild(cell);
-            cells[r][c] = cell;
-          }
-        }
-
-        boardEl.innerHTML = '';
-        boardEl.appendChild(frag);
-      } else {                           // subsequent resets – clear discs
-        for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < COLS; c++) {
-            const cell = cells[r][c];
-            while (cell.firstChild) cell.removeChild(cell.firstChild);
-          }
-        }
-      }
-    };
-
-    const dropDisc = col => {
-      for (let r = ROWS - 1; r >= 0; r--) {
-        if (!boardState[r][col]) {
-          boardState[r][col] = currentPlayer;
-          const disc = document.createElement('div');
-          disc.className = `disc ${currentPlayer}`;
-          cells[r][col].appendChild(disc);
-          return true;
-        }
-      }
-      return false; // column full
-    };
-
-    const checkWin = () => {
-      const DIRS = [
-        [0, 1],   // horizontal
-        [1, 0],   // vertical
-        [1, 1],   // diagonal down‑right
-        [1, -1]   // diagonal down‑left
-      ];
-
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const p = boardState[r][c];
-          if (!p) continue;
-
-          for (const [dr, dc] of DIRS) {
-            let count = 1;
-            const pos   = [[r, c]];
-            for (let i = 1; i < 4; i++) {
-              const nr = r + dr * i,
-                    nc = c + dc * i;
-              if (
-                nr >= 0 && nr < ROWS &&
-                nc >= 0 && nc < COLS &&
-                boardState[nr][nc] === p
-              ) {
-                count++;
-                pos.push([nr, nc]);
-              } else break;
-            }
-            if (count === 4) return { winner: p, positions: pos };
-          }
-        }
-      }
-      return null;
-    };
-
-    const isTie = () =>
-      boardState.every(row => row.every(v => v !== null));
-
-    const setMessage = (text, cls) => {
-      messageEl.textContent = text;
-      messageEl.className   = 'message';
-      if (cls) messageEl.classList.add(cls);
-    };
-
-    boardEl.addEventListener('click', e => {
-      if (gameOver) return;
-
-      const cell = e.target.closest('.cell');
-      if (!cell) return;
-
-      const col = Number(cell.dataset.col);
-      if (!dropDisc(col)) return;          // column full
-
-      const win = checkWin();
-      if (win) {
-        gameOver = true;
-        setMessage(`🎉 ${capitalize(win.winner)} Wins! 🎉`, 'win');
-
-        // highlight the winning discs
-        win.positions.forEach(([r, c]) => {
-          const discCell = cells[r][c];
-          if (discCell.firstChild)
-            discCell.firstChild.classList.add('highlight');
-        });
-      } else if (isTie()) {
-        gameOver = true;
-        setMessage("💥 It's a Draw! 💥", 'draw');
-      } else {
-        currentPlayer = currentPlayer === 'red' ? 'blue' : 'red';
-        setMessage(`${capitalize(currentPlayer)}'s turn`);
-      }
-    });
-
-    resetBtn.addEventListener('click', init);
-
-    const capitalize = s => s.charAt(0).toUpperCase() + s.slice(1);
-
-    init();          // first run
-  })();
-
-})();
-
-/* ----------------------------------------------------
-   Connect 4 End
----------------------------------------------------- */
-
-
-
+  modal.addEventListener('click', () => {
+    modal.classList.remove('show');
+    modalImg.src = '';
+    modalImg.alt = '';
+    modalCaption.textContent = '';            // Clear the caption
+    modalCaption.style.display = 'none';
+  });
 });
 </script>
 </body>
