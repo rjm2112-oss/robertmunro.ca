@@ -166,7 +166,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   display:none;
 }
 
-/* Responsive tweaks --------------------------------------------------- */
+/* -----------  Mobile tweaks ------------------------------------ */
 @media (max-width:700px) {
   .blog-container{display:flex;flex-wrap:no-wrap;gap:0px;overflow-x:auto;}
   .preview-list{flex-basis:calc(30% - 5px);min-width:120px;max-height:none;}
@@ -194,24 +194,29 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     margin-top:0.1rem;
   }
 }
-/* -----------  Mobile tweaks ------------------------------------ */
 @media (max-width:700px) {
-  /* …existing rules… */
-
-  /* Give the expanded article some horizontal breathing room   */
   #section1 .post-detail article{
     padding-left: var(--post-detail-side-pad);
     padding-right: var(--post-detail-side-pad);
 
-    /* Optional – keep the text from stretching too wide on tablets/phones   */
     margin-left: 0;
-    margin-right: 1rem;
+    /* HOME PAGE MARGIN on right after main article  */
+    margin-right: 0.4rem;
   }
+    .blog-container{
+    flex-wrap:no-wrap;
+    gap:0rem;
+  }
+
+/* HOME PAGE MARGIN between left right boxes  */
+  .post-detail {
+    margin-left: 0.1rem;
 }
 
 @media (max-width:500px) {
   header nav a {margin:0 16px;letter-spacing:.03em;}
 }
+
 
 /* Hide CV title in expanded detail ------------------------------------ */
 .post-detail article > h3[data-no-title] {display:none;}
