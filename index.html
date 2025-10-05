@@ -112,6 +112,7 @@ body{
 .glass-nav .panel{
     content:"";
     backdrop-filter: blur(var(--hover-blur-strength));
+    -webkit-backdrop-filter: blur(var(--hover-blur-strength));
     filter: hue-rotate(var(--hover-hue-change));
     transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
     position:absolute;
@@ -151,14 +152,6 @@ body{
 
 }
 
-}
-
-/* ────────────────────────────────────────────────────── */
-/* Fallback for browsers that don’t support backdrop‑filter */
-@supports not (backdrop-filter: blur(var(--hover-blur-strength))) {
-    .glass-nav{
-        background: rgba(var(--hover-tint),var(--hover-bg-opacity));
-    }
 }
 
 /* Blog & preview ------------------------------------------------------- */
