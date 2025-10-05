@@ -63,7 +63,7 @@ body{
     display:flex;
     align-items:center;
     justify-content: space-between;
-    padding: 0 8vw;
+    padding: 0 20vw;
 
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
@@ -120,7 +120,7 @@ body{
     position:absolute;
     top:(1vh - 1px); left:0; bottom:0;
 
-    width: calc((100vw / 4) - 3vw);
+    width: calc((100vw / 4) - 2vw);
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
@@ -150,7 +150,7 @@ pointer-events:none;
         /* right and bottom light highlight */
         inset -1vw -.8vw 10px rgba(215,215,215,.09),
         /* left and top dark shadow */
-        inset 1vw .8vw 10px rgba(0,0,0,.2);
+        inset 1vw .8vw 10px rgba(0,0,0,.22);
 }
 
 }
