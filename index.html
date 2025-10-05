@@ -355,19 +355,13 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 @media (max-width:500px) {
   /* make the whole demo take up almost all available width */
   #coin-demo { max-width: 100%; }
-
-  /* shrink coin size */
-  /* reduce spacing between coins */
-  #coin-demo .coins-wrapper {height:26vh}
 #coin-demo .coin-tails{
   clip-path:circle(44%);
-
-  /* keep images responsive inside the coin */
   #coin-demo .coin-heads img,
   #coin-demo .coin-tails img { max-width:100%; height:auto; }
 }
 }
-@media (max-height:700px) {
+@media (max-height:500px) {
 #coin-demo .coins-wrapper{
   height:80px;}
 }
