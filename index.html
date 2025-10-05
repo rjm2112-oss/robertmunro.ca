@@ -17,7 +17,7 @@
 /* Custom properties for glass nav (from nav.html) --------------------- */
 :root{
     /* Navigation bar */
-    --nav-height: 18vh;
+    --nav-height: 17vh;
     --navtext-color: #B4AC58;
     --nav-bg-opacity: .05;
     --hover-bg-opacity: .1;
@@ -63,7 +63,7 @@ body{
     display:flex;
     align-items:center;
     justify-content: space-between;
-    padding: 0 20vw;
+    padding: 0 12vw;
 
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
@@ -109,18 +109,19 @@ body{
     pointer-events:auto;
     z-index:-1;
 }
+
 /* ────────────────────────────────────── */
 /* The sliding glass panel – enhanced 3D shading */
 .glass-nav .panel{
     content:"";
-   backdrop-filter: blur(var(--hover-blur-strength));
+    backdrop-filter: blur(var(--hover-blur-strength));
     -webkit-backdrop-filter: blur(var(--hover-blur-strength));
-    filter: hue-rotate(var(--hover-hue-change));
+    backdrop-filter: hue-rotate(var(--hover-hue-change));
     transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
     position:absolute;
-    top:(1vh - 1px); left:0; bottom:0;
+    top:(1vh - 1.5px); left:0; bottom:0;
 
-    width: calc((100vw / 4) - 2vw);
+    width: calc((100vw / 5) + 8vw);
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
@@ -150,7 +151,7 @@ pointer-events:none;
         /* right and bottom light highlight */
         inset -1vw -.8vw 10px rgba(215,215,215,.09),
         /* left and top dark shadow */
-        inset 1vw .8vw 10px rgba(0,0,0,.22);
+        inset 1vw .8vw 10px rgba(0,0,0,.25);
 }
 
 }
@@ -167,7 +168,7 @@ pointer-events:none;
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
 .blog-container{display:flex;}
 .preview-list{
-  width:calc(28vw + 2rem);flex-shrink:0;padding-right:0px;
+  width:calc(21vw + 3rem);flex-shrink:0;padding-right:0px;
   height:calc(99.5vh - var(--nav-height));
 }
 .post-detail{flex-grow:1;background:#fff;border-radius:8px;margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
@@ -288,7 +289,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 /* ---------- Controls ------------------------------- */
 #coin-demo #controls {
   position: relative;
-  top: 20px;
+  top: 1.5vh;
 }
 #coin-demo button,
 #coin-demo select {
@@ -307,17 +308,17 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 /* ---------- Coins container ------------------------ */
 #coin-demo .coins-wrapper{
   display:flex;
-  gap:10px;
   justify-content:center;
   align-items:flex-end; /* so coins start at bottom */
   position:relative;
-  height:300px;          /* increased space for higher fly animation */
+  height:250px;          /* increased space for higher fly animation */
+  transform: translateX(60px);
 }
 
 /* ---------- Coin ----------------------------------- */
 #coin-demo .coin-flip{
-  width:183px;
-  height:183px;
+  width:150px;
+  height:150px;
   transform-style:preserve-3d;
   position:absolute;
   top:calc(100% - 0px);   /* start slightly above the bottom of wrapper */
@@ -349,6 +350,22 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 @keyframes flip-tail{
   0%,100%{transform:rotateX(180deg);}
   50%    {transform:rotateX(0deg);}
+}
+
+@media (max-width:500px) {
+  /* make the whole demo take up almost all available width */
+  #coin-demo { max-width: 100%; }
+
+  /* shrink coin size */
+  /* reduce spacing between coins */
+  #coin-demo .coins-wrapper {height:26vh}
+#coin-demo .coin-tails{
+  clip-path:circle(44%);
+
+  /* keep images responsive inside the coin */
+  #coin-demo .coin-heads img,
+  #coin-demo .coin-tails img { max-width:100%; height:auto; }
+}
 }
 </style>
 </head>
@@ -709,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+
 // --------------------------COIN FLIP
 (() => {
   /* ----- Utility: create a coin element ---------------- */
@@ -760,7 +778,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wrapper.innerHTML = '';                     // clear previous coins
 
     let delay = 0;                              // ms before we start a coin
-    const centerDistance = 120;                 // spacing between centers
+    const centerDistance = 80;                 // spacing between centers
     const staggerMs = 260;                      // <‑– change this to tweak the gap
 
     for (let i = 0; i < n; i++) {
