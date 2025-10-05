@@ -19,11 +19,11 @@
     /* Navigation bar */
     --nav-height: 18vh;
     --navtext-color: #B4AC58;
-    --nav-bg-opacity: .04;
+    --nav-bg-opacity: .1;
     --hover-bg-opacity: .1;
-    --blur-strength: 8px;
+    --blur-strength: 6px;
     --hover-blur-strength: 0px;
-    --hover-hue-change: -65deg;
+    --hover-hue-change: -50deg;
     --nav-tint: 255, 196, 146;
     --hover-tint: 0, 0, 0;
     --nav-outline: 0, 0, 0;
@@ -38,6 +38,7 @@ main section{
   max-width:100vw;width:100%;background:white;
   padding:0 var(--section-padding-horizontal);
   border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
+
 }
 
 
@@ -46,6 +47,7 @@ main section.active{display:block;opacity:1;}
 body{
   font-family:'Arial',sans-serif;
 background-color: #001f3f;
+
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) +  var(--section-padding-vertical));}
 
@@ -61,16 +63,16 @@ body{
     display:flex;
     align-items:center;
     justify-content: space-between;
-    padding: 0 10.5vw;
+    padding: 0 8vw;
 
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
-    backdrop-filter: blur(var(--blur-strength));
-    -webkit-backdrop-filter: blur(var(--blur-strength));
+   /* backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));*/
     border-radius: 16px;
-    box-shadow: 0 3px 0px rgba(0, 0, 0, 0.1);
-    border: .7px solid rgba(var(--nav-outline), 0.45);
-    border-bottom: .8px solid rgba(0,0,0,.2);
+    box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
+    border: .9px solid rgba(var(--nav-outline), 0.45);
+    border-bottom: 2px solid rgba(0,0,0,.2);
 
     /* 3‑D perspective for the link panes */
     z-index:1;
@@ -89,7 +91,7 @@ body{
     z-index:0;
 
     /* Responsive font‑size  */
-    font-size: clamp(1.3rem, 3vw, 2rem);   /* min = 1rem, max = 2rem */
+    font-size: clamp(1rem, 3vw, 2rem);   /* min = 1rem, max = 2rem */
     text-shadow:
         0 1px 0 #000,
        -1px 0 0 #000,
@@ -111,15 +113,15 @@ body{
 /* The sliding glass panel – enhanced 3D shading */
 .glass-nav .panel{
     content:"";
-    backdrop-filter: blur(var(--hover-blur-strength));
+   backdrop-filter: blur(var(--hover-blur-strength));
     -webkit-backdrop-filter: blur(var(--hover-blur-strength));
-    transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
     filter: hue-rotate(var(--hover-hue-change));
+    transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
     position:absolute;
-    top:1.4vh; left:0; bottom:0;
+    top:17px; left:0; bottom:0;
 
-    width: calc((100vw / 4) + 3vw);
-    height: calc(var(--nav-height) - 1.55vh);
+    width: calc((100vw / 4) - 3vw);
+    height: calc(var(--nav-height) - 18px);
 
     /* ------------------------------------------------- */
     /* 1️⃣ Base + center‑highlight background layers
@@ -135,11 +137,11 @@ body{
             rgba(var(--hover-tint),0) 100%
         );
     background-blend-mode: multiply, screen;
-
+pointer-events:none;
     /* ------------------------------------------------- */
     border-radius:22px;
     border:1.5px solid rgba(var(--hover-outline), .4);
-  pointer-events: none;
+    z-index:1000;
 
     /* ------------------------------------------------- */
     box-shadow:
@@ -148,10 +150,17 @@ body{
         /* right and bottom light highlight */
         inset -1vw -.8vw 10px rgba(215,215,215,.05),
         /* left and top dark shadow */
-        inset 1vw .8vw 10px rgba(0,0,0,.18);
+        inset 1vw .8vw 10px rgba(0,0,0,.1);
+}
 
 }
 
+/* ────────────────────────────────────────────────────── */
+/* Fallback for browsers that don’t support backdrop‑filter */
+@supports not (backdrop-filter: blur(var(--hover-blur-strength))) {
+    .glass-nav{
+        background: rgba(var(--hover-tint),var(--hover-bg-opacity));
+    }
 }
 
 /* Blog & preview ------------------------------------------------------- */
@@ -235,7 +244,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
       0 1px 2px rgba(0,0,0,.12);
   transition:transform .2s ease, box-shadow .2s ease;
 }
-.gallery-item img:hover{transform:scale(1.05);}
+.gallery-item img:hover{transform:scale(1.05);z-index:-0;}
 .gallery-item .description{
   display:block;margin-top:.5rem;padding:.5rem .5rem;font-size:.9rem;color:#444;text-align:center;
   background:#ffffff;border:1px solid #e0e0e0;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.15);
@@ -350,7 +359,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
  <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
     <a href="#" data-target="section2">Gallery</a>
     <a href="#" data-target="section3">Coin Flip</a>
-    
+
     <!-- Sliding panel (one element for all links) -->
     <div class="panel"></div>
 </nav>
