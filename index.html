@@ -311,8 +311,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   justify-content:center;
   align-items:flex-end; /* so coins start at bottom */
   position:relative;
-  height:250px;          /* increased space for higher fly animation */
-  transform: translateX(60px);
+  height:300px;          /* increased space for higher fly animation */
+  transform: translateX(50px);
 }
 
 /* ---------- Coin ----------------------------------- */
@@ -366,6 +366,10 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   #coin-demo .coin-heads img,
   #coin-demo .coin-tails img { max-width:100%; height:auto; }
 }
+}
+@media (max-height:700px) {
+#coin-demo .coins-wrapper{
+  height:80px;}
 }
 </style>
 </head>
