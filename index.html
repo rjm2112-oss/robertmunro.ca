@@ -8,61 +8,167 @@
 <style>
 /* Theme & spacing ----------------------------------------------------- */
 :root{
-  --primary-bg:#f9f9f9;
-  --text-color:#222;
-  --nav-bg:#2c3e50;
-  --nav-text:#ecf0f1;
-  --nav-hover:#f39c12;
-
-  --section-margin:20px;
-  --section-padding-vertical:20px;
-  --section-padding-horizontal:20px;
+  --section-padding-vertical:4px;
+  --section-padding-horizontal:0;
+  --blog-margin-left: 1vw;
+  --blog-margin-right: 1vw;
 }
 
-/* Normalisation -------------------------------------------------------- */
-*, *::before, *::after{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:'Arial',sans-serif;
-  background:var(--primary-bg);
-  color:var(--text-color);
-}
+/* Custom properties for glass nav (from nav.html) --------------------- */
+:root{
+    /* Navigation bar */
+    --nav-height: 18vh;
+    --navtext-color: #B4AC58;
+    --nav-bg-opacity: .04;
+    --hover-bg-opacity: .1;
+    --blur-strength: 8px;
+    --hover-blur-strength: 0px;
+    --hover-hue-change: -35deg;
+    --nav-tint: 255, 196, 146;
+    --hover-tint: 0, 0, 0;
+    --nav-outline: 0, 0, 0;
+    --hover-outline: 0, 31, 41;
 
-/* Navigation ----------------------------------------------------------- */
-header nav{
-  padding-top:110px;height:90px;display:flex;justify-content:center;align-items:flex-end;
-  background:var(--nav-bg);
-  box-shadow:
-      inset 0 -4px 10px rgba(0,0,0,.15),
-      0 6px 12px rgba(0,0,0,.25);
+    /* Background Base colours */
+    --bg-base: #001f3f;             /* deep navy 0, 31, 63*/
+    --yellow: #FFC42E;           /* dark gold/yellow 255, 196, 46*/
 }
-header nav a{
-  color:var(--nav-text);text-decoration:none;margin:0 22px;font-weight:bold;
-  font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;
-  transition:color .3s ease;
-}
-header nav a:hover{color:var(--nav-hover);}
-header nav a > span{
-  display:inline-block;transition:transform .2s ease;
-}
-header nav a:hover > span{transform:translateY(-4px);}
-
 /* Sections ------------------------------------------------------------- */
 main section{
-  max-width:900px;width:100%;margin:var(--section-margin) auto;background:white;
-  padding:var(--section-padding-vertical) var(--section-padding-horizontal);
+  max-width:100vw;width:100%;background:white;
+  padding:0 var(--section-padding-horizontal);
   border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
-  opacity:0;transition:opacity .3s ease;
 }
+
+
 main section.active{display:block;opacity:1;}
+/* Normalisation -------------------------------------------------------- */
+body{
+  font-family:'Arial',sans-serif;
+background-color: #001f3f;
+}
+body > *:not(.glass-nav){margin-top: calc(var(--nav-height) +  var(--section-padding-vertical));}
+
+/* 3️⃣ Navigation bar */
+body{
+    margin:0; padding:0; font-family:'Arial', sans-serif;
+}
+
+.glass-nav {
+    position: fixed;
+    top:0rem; left:0; right:.1vw;
+    height: var(--nav-height);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 0 8vw;
+
+    /* Glassy look – blur the background behind it */
+    background: rgba(var(--nav-tint),var(--nav-bg-opacity));
+    backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));
+    border-radius: 16px;
+    box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
+    border: .6px solid rgba(var(--nav-outline), 0.45);
+    border-bottom: 1px solid rgba(0,0,0,.2);
+
+    /* 3‑D perspective for the link panes */
+    z-index:1;
+    overflow:hidden;            /* clip the sliding panel */
+}
+
+/* ────────────────────────────────────────────────────── */
+/* Links – relative so we can position the pane absolutely inside each one */
+.glass-nav a{
+    position:relative;
+    text-align:center;     /*  center link text inside its block */
+    color:var(--navtext-color);
+    text-decoration:none;
+    font-weight:650;
+    padding:0 0;
+    z-index:0;
+
+    /* Responsive font‑size  */
+    font-size: clamp(1.3rem, 3vw, 2rem);   /* min = 1rem, max = 2rem */
+    text-shadow:
+        0 1px 0 #000,
+       -1px 0 0 #000,
+        1px 0 0 #000,
+        0 -1px 0 #000;
+    /* Preserve 3‑D space for the pseudo‑element */
+    transform-style: preserve-3d;
+}
+
+.glass-nav a::before{
+    content:"";
+    position:absolute;
+    inset:-3.5vw;                 /* invsible link additional size */
+    background:transparent;
+    pointer-events:auto;
+    z-index:-1;
+}
+/* ────────────────────────────────────── */
+/* The sliding glass panel – enhanced 3D shading */
+.glass-nav .panel{
+    content:"";
+   backdrop-filter: blur(var(--hover-blur-strength));
+    -webkit-backdrop-filter: blur(var(--hover-blur-strength));
+    filter: hue-rotate(var(--hover-hue-change));
+    transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
+    position:absolute;
+    top:17px; left:0; bottom:0;
+
+    width: calc((100vw / 4) - 3vw);
+    height: calc(var(--nav-height) - 18px);
+
+    /* ------------------------------------------------- */
+    /* 1️⃣ Base + center‑highlight background layers
+       (only linear gradients – no radial gradient)   */
+    background-image:
+        /* Diagonal light‑refraction layer – thin glass pane */
+        linear-gradient(
+            135deg,
+            rgba(var(--hover-tint), var(--hover-bg-opacity)) 0%,
+            rgba(var(--hover-tint), calc(var(--hover-bg-opacity)*0.9)) 20%,
+            rgba(var(--hover-tint), calc(var(--hover-bgOpacity)*0.7)) 50%,
+            rgba(var(--hover-tint), calc(var(--hover-bgOpacity)*0.5)) 80%,
+            rgba(var(--hover-tint),0) 100%
+        );
+    background-blend-mode: multiply, screen;
+
+    /* ------------------------------------------------- */
+    border-radius:22px;
+    border:1.5px solid rgba(var(--hover-outline), .4);
+  pointer-events: none;
+
+    /* ------------------------------------------------- */
+    box-shadow:
+        /* External drop shadow */
+        0 6px 12px rgba(0,0,0,.25),
+        /* right and bottom light highlight */
+        inset -1vw -.8vw 10px rgba(215,215,215,.05),
+        /* left and top dark shadow */
+        inset 1vw .8vw 10px rgba(0,0,0,.18);
+}
+
+}
+
+/* ────────────────────────────────────────────────────── */
+/* Fallback for browsers that don’t support backdrop‑filter */
+@supports not (backdrop-filter: blur(var(--hover-blur-strength))) {
+    .glass-nav{
+        background: rgba(var(--hover-tint),var(--hover-bg-opacity));
+    }
+}
 
 /* Blog & preview ------------------------------------------------------- */
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
 .blog-container{display:flex;}
 .preview-list{
-  width:240px;flex-shrink:0;padding-right:7.5px;
-  max-height:calc(100vh - 200px);overflow-y:auto;
+  width:240px;flex-shrink:0;padding-right:2.5px;
+  height:calc(99.5vh - var(--nav-height));
 }
-.post-detail{flex-grow:1;background:#fff;border-radius:8px;margin-left:10px;
+.post-detail{flex-grow:1;background:#fff;border-radius:8px;margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
   box-shadow:0 2x 6px rgba(0,0,0,.08);}
 .post{
   padding:15px;margin-bottom:4px;background:white;border-radius:8px;cursor:pointer;border:1px solid #eaeaea;
@@ -77,7 +183,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:4px;border-bottom-left-radius:4px;}
 .post.static h3{font-family:'Arial',serif;font-weight:600;}
 
-/* Text justification in Home section ---------------------------------- */
+/* Text justification in Home section */
 #section1 .post-detail article .full-body p,
 #section1 .post-detail article .full-body *:not(figure):not(img) {
     text-align: justify;
@@ -85,32 +191,31 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     hyphens: auto;
 }
 
-/* Highlight selected preview ------------------------------------------ */
+/* Highlight selected preview */
 .preview-list .post.active {background:#d6d6d6;}
 .preview-list .post.active:hover{background:#d6d6d6;}
 
-/* CV ------------------------------------------------------------------ */
+/* CV styling WHITE SPACE above and below download button */
 .cv-header-wrapper{
-  display:flex;align-items:center;gap:.5rem;margin-bottom:5px;
+  display:flex;align-items:center;margin-bottom:0px;margin-top:1px;
 }
 .cv-header-wrapper a.download-btn{
   padding:.6rem 1.2rem;background:#2c3e50;color:#fff;text-decoration:none;border-radius:4px;font-size:1.1rem;
-  border:1px solid #d4af37;
+  border:1x solid #d4af37;
 }
 .cv-header-wrapper a.download-btn:hover{background:#d4af35;color:#222;}
 .cv-header-wrapper h2{flex:1;text-align:center;}
 .cv-container{
-  overflow:auto;border:3px solid #eaeaea;border-radius:8px;margin-top:5px;
+  overflow:auto;border:3px solid #eaeaea;border-radius:8px;margin-top:0px;
 }
 .cv-container iframe{
   width:100%;aspect-ratio:8.5 / 11;border:none;
 }
 
-/* Hide CV title in expanded detail ------------------------------------ */
+/* Hide CV title in expanded detail */
 .post-detail article > h3[data-no-title] {display:none;}
-/* Image row ----------------------------------------------------------- */
+/* Image row */
 .image-row{display:flex;flex-wrap:wrap;gap:10px;}
-.image-row img{width:calc(50% - 5px);height:auto;}
 
 /* Gallery ------------------------------------------------------------ */
 .gallery{
@@ -144,92 +249,120 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 }
 .gallery-item figure{position:relative;}
 
-/* Modal -------------------------------------------------------------- */
+/* Modal for gallery preview */
 .modal{
-  position:fixed; top:0; left:0; width:100%; height:100%;
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
   background:rgba(0,0,0,.8);
-  display:flex; align-items:center; justify-content:center;
-  visibility:hidden; opacity:0; transition:.3s ease;
+  display:flex;
+  flex-direction:column;          /* <‑‑ NEW: stack image + caption vertically   */
+  align-items:center; justify-content:center;
+  visibility:hidden; opacity:0;
+  transition:.3s ease;
 }
 .modal.show{visibility:visible; opacity:1;}
 .modal img{
-  max-width:90vw;
-  max-height:90vh;
+  max-width:90vw; max-height:80vh;
   border-radius:4px;
+  margin-bottom:8px;              /* space between image & caption */
 }
-.modal-caption {
+.modal-caption{
+  color:#fff; font-size:1rem; padding:0 12px;
+  text-align:center;             /* <‑‑ NEW: simple caption styling          */
+}
+
+/* ---------- COIN FLIP------------------------------------ */
+/* ---------- Wrapper & Layout ------------------------------------ */
+#coin-demo {
+  /* the demo lives in its own box – it does not touch body styles */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;              /* you can change this if needed */
+  margin: 0 auto;           /* center horizontally on the page */
+}
+
+/* ---------- Controls ------------------------------- */
+#coin-demo #controls {
+  position: relative;
+  top: 20px;
+}
+#coin-demo button,
+#coin-demo select {
+  padding:.75rem 1.25rem;
+  font-size:1.125rem;
+  margin-right:.5rem;
+  border:none;
+  background:#444;
+  color:white;
+  cursor:pointer;
+  border-radius:6px;
+}
+#coin-demo button:hover {background:#555;}
+#coin-demo .coin-btn.selected{background-color:#777;color:white;}
+
+/* ---------- Coins container ------------------------ */
+#coin-demo .coins-wrapper{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  align-items:flex-end; /* so coins start at bottom */
+  position:relative;
+  height:300px;          /* increased space for higher fly animation */
+}
+
+/* ---------- Coin ----------------------------------- */
+#coin-demo .coin-flip{
+  width:183px;
+  height:183px;
+  transform-style:preserve-3d;
   position:absolute;
-  bottom:0;
+  top:calc(100% - 0px);   /* start slightly above the bottom of wrapper */
+}
+
+/* ---------- Heads / Tails -------------------------- */
+#coin-demo .coin-heads,
+#coin-demo .coin-tails{
+  position:absolute;
+  top:0;
   left:0;
-  width:100%;
-  background:rgba(0,0,0,.7);
-  color:#fff;
-  font-size:1rem;
-  padding:8px 12px;
-  text-align:center;
-  pointer-events:none;
-  display:none;
+  clip-path:circle(44%);
 }
+#coin-demo .coin-heads{animation:flip-head 1.5s ease-out forwards;}
+#coin-demo .coin-tails{animation:flip-tail 1.5s ease-out forwards;}
 
-/* -----------  Mobile tweaks ------------------------------------ */
-@media (max-width:700px) {
-  .blog-container{display:flex;flex-wrap:no-wrap;gap:0px;overflow-x:auto;}
-  .preview-list{flex-basis:calc(30% - 10px);min-width:120px;max-height:none;}
-  .post-detail{flex-basis:calc(70% - 5px);min-width:120px;}
+/* ---------- Result after animation ----------------- */
+#coin-demo .coin-flip.result-h .coin-heads {transform:rotateX(0deg); }
+#coin-demo .coin-flip.result-h .coin-tails{display:none;}
+#coin-demo .coin-flip.result-t .coin-tails{transform:rotateX(0deg);} /* fixed tails visibility */
+#coin-demo .coin-flip.result-t .coin-heads{display:none;}
+
+/* ---------- Animations ----------------------------- */
+@keyframes fly { from {top:100%;} to   {top:10%;} }
+@keyframes flip-head{
+  0%,100%{transform:rotateX(0deg);}
+  50%    {transform:rotateX(180deg);}
 }
-@media (max-width:700px) {
-  #section1 .preview-list, #section1 .preview-list * {font-size:.9rem;}
-  #section1 .preview-list h3{font-size:1rem;line-height:1.2;}
-  .preview-list .post,*{padding:1px !important;}
-  #section1 .blog-container{width:100%;max-width:none;margin:0;padding:0;}
-  #section3 .gallery-item{width:calc(50% - 10px);}
-  .gallery-item .description{font-size:.9rem;line-height:1.3;}
-  #section1, #section2, #section3{
-    margin-left:0;margin-right:0;width:100%;max-width:none;padding-left:0;padding-right:0;
-  }
-
-  header nav{
-    padding-top:0;          /* remove the internal blank space       */
-  }
-  main section{             /* collapse the top margin of every section */
-    margin-top:0.1rem;
-  }
-  #section1 .post-detail article{
-    padding-left: var(--post-detail-side-pad);
-    padding-right: var(--post-detail-side-pad);
-    margin-left: 0;
-    /* HOME PAGE MARGIN on right after main article  */
-    margin-right: 0.2rem;
-  }
-    .blog-container{
-    flex-wrap:no-wrap;
-    gap:0rem;
-  }
-
-/* HOME PAGE MARGIN between left right boxes  */
-  .post-detail {
-    margin-left: 0.1rem;
-  }
-  /* GALLERY MARGIN white space to the left of photos left column   */
-  #section3 .gallery {margin-left:0.55rem;}
+@keyframes flip-tail{
+  0%,100%{transform:rotateX(180deg);}
+  50%    {transform:rotateX(0deg);}
 }
-
-
-@media (max-width:500px) {
-  header nav a {margin:0 16px;letter-spacing:.03em;}
-}
-
 </style>
 </head>
 
 <body>
-<header>
-  <nav>
-    <!-- Add more links here – they automatically become new sections -->
-    <a href="#" data-target="section1"><span>Home</span></a>
-    <a href="#" data-target="section3"><span>Gallery</span></a>
-  </nav>
-</header>
+<nav class="glass-nav">
+    <!-- Mark the current page with aria-current="page" -->
+ <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
+    <a href="#" data-target="section2">Gallery</a>
+    <a href="#" data-target="section3">Coin Flip</a>
+    <a href="#" data-target="section4">Empty</a>
+    <!-- Sliding panel (one element for all links) -->
+    <div class="panel"></div>
+</nav>
+
+<h1></h1>
 
 <main>
   <!-- Section 1 – Home -->
@@ -297,10 +430,9 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
       <!-- Detail area – shows the currently selected post -->
       <div class="post-detail"></div>
     </div>
-  </section>
 
-  <!-- Section 3 – Gallery -->
-  <section id="section3">
+  </section>
+  <section id="section2">
     <h2></h2>
 
     <div class="gallery" id="gallery">
@@ -320,75 +452,145 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 
     </div>
   </section>
+
+
+   </section>
+  <section id="section3">
+<div id="coin-demo">
+
+  <div id="controls">
+    <label>Number of coins:</label>
+    <div id="numCoinsContainer">
+      <button class="coin-btn selected" data-num="1">1</button>
+      <button class="coin-btn" data-num="2">2</button>
+      <button class="coin-btn" data-num="3">3</button>
+      <button class="coin-btn" data-num="4">4</button>
+    </div>
+    <button id="flipBtn">Flip!</button>
+  </div>
+
+  <div class="coins-wrapper" id="wrapper"></div>
+
+</div> <!-- /#coin-demo -->
+     </section>
+
 </main>
 
-<!-- Modal for enlarged images -->
-<div class="modal" id="imageModal">
+<!-- Modal for gallery preview -->
+<div id="imageModal" class="modal">
   <img src="" alt="">
   <div class="modal-caption"></div>
 </div>
-
 <script>
-// Navigation & section activation ------------------------------------
+/* ------------------------------------------------------------------ */
+/* 1️⃣ Navigation & section activation --------------------------------*/
 document.addEventListener('DOMContentLoaded', () => {
-  const navLinks = document.querySelectorAll('[data-target]');
-  const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('[data-target]');
+    const sections = document.querySelectorAll('section');
+    const nav      = document.querySelector('.glass-nav');
+    const panel    = nav.querySelector('.panel');
 
-  // Clear “active” from all previews in a section
-  function clearActive(sectionId) {
-    document.querySelectorAll(`#${sectionId} .post.active`).forEach(p=>p.classList.remove('active'));
-  }
+    /* Track the index of the link that is currently active */
+    let currentNavIndex = null;
 
-  // Show a particular section
-  function showSection(id) {
-    sections.forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    clearActive(id);
-    expandFirstInSection(id);      // also marks the first post active
-  }
+    /* ------------------------------------------------------------------
+       Helper: clear any .active class from posts inside a section
+       ------------------------------------------------------------------*/
+    function clearActive(sectionId) {
+        document.querySelectorAll(`#${sectionId} .post.active`).forEach(p => p.classList.remove('active'));
+    }
 
-  // Expand the first non‑static post in a section (used on load)
-  function expandFirstInSection(sectionId){
-    const list = document.querySelector(`#${sectionId} .preview-list`);
-    if (!list) return;
-    list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
-    const firstPost = list.querySelector('.post:not(.static)');
-    if(!firstPost) return;
-    firstPost.classList.add('active');
-    const detailArea = document.querySelector(`#${sectionId} .post-detail`);
-    const title   = firstPost.querySelector('h3').outerHTML;
-    const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
-    const body    = firstPost.querySelector('.full-body')?.innerHTML || '';
-    detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
-  }
+    /* ------------------------------------------------------------------
+       Move the panel under the link at `idx`
+       ------------------------------------------------------------------*/
+    function movePanelTo(idx) {
+        const linkRect = navLinks[idx].getBoundingClientRect();
+        const navRect  = nav.getBoundingClientRect();
 
-  // Default to the first nav link
-  showSection(navLinks[0].dataset.target);
+        // Center the panel on the link text
+        const targetLeft =
+            linkRect.left + (linkRect.width / 2)
+            - navRect.left
+            - (panel.clientWidth / 2);
 
-  // Nav click handler
-  navLinks.forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      showSection(link.dataset.target);
+        panel.style.transform = `translateX(${targetLeft}px)`;
+    }
+
+    /* ------------------------------------------------------------------
+       Show a section by id and update the panel position
+       ------------------------------------------------------------------*/
+    function showSection(id, linkIdx = null) {
+        // Hide all sections, then reveal the requested one
+        sections.forEach(s => s.classList.remove('active'));
+        const targetSec = document.getElementById(id);
+        if (!targetSec) return;
+        targetSec.classList.add('active');
+
+        // Clear any post‑selection inside that section
+        clearActive(id);
+
+        /* Expand the first non‑static post in this section */
+        expandFirstInSection(id);
+
+        /* If we know which link triggered this change, keep the panel there */
+        if (linkIdx !== null) {
+            movePanelTo(linkIdx);
+            currentNavIndex = linkIdx;
+            navLinks.forEach((l, i) => l.classList.toggle('active-link', i === currentNavIndex));
+        }
+    }
+
+    /* ------------------------------------------------------------------
+       Expand the first non‑static post in a section (unchanged logic)
+       ------------------------------------------------------------------*/
+    function expandFirstInSection(sectionId){
+        const list = document.querySelector(`#${sectionId} .preview-list`);
+        if (!list) return;
+        list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+        const firstPost = list.querySelector('.post:not(.static)');
+        if(!firstPost) return;
+        firstPost.classList.add('active');
+        const detailArea = document.querySelector(`#${sectionId} .post-detail`);
+        const title   = firstPost.querySelector('h3').outerHTML;
+        const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
+        const body    = firstPost.querySelector('.full-body')?.innerHTML || '';
+        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+    }
+
+    /* ------------------------------------------------------------------
+       Initial load – show the first section and position the panel
+       ------------------------------------------------------------------*/
+    const initialIdx = 0; // index of navLinks[0]
+    showSection(navLinks[initialIdx].dataset.target, initialIdx);
+
+    /* ------------------------------------------------------------------
+       Navigation link click handler – switch sections & keep panel fixed
+       ------------------------------------------------------------------*/
+    navLinks.forEach((link, i) => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            showSection(link.dataset.target, i);
+        });
     });
-  });
 
-  // Preview list click – swap detail content
-  document.querySelectorAll('.preview-list').forEach(list => {
-    list.addEventListener('click', e => {
-      const post = e.target.closest('.post');
-      if (!post || post.classList.contains('static')) return;
-      list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
-      post.classList.add('active');
-      const detailArea = list.nextElementSibling; // .post-detail
-      const title   = post.querySelector('h3').outerHTML;
-      const meta    = post.querySelector('.meta')?.outerHTML || '';
-      const body    = post.querySelector('.full-body')?.innerHTML || '';
-      detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+    /* ------------------------------------------------------------------
+       Handle clicks on the preview list (unchanged)
+       ------------------------------------------------------------------*/
+    document.querySelectorAll('.preview-list').forEach(list => {
+        list.addEventListener('click', e => {
+            const post = e.target.closest('.post');
+            if (!post || post.classList.contains('static')) return;
+            list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+            post.classList.add('active');
+            const detailArea = list.nextElementSibling; // .post-detail
+            const title   = post.querySelector('h3').outerHTML;
+            const meta    = post.querySelector('.meta')?.outerHTML || '';
+            const body    = post.querySelector('.full-body')?.innerHTML || '';
+            detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+        });
     });
-  });
 
-  // Gallery modal --------------------------------------------
+  /* Gallery modal logic – now that the modal element exists */
   const modal = document.getElementById('imageModal');
   const modalImg = modal.querySelector('img');
   const modalCaption = modal.querySelector('.modal-caption');
@@ -419,6 +621,177 @@ document.addEventListener('DOMContentLoaded', () => {
     modalCaption.style.display = 'none';
   });
 });
+
+// ------------------------------------------------------------------
+// GLASS NAV PANEL distance → duration (px per second)
+// ------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    const nav   = document.querySelector('.glass-nav');
+    const panel = nav.querySelector('.panel');
+    const links = Array.from(nav.querySelectorAll('a'));
+    const count = links.length;
+
+    // ------------------------------------------------------------------
+    // Helper: distance → duration (px per second)
+    // ------------------------------------------------------------------
+    const msPerPixel = 1000 / 550;            // ms for each pixel
+    const minDur = .8;                       // seconds
+    const maxDur = 1.2;                       // seconds
+
+    const durationForDistance = dist => {
+        const raw = Math.abs(dist) * msPerPixel / 1000;   // convert to s
+        return Math.min(Math.max(raw, minDur), maxDur);
+    };
+
+ let currentLeft = 0;   // start at left‑most (will be set later)
+
+    const setPanel = idx => {
+        const linkRect = links[idx].getBoundingClientRect();
+        const navRect  = nav.getBoundingClientRect();
+        const panelW   = panel.clientWidth;
+
+        // Desired left offset so the panel is centered on the link text
+        const targetLeft =
+            linkRect.left + (linkRect.width / 2)
+            - navRect.left
+            - (panelW / 2);
+
+        // Compute duration based on how far we need to travel
+        const dur = durationForDistance(targetLeft - currentLeft);
+        panel.style.transitionDuration = `${dur}s`;
+
+        // Move the panel
+        panel.style.transform = `translateX(${targetLeft}px)`;
+
+        // Remember for the next move
+        currentLeft = targetLeft;
+    };
+
+    // ------------------------------------------------------------------
+    // Initial position – use the link marked with aria‑current="page"
+    // ------------------------------------------------------------------
+    const currentIdx = links.findIndex(a => a.hasAttribute('aria-current'));
+    if (currentIdx !== -1) {
+        setPanel(currentIdx);
+    } else {
+        panel.style.opacity = '0';   // hide until hovered
+    }
+
+    // ------------------------------------------------------------------
+    // Hover logic
+    // ------------------------------------------------------------------
+    links.forEach((link, i) => {
+        link.addEventListener('mouseenter', () => {
+            setPanel(i);
+            panel.style.opacity = '1';
+        });
+            /* ------------------------------------------------------------------
+       ** Return to the active section when leaving the nav bar **
+    ------------------------------------------------------------------*/
+    nav.addEventListener('mouseleave', () => {
+        // Find the link that is currently considered "active".
+        // We use either `aria-current="page"` (initial state) or
+        // the `active-link` class added by the first DOMContentLoaded block.
+        const activeLink = nav.querySelector(
+            'a.active-link'
+        );
+        if (!activeLink) return;          // nothing to do
+
+        const idx = links.indexOf(activeLink);
+        if (idx === -1) return;
+
+        setPanel(idx);                     // slide back
+        panel.style.opacity = '1';         // keep it visible
+    });
+    });
+});
+
+// --------------------------COIN FLIP
+(() => {
+  /* ----- Utility: create a coin element ---------------- */
+  function createCoin() {
+    const c = document.createElement('div');
+    c.className='coin-flip';
+
+    const heads = document.createElement('div');
+    heads.className='coin-heads';
+    const himg = document.createElement('img');
+    // If you don't have assets/pic3.png, replace with a data‑URI or another URL
+    himg.src='assets/pic5.png';
+    heads.appendChild(himg);
+
+    const tails = document.createElement('div');
+    tails.className='coin-tails';
+    const timg = document.createElement('img');
+    // If you don't have assets/pic2.png, replace with a data‑URI or another URL
+    timg.src='assets/pic4.png';
+    tails.appendChild(timg);
+
+    c.appendChild(heads);
+    c.appendChild(tails);
+    return c;
+  }
+
+  /* ----- Animation helpers ---------------------------- */
+  function startAnimation(coin) {
+    // Force restart of animation
+    coin.style.animation = 'none';
+    void coin.offsetWidth;                     // trigger reflow
+    // Start the fly animation with an ease‑out timing for faster start
+    coin.style.animation = 'fly 1.5s ease-out forwards';
+
+    // After fly + flip finishes, set the result
+    setTimeout(() => setResult(coin), 1500);
+  }
+
+  function setResult(coin) {
+    const heads = Math.random() < 0.5;          // true=heads, false=tails
+    if (heads) coin.classList.add('result-h');
+    else       coin.classList.add('result-t');
+    // stop the fly animation so coin stays at final position
+    coin.style.animation = 'none';
+  }
+
+  function flipCoins(n) {
+    const wrapper = document.getElementById('wrapper');
+    wrapper.innerHTML = '';                     // clear previous coins
+
+    let delay = 0;                              // ms before we start a coin
+    const centerDistance = 120;                 // spacing between centers
+    const staggerMs = 260;                      // <‑– change this to tweak the gap
+
+    for (let i = 0; i < n; i++) {
+      const coin = createCoin();
+
+      /* ---- Position the coin so its centre is over the wrapper’s centre */
+      const leftOffset = (i - (n - 1) / 2) * centerDistance;
+      coin.style.left = `calc(50% + ${leftOffset}px - 50px)`;
+      coin.style.transform = 'translateX(-50%)';
+
+      wrapper.appendChild(coin);
+
+      /* ---- Start the fly animation after a staggered delay */
+      setTimeout(() => startAnimation(coin), delay);
+      delay += staggerMs;                       // next coin starts `staggerMs` later
+    }
+  }
+
+  /* ----- Handle coin count button selection ---------------- */
+  let selectedNum = 1;
+  const coinBtns = document.querySelectorAll('#numCoinsContainer .coin-btn');
+  coinBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedNum = parseInt(btn.dataset.num, 10);
+      coinBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  /* ----- Event listeners -------------------------------- */
+  document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
+
+})();
 </script>
 </body>
 </html>
