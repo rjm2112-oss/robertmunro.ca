@@ -19,11 +19,11 @@
     /* Navigation bar */
     --nav-height: 18vh;
     --navtext-color: #B4AC58;
-    --nav-bg-opacity: .1;
+    --nav-bg-opacity: .05;
     --hover-bg-opacity: .1;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
-    --hover-hue-change: -50deg;
+    --hover-hue-change: -40deg;
     --nav-tint: 255, 196, 146;
     --hover-tint: 0, 0, 0;
     --nav-outline: 0, 0, 0;
@@ -46,7 +46,7 @@ main section.active{display:block;opacity:1;}
 /* Normalisation -------------------------------------------------------- */
 body{
   font-family:'Arial',sans-serif;
-background-color: #001f3f;
+background-color: #1C4364;
 
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) +  var(--section-padding-vertical));}
@@ -118,10 +118,10 @@ body{
     filter: hue-rotate(var(--hover-hue-change));
     transition: transform 0.4s cubic-bezier(.22,.61,.36,1);
     position:absolute;
-    top:17px; left:0; bottom:0;
+    top:(1vh - 1px); left:0; bottom:0;
 
     width: calc((100vw / 4) - 3vw);
-    height: calc(var(--nav-height) - 18px);
+    height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
     /* 1️⃣ Base + center‑highlight background layers
@@ -148,9 +148,9 @@ pointer-events:none;
         /* External drop shadow */
         0 6px 12px rgba(0,0,0,.25),
         /* right and bottom light highlight */
-        inset -1vw -.8vw 10px rgba(215,215,215,.05),
+        inset -1vw -.8vw 10px rgba(215,215,215,.09),
         /* left and top dark shadow */
-        inset 1vw .8vw 10px rgba(0,0,0,.1);
+        inset 1vw .8vw 10px rgba(0,0,0,.2);
 }
 
 }
