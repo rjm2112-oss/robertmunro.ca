@@ -61,7 +61,7 @@ body{
     display:flex;
     align-items:center;
     justify-content: space-between;
-    padding: 0 11.5vw;
+    padding: 0 11vw;    /* outer border of words */
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
    /* backdrop-filter: blur(var(--blur-strength));
@@ -83,7 +83,7 @@ body{
     color:var(--navtext-color);
     text-decoration:none;
     font-weight:650;
-    padding:0 0;
+    padding:0 1.5vw;  /*  margin for nav text */
     z-index:0;
 touch-action: manipulation;   /* iOS Safari + Chrome Android */
     /* Responsive font‑size  */
@@ -118,7 +118,7 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     position:absolute;
     top:(1vh - 1.5px); left:0; bottom:0;
 
-    width: calc((100vw / 5) + 10vw);
+    width: calc((100vw / 5) + 9vw);
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
@@ -138,13 +138,13 @@ pointer-events:none;
     border:1.5px solid rgba(var(--hover-outline), .4);
     z-index:1000;
 
-    box-shadow:
-        /* External drop shadow */
-        0 6px 12px rgba(0,0,0,.25),
-        /* right and bottom light highlight */
-        inset 1.2vw -.8vw 10px rgba(220,220,220,0.0),
-        /* left and top dark shadow */
-        inset -1.2vw .8vw 10px rgba(0,0,0,0.0);
+    /*    box-shadow:
+        /* External drop shadow
+        0 6px 12px rgba(0,0,0,.25),*/
+        /* right and bottom light highlight
+        inset 1.2vw -.8vw 10px rgba(220,220,220,.2),*/
+        /* left and top dark shadow
+        inset -1.2vw .8vw 10px rgba(0,0,0,.2); */
 }
 
 }
@@ -460,9 +460,6 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
       <figure class="gallery-item"><img src="assets/gallery2.png" alt="Gallery image 2"><figcaption class="description">A brief description of Gallery image 2.</figcaption></figure>
       <figure class="gallery-item"><img src="assets/gallery3.png" alt="Gallery image 3"><figcaption class="description">A brief description of Gallery image 3.</figcaption></figure>
       <figure class="gallery-item"><img src="assets/gallery4.png" alt="Gallery image 4"><figcaption class="description">A brief description of Gallery image 4.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery5.png" alt="Gallery image 5"><figcaption class="description">A brief description of Gallery image 5.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery6.png" alt="Gallery image 6"><figcaption class="description">A brief description of Gallery image 6.</figcaption></figure>
-
     </div>
   </section>
 
