@@ -39,16 +39,12 @@ main section{
   max-width:100vw;width:100%;background:white;
   padding:0 var(--section-padding-horizontal);
   border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
-
 }
-
-
 main section.active{display:block;opacity:1;}
 /* Normalisation -------------------------------------------------------- */
 body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
-
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) +  var(--section-padding-vertical));}
 
@@ -56,7 +52,6 @@ body > *:not(.glass-nav){margin-top: calc(var(--nav-height) +  var(--section-pad
 body{
     margin:0; padding:0; font-family:'Arial', sans-serif;
 }
-
 .glass-nav {
     position: fixed;
     top:0; left:0; right:.1vw;
@@ -65,7 +60,6 @@ body{
     align-items:center;
     justify-content: space-between;
     padding: 0 11.5vw;
-
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
    /* backdrop-filter: blur(var(--blur-strength));
@@ -74,8 +68,6 @@ body{
     box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
     border: .9px solid rgba(var(--nav-outline), 0.45);
     border-bottom: 2px solid rgba(0,0,0,.2);
-
-    /* 3‑D perspective for the link panes */
     z-index:1;
     overflow:hidden;            /* clip the sliding panel */
 }
@@ -90,7 +82,7 @@ body{
     font-weight:650;
     padding:0 0;
     z-index:0;
-
+touch-action: manipulation;   /* iOS Safari + Chrome Android */
     /* Responsive font‑size  */
     font-size: clamp(1rem, 5vw, 2rem);   /* min = 1rem, max = 2rem */
     text-shadow:
@@ -127,8 +119,6 @@ body{
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
-    /* 1️⃣ Base + center‑highlight background layers
-       (only linear gradients – no radial gradient)   */
     background-image:
         /* Diagonal light‑refraction layer – thin glass pane */
         linear-gradient(
@@ -141,12 +131,10 @@ body{
         );
     background-blend-mode: multiply, screen;
 pointer-events:none;
-    /* ------------------------------------------------- */
     border-radius:22px;
     border:1.5px solid rgba(var(--hover-outline), .4);
     z-index:1000;
 
-    /* ------------------------------------------------- */
     box-shadow:
         /* External drop shadow */
         0 6px 12px rgba(0,0,0,.25),
@@ -158,7 +146,6 @@ pointer-events:none;
 
 }
 
-/* ────────────────────────────────────────────────────── */
 /* Fallback for browsers that don’t support backdrop‑filter */
 @supports not (backdrop-filter: blur(var(--nav-blur-strength))) {
     .glass-nav{
@@ -233,7 +220,6 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 }
 
 /* -------------  IMAGE STYLES ------------- */
-/* Wrap each image in a <figure> for semantics – optional */
 .gallery figure {
     margin:0;                    /* Reset default figure margin */
 }
@@ -298,7 +284,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100%;              /* you can change this if needed */
+  width: 100%;
   margin: 0 auto;           /* center horizontally on the page */
 }
 
@@ -386,7 +372,6 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 
 <body>
 <nav class="glass-nav">
-    <!-- Mark the current page with aria-current="page" -->
  <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
     <a href="#" data-target="section2">Gallery</a>
     <a href="#" data-target="section3">Coin Flip</a>
@@ -517,16 +502,10 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Track the index of the link that is currently active */
     let currentNavIndex = null;
 
-    /* ------------------------------------------------------------------
-       Helper: clear any .active class from posts inside a section
-       ------------------------------------------------------------------*/
     function clearActive(sectionId) {
         document.querySelectorAll(`#${sectionId} .post.active`).forEach(p => p.classList.remove('active'));
     }
 
-    /* ------------------------------------------------------------------
-       Move the panel under the link at `idx`
-       ------------------------------------------------------------------*/
     function movePanelTo(idx) {
         const linkRect = navLinks[idx].getBoundingClientRect();
         const navRect  = nav.getBoundingClientRect();
@@ -540,9 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.transform = `translateX(${targetLeft}px)`;
     }
 
-    /* ------------------------------------------------------------------
-       Show a section by id and update the panel position
-       ------------------------------------------------------------------*/
     function showSection(id, linkIdx = null) {
         // Hide all sections, then reveal the requested one
         sections.forEach(s => s.classList.remove('active'));
@@ -558,9 +534,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    /* ------------------------------------------------------------------
-       Expand the first non‑static post in a section (unchanged logic)
-       ------------------------------------------------------------------*/
     function expandFirstInSection(sectionId){
         const list = document.querySelector(`#${sectionId} .preview-list`);
         if (!list) return;
@@ -575,15 +548,11 @@ document.addEventListener('DOMContentLoaded', () => {
         detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
     }
 
-    /* ------------------------------------------------------------------
-       Initial load – show the first section and position the panel
-       ------------------------------------------------------------------*/
+
     const initialIdx = 0; // index of navLinks[0]
     showSection(navLinks[initialIdx].dataset.target, initialIdx);
 
-    /* ------------------------------------------------------------------
-       Navigation link click handler – switch sections & keep panel fixed
-       ------------------------------------------------------------------*/
+
     navLinks.forEach((link, i) => {
         link.addEventListener('click', e => {
             e.preventDefault();
@@ -591,9 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ------------------------------------------------------------------
-       Handle clicks on the preview list (unchanged)
-       ------------------------------------------------------------------*/
     document.querySelectorAll('.preview-list').forEach(list => {
         list.addEventListener('click', e => {
             const post = e.target.closest('.post');
@@ -704,6 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setPanel(i);
             panel.style.opacity = '.9';
         });
+
             /* ------------------------------------------------------------------
        ** Return to the active section when leaving the nav bar **
     ------------------------------------------------------------------*/
