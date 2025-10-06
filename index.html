@@ -624,8 +624,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Helper: distance → duration (px per second)
     // ------------------------------------------------------------------
     const msPerPixel = 1000 / 550;            // ms for each pixel
-    const minDur = .8;                       // seconds
-    const maxDur = 1.2;                       // seconds
+    const minDur = .85;                       // seconds
+    const maxDur = 1.25;                       // seconds
 
     const durationForDistance = dist => {
         const raw = Math.abs(dist) * msPerPixel / 1000;   // convert to s
@@ -672,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
     links.forEach((link, i) => {
         link.addEventListener('mouseenter', () => {
             setPanel(i);
-            panel.style.opacity = '.9';
+            panel.style.opacity = '1';
         });
 
             /* ------------------------------------------------------------------
@@ -688,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idx === -1) return;
 
         setPanel(idx);                     // slide back
-        panel.style.opacity = '.9';         // keep it visible
+        panel.style.opacity = '1';         // keep it visible
     });
     });
 });
