@@ -114,9 +114,10 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
 /* The sliding glass panel – enhanced 3D shading */
 .glass-nav .panel{
     content:"";
-    backdrop-filter: blur(var(--hover-blur-strength));
-    -webkit-backdrop-filter: blur(var(--hover-blur-strength));
+   /* backdrop-filter: blur(var(--hover-blur-strength));
+    -webkit-backdrop-filter: blur(var(--hover-blur-strength));*/
     backdrop-filter: hue-rotate(var(--hover-hue-change));
+    -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
    /* transition: transform 0.4s cubic-bezier(.22,.61,.36,1);*/
     position:absolute;
     top:(1vh - 1.5px); left:0; bottom:0;
@@ -139,14 +140,13 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
         inset -1.2vw .8vw 10px rgba(0,0,0,.2); */
 }
 
-}
 
-/* Fallback for browsers that don’t support backdrop‑filter */
+/* Fallback for browsers that don’t support backdrop‑filter
 @supports not (backdrop-filter: blur(var(--nav-blur-strength))) {
     .glass-nav{
         background: rgba(var(--nav-tint),var(--nav-bg-opacity));
     }
-}
+}*/
 
 /* Blog & preview ------------------------------------------------------- */
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
