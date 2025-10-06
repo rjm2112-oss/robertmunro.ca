@@ -58,12 +58,12 @@ body{
 
 .glass-nav {
     position: fixed;
-    top:0rem; left:0; right:.1vw;
+    top:0; left:0; right:.1vw;
     height: var(--nav-height);
     display:flex;
     align-items:center;
     justify-content: space-between;
-    padding: 0 12vw;
+    padding: 0 11.5vw;
 
     /* Glassy look – blur the background behind it */
     background: rgba(var(--nav-tint),var(--nav-bg-opacity));
@@ -91,7 +91,7 @@ body{
     z-index:0;
 
     /* Responsive font‑size  */
-    font-size: clamp(1rem, 3vw, 2rem);   /* min = 1rem, max = 2rem */
+    font-size: clamp(1rem, 5vw, 2rem);   /* min = 1rem, max = 2rem */
     text-shadow:
         0 1px 0 #000,
        -1px 0 0 #000,
@@ -104,7 +104,8 @@ body{
 .glass-nav a::before{
     content:"";
     position:absolute;
-    inset:-3.5vw;                 /* invsible link additional size */
+  /* 1️⃣ 4‑value inset – independent X & Y offsets   */
+  inset:-6.5vh -6.5vw;          /* top/bottom = -3.5 vw, left/right */
     background:transparent;
     pointer-events:auto;
     z-index:-1;
@@ -121,7 +122,7 @@ body{
     position:absolute;
     top:(1vh - 1.5px); left:0; bottom:0;
 
-    width: calc((100vw / 5) + 8vw);
+    width: calc((100vw / 5) + 10vw);
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
@@ -151,7 +152,7 @@ pointer-events:none;
         /* right and bottom light highlight */
         inset -1vw -.8vw 10px rgba(215,215,215,.09),
         /* left and top dark shadow */
-        inset 1vw .8vw 10px rgba(0,0,0,.25);
+        inset 1vw .8vw 10px rgba(0,0,0,.28);
 }
 
 }
@@ -226,8 +227,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     flex-wrap:wrap;              /* Wrap to next line if needed */
     justify-content:center;      /* Center horizontally */
     align-items:center;          /* Center vertically (if you add height) */
-    gap:10vw;  /* Optional spacing between items */
-    padding:2vw;
+    gap:6vw;  /* Optional spacing between items */
+    padding:0;
 }
 
 /* -------------  IMAGE STYLES ------------- */
@@ -248,10 +249,10 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   display:flex;
   flex-direction:column;
   align-items:center;
-  width:30vw;
+  width:36vw;
 }
 .gallery-item img{
-  width:auto;
+  width:100%;
   height:100%;
   object-fit:cover;
   border:3px solid #ffffff;
@@ -273,8 +274,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   width:100%; height:100%;
   background:rgba(0,0,0,.8);
   display:flex;
-  flex-direction:column;          /* <‑‑ NEW: stack image + caption vertically   */
-  align-items:center; justify-content:center;
+  flex-direction:column;
+  align-items:center; justify-content:top;
   visibility:hidden; opacity:0;
   transition:.3s ease;
 }
@@ -717,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
     links.forEach((link, i) => {
         link.addEventListener('mouseenter', () => {
             setPanel(i);
-            panel.style.opacity = '1';
+            panel.style.opacity = '.9';
         });
             /* ------------------------------------------------------------------
        ** Return to the active section when leaving the nav bar **
@@ -735,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idx === -1) return;
 
         setPanel(idx);                     // slide back
-        panel.style.opacity = '1';         // keep it visible
+        panel.style.opacity = '.9';         // keep it visible
     });
     });
 });
