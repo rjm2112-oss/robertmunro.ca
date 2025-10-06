@@ -108,7 +108,7 @@ body{
   inset:-6.5vh -6.5vw;          /* top/bottom = -3.5 vw, left/right */
     background:transparent;
     pointer-events:auto;
-    z-index:1;
+    z-index:1000;
 }
 
 /* ────────────────────────────────────── */
@@ -382,7 +382,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 }
 </style>
 </head>
-<meta name="theme-color" content="#1C4364"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <body>
 <nav class="glass-nav">
@@ -806,13 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ----- Event listeners -------------------------------- */
   document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
-    window.addEventListener('load', () => {
-    // Only act if we’re not already at the top
-    if (window.scrollY > 0) {
-      /* `behavior: 'smooth'` gives a nice fade‑in; omit it for an instant jump. */
-      window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
-    }
-  });
+
 })();
 
 
