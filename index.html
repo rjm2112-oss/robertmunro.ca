@@ -40,6 +40,19 @@ main section{
   border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
 
 }
+.ios-status-bar:before {
+    content: "";
+    position: fixed;
+    z-index: 10000;
+    top: -100px;
+    height: 100px;
+    right: 0;
+    left: 0;
+    background-color: #1C4364;
+}
+const isIOS = navigator.userAgent.match(/OS/i) != null;
+if (isIOS)
+  document.body.classList.add('ios-status-bar');
 
 
 main section.active{display:block;opacity:1;}
@@ -806,13 +819,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ----- Event listeners -------------------------------- */
   document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
-})();
-  window.addEventListener('load', () => {
+    window.addEventListener('load', () => {
     // Only act if we’re not already at the top
     if (window.scrollY > 0) {
+      /* `behavior: 'smooth'` gives a nice fade‑in; omit it for an instant jump. */
       window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
     }
   });
+})();
+
+
 </script>
 </body>
 </html>
