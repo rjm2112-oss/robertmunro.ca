@@ -36,6 +36,7 @@
 }
 /* Sections ------------------------------------------------------------- */
 main section{
+ min-height: calc(98vh - var(--nav-height));
   max-width:100vw;width:100%;background:white;
   padding:0 var(--section-padding-horizontal);
   border-radius:8px;box-shadow:0 12px 24px rgba(0,0,0,.1);display:none;
@@ -343,17 +344,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 #coin-demo .coin-flip.result-t .coin-tails{transform:rotateX(0deg);} /* fixed tails visibility */
 #coin-demo .coin-flip.result-t .coin-heads{display:none;}
 
-/* Initial state – no vertical space, nothing visible */
-#coin-section {
-  transform: scaleY(0);
-  transform-origin: top;          /* keep the top edge stationary */
-  transition: transform .6s ease-out, opacity .4s ease;
-  opacity: 0;
-}
-#coin-section.active {
-  transform: scaleY(1);
-  opacity: 1;
-}
+
 /* ---------- Animations ----------------------------- */
 @keyframes fly { from {top:100%;} to   {top:10%;} }
 @keyframes flip-head{
@@ -784,19 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ----- Event listeners -------------------------------- */
   document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
-  const coinSection = document.getElementById('coin-section');
 
-  // If you only want to show it once, unobserve after first reveal.
-  const observer = new IntersectionObserver((entries, obs) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        coinSection.classList.add('active');
-        obs.unobserve(coinSection);   // stop watching – we’re done
-      }
-    });
-  }, { threshold: 0.2 });            // trigger when ~20% of the section is visible
-
-  observer.observe(coinSection);
 })();
 
 
