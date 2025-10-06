@@ -27,8 +27,7 @@
     --hover-hue-change: -60deg;
     --nav-tint: 28, 67, 100;
     --hover-tint: 0, 0, 0;
-    --nav-outline: 0, 0, 0;
-    --hover-outline: 0, 31, 41;
+    --hover-outline: 0, 0, 0;
 
     /* Background Base colours */
     --bg-base: #001f3f;             /* deep navy 0, 31, 63*/
@@ -56,7 +55,7 @@ body{
 }
 .glass-nav {
     position: fixed;
-    top:0; left:0; right:.1vw;
+    top:0; left:0; right:0;
     height: var(--nav-height);
     display:flex;
     align-items:center;
@@ -67,9 +66,8 @@ body{
    /* backdrop-filter: blur(var(--blur-strength));
     -webkit-backdrop-filter: blur(var(--blur-strength));*/
     border-radius: 16px;
-    box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
-    border: .9px solid rgba(var(--nav-outline), 0.45);
-    border-bottom: 2px solid rgba(0,0,0,.2);
+     /* box-shadow: 0 .05vh 0.1vh rgba(0, 0, 0, 0.5);*/
+    border-bottom: 1px solid rgba(0,0,0,.25);
     z-index:1000;
     overflow:hidden;            /* clip the sliding panel */
       pointer-events:auto;
@@ -105,8 +103,8 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
 .glass-nav a::before{
     content:"";
     position:absolute;
-  /* 1️⃣ 4‑value inset – independent X & Y offsets   */
-  inset:-6.5vh -6.5vw;          /* top/bottom = -3.5 vw, left/right */
+  /* independent X & Y offsets   */
+  inset:-6.5vh -6.5vw;          /* top/bottom  left/right */
     background:transparent;
     pointer-events:auto;
     z-index:1;
@@ -127,20 +125,9 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     height: calc(var(--nav-height) - (1.1vh));
 
     /* ------------------------------------------------- */
-    background-image:
-        /* Diagonal light‑refraction layer – thin glass pane */
-        linear-gradient(
-            135deg,
-            rgba(var(--hover-tint), var(--hover-bg-opacity)) 0%,
-            rgba(var(--hover-tint), calc(var(--hover-bg-opacity)*0.9)) 20%,
-            rgba(var(--hover-tint), calc(var(--hover-bgOpacity)*0.7)) 50%,
-            rgba(var(--hover-tint), calc(var(--hover-bgOpacity)*0.5)) 80%,
-            rgba(var(--hover-tint),0) 100%
-        );
-    background-blend-mode: multiply, screen;
-pointer-events:none;
+ pointer-events:none;
     border-radius:22px;
-    border:1.5px solid rgba(var(--hover-outline), .4);
+    border:1.5px solid rgba(var(--hover-outline), .25);
     z-index:1000;
 
     /*    box-shadow:
