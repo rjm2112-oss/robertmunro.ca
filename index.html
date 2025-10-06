@@ -69,8 +69,9 @@ body{
     box-shadow: 0 5px 0px rgba(0, 0, 0, 0.1);
     border: .9px solid rgba(var(--nav-outline), 0.45);
     border-bottom: 2px solid rgba(0,0,0,.2);
-    z-index:1;
+    z-index:1000;
     overflow:hidden;            /* clip the sliding panel */
+      pointer-events:auto;
 }
 
 /* ────────────────────────────────────────────────────── */
@@ -287,13 +288,12 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   justify-content: center;
   width: 100%;
   margin: 0 auto;           /* center horizontally on the page */
-  z-index:-1000;
   }
 
 /* ---------- Controls ------------------------------- */
 #coin-demo #controls {
   position: relative;
-  top: 1.5vh;
+  top: 20vh;
 }
 #coin-demo button,
 #coin-demo select {
@@ -469,6 +469,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
    </section>
   <section id="section3">
 <div id="coin-demo">
+  <div class="coins-wrapper" id="wrapper"></div>
 
   <div id="controls">
     <label>Number of coins:</label>
@@ -481,7 +482,6 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     <button id="flipBtn">Flip!</button>
   </div>
 
-  <div class="coins-wrapper" id="wrapper"></div>
 
 </div> <!-- /#coin-demo -->
      </section>
