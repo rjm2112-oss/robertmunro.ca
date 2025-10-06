@@ -220,23 +220,38 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 /* Image row */
 .image-row{display:flex;flex-wrap:wrap;gap:10px;}
 
-/* Gallery ------------------------------------------------------------ */
-.gallery{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-  margin-right:0rem;
-  margin-left:0.8rem;
+/* -------------  GALLERY CONTAINER ------------- */
+.gallery {
+    display:flex;                /* Flexbox = easy centering */
+    flex-wrap:wrap;              /* Wrap to next line if needed */
+    justify-content:center;      /* Center horizontally */
+    align-items:center;          /* Center vertically (if you add height) */
+    gap:10vw;  /* Optional spacing between items */
+    padding:2vw;
 }
 
+/* -------------  IMAGE STYLES ------------- */
+/* Wrap each image in a <figure> for semantics – optional */
+.gallery figure {
+    margin:0;                    /* Reset default figure margin */
+}
+
+.gallery img {
+    display:block;                /* Remove inline‑space */
+    max-width:100%;               /* Keep responsive */
+    height:auto;
+    border-radius:8px;            /* Optional styling */
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+
+}
 .gallery-item{
   display:flex;
   flex-direction:column;
   align-items:center;
-  width:calc(33.333% - 10px);
+  width:30vw;
 }
 .gallery-item img{
-  width:100%;
+  width:auto;
   height:100%;
   object-fit:cover;
   border:3px solid #ffffff;
@@ -361,7 +376,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   #coin-demo .coin-tails img { max-width:100%; height:auto; }
 }
 }
-@media (max-height:500px) {
+@media (max-height:600px) {
 #coin-demo .coins-wrapper{
   height:30px;}
 }
