@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
     links.forEach((link, i) => {
         link.addEventListener('mouseenter', () => {
             setPanel(i);
-            panel.style.opacity = '1';
+            panel.style.opacity = '.9';
         });
 
             /* ------------------------------------------------------------------
@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (idx === -1) return;
 
         setPanel(idx);                     // slide back
-        panel.style.opacity = '1';         // keep it visible
+        panel.style.opacity = '.9';         // keep it visible
     });
     });
 });
