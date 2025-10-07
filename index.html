@@ -27,7 +27,7 @@
     --hover-hue-change: -60deg;
     --nav-tint: 28, 67, 100;
     --hover-tint: 0, 0, 0;
-    --hover-outline: 0, 0, 0;
+    --slider-outline: 0, 0, 0;
 
     /* Background Base colours */
     --bg-base: #001f3f;             /* deep navy 0, 31, 63*/
@@ -126,7 +126,7 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     /* ------------------------------------------------- */
  pointer-events:none;
     border-radius:22rem;
-    border:2px solid rgba(var(--hover-outline), .25);
+    border:2px solid rgba(var(--slider-outline), .25);
     z-index:1000;
 
     box-shadow:
@@ -136,7 +136,9 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     @media (min-width:1000px) {  .glass-nav .panel{ box-shadow:
         /* External drop shadow */
         0vw 0vw .5px 0vw rgba(0,0,0,.18);}}
-
+    @media (max-width:400px) {  .glass-nav .panel{ box-shadow:
+        /* External drop shadow */
+        0vw 0vw 2px 0vw rgba(0,0,0,.18);}}
 
 /* Fallback for browsers that don’t support backdrop‑filter
 @supports not (backdrop-filter: blur(var(--nav-blur-strength))) {
