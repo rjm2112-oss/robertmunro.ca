@@ -132,9 +132,10 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     box-shadow:
         /* External drop shadow */
         0vw 0vw 1.5px 0vw rgba(0,0,0,.18);
-        /* light highlight */
 }
-    @media (min-width:1000px) {  .glass-nav .panel{  border:0 solid rgba(var(--hover-outline), .25);}
+    @media (min-width:1000px) {  .glass-nav .panel{ box-shadow:
+        /* External drop shadow */
+        0vw 0vw 0px 0vw rgba(0,0,0,.18);}
 
 
 /* Fallback for browsers that don’t support backdrop‑filter
