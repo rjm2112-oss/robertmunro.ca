@@ -98,9 +98,6 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     @media (max-width:500px) {  .glass-nav a{  padding:0 0;}  /*  margin for nav text */}
     @media (min-width:1000px) {  .glass-nav a{  padding:0 2.2vw;}  /*  margin for nav text */}
 
-    .glass-nav a:nth-child(2) {          /* space added after the 1st link */
-    margin-left: 0.3rem;             }
-
 .glass-nav a::before{
     content:"";
     position:absolute;
@@ -368,7 +365,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 <body>
 <nav class="glass-nav">
  <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
-    <a href="#" data-target="section2">&#8202;Photos</a>
+    <a href="#" data-target="section2">Photos</a>
     <a href="#" data-target="section3">Coin Flip</a>
 
     <!-- Sliding panel (one element for all links) -->
