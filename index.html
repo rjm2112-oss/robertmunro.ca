@@ -12,6 +12,8 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 1vw;
+  --post-background:#f7fafc;
+  --section-background:#f7fafc;
 }
 
 /* Custom properties for glass nav (from nav.html) --------------------- */
@@ -20,7 +22,7 @@
     --nav-height: 17vh;
     --background-color:#1C4364;
     --navtext-color: #B4AC58;
-    --nav-bg-opacity: .25;
+    --nav-bg-opacity: .15;
     --hover-bg-opacity: .1;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
@@ -36,7 +38,7 @@
 /* Sections ------------------------------------------------------------- */
 main section{
  min-height: calc(97vh - var(--nav-height));
-  max-width:100vw;width:100%;background:#e8e8e8;
+  max-width:100vw;width:100%;background:var(--section-background);
   padding:0 var(--section-padding-horizontal);
   border-top: 1px 0 0 solid rgba(28, 67, 100,1);
   display:none;
@@ -151,7 +153,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
   width:calc(21vw + 3rem);flex-shrink:0;padding-right:0px;
   height:calc(99.5vh - var(--nav-height));
 }
-.post-detail{flex-grow:1;background:#e8e8e8;border-radius:8px;margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
+.post-detail{flex-grow:1;background:var(--post-background);border-radius:8px;margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
   box-shadow:0 2x 6px rgba(0,0,0,.08);}
 .post{
   padding:15px;margin-bottom:4px;background:white;border-radius:8px;cursor:pointer;border:1px solid #eaeaea;
@@ -401,7 +403,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         <!-- Recent project showcase -->
         <article class="post"><h3>Recent Project Showcase</h3>
           <p class="meta">20 Sep 2025</p>
-          <div class="preview">A sneak peek of the latest work – click to expand.</div>
+          <div class="preview">A sneak peek of the latest work</div>
           <div class="full-body">
             <p>This project involved building a cutting‑edge web application that integrates real‑time data visualisation and AI‑powered analytics.</p>
             <div class="image-row">
