@@ -12,7 +12,776 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 1vw;
+}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Robert Munro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+/* Theme & spacing ----------------------------------------------------- */
+:root{
+  --section-padding-vertical:2px; /*height of nav borders*/
+  --section-padding-horizontal:0;
+  --blog-margin-left: 1vw;
+  --blog-margin-right: 1vw;
 }
+
+/* Custom properties for glass nav (from nav.html) --------------------- */
+:root{
+    /* Navigation bar */
+    --nav-height: 17vh;
+    --background-color:#1C4364;
+    --navtext-color: #B4AC58;
+    --nav-bg-opacity: .25;
+    --hover-bg-opacity: .1;
+    --blur-strength: 6px;
+    --hover-blur-strength: 0px;
+    --hover-hue-change: -60deg;
+    --nav-tint: 28, 67, 100;
+    --hover-tint: 0, 0, 0;
+    --slider-outline: 0, 0, 0;
+
+    /* Background Base colours */
+    --bg-base: #001f3f;             /* deep navy 0, 31, 63*/
+    --yellow: #FFC42E;           /* dark gold/yellow 255, 196, 46*/
+}
+/* Sections ------------------------------------------------------------- */
+main section{
+ min-height: calc(97vh - var(--nav-height));
+  max-width:100vw;width:100%;background:#e8e8e8;
+  padding:0 var(--section-padding-horizontal);
+  border-top: 1px 0 0 solid rgba(28, 67, 100,1);
+  display:none;
+}
+main section.active{display:block;opacity:1;}
+/* Normalisation -------------------------------------------------------- */
+body{
+  font-family:'Arial',sans-serif;
+background-color: var(--background-color);
+background:var(--background-color);
+}
+body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
+
+/* 3️⃣ Navigation bar */
+body{
+    margin:0; padding:0; font-family:'Arial', sans-serif;
+}
+.glass-nav {
+    position: fixed;
+    top:0; left:0; right:0;
+    height: var(--nav-height);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    padding: 0 11vw;    /* outer border of words */
+    background: rgba(var(--nav-tint),var(--nav-bg-opacity));
+   /* backdrop-filter: blur(var(--blur-strength));
+    -webkit-backdrop-filter: blur(var(--blur-strength));*/
+    border-radius: 1.8rem;
+    border-bottom: 1px solid rgba(28, 67, 100,.1);
+    border-top: 1px solid rgba(0,0,0,.25);
+    z-index:1000;
+    overflow:hidden;            /* clip the sliding panel */
+      pointer-events:auto;
+}
+
+/* ────────────────────────────────────────────────────── */
+/* Links – relative so we can position the pane absolutely inside each one */
+.glass-nav a{
+    position:relative;
+    text-align:center;     /*  center link text inside its block */
+    color:var(--navtext-color);
+    text-decoration:none;
+    font-weight:650;
+    padding:0 0;  /*  margin for nav text */
+    z-index:0;
+touch-action: manipulation;   /* iOS Safari + Chrome Android */
+    /* Responsive font‑size  */
+    font-size: clamp(1rem, 5vw, 1.8rem);   /* min = 1rem, max = 2rem */
+    text-shadow:
+        0 1px 0 #000,
+       -1px 0 0 #000,
+        1px 0 0 #000,
+        0 -1px 0 #000;
+    /* Preserve 3‑D space for the pseudo‑element */
+    transform-style: preserve-3d;
+}
+    @media (max-width:500px) {  .glass-nav a{  padding:0 0;}  /*  margin for nav text */}
+    @media (min-width:1000px) {  .glass-nav a{  padding:0 2.2vw;}  /*  margin for nav text */}
+
+.glass-nav a::before{
+    content:"";
+    position:absolute;
+  /* independent X & Y offsets   */
+  inset:-6.5vh -6.5vw;          /* top/bottom  left/right */
+    background:transparent;
+    pointer-events:auto;
+    z-index:1;
+}
+
+/* ────────────────────────────────────── */
+/* The sliding glass panel – enhanced 3D shading */
+.glass-nav .panel{
+    content:"";
+    backdrop-filter: hue-rotate(var(--hover-hue-change));
+    -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
+    position:absolute;
+    top:calc(.2vh + 2px); left:0; bottom:0px;
+
+    width: calc((100vw / 5) + 9vw);
+    height: calc(var(--nav-height) - (.5vh) -1.5px );
+
+    /* ------------------------------------------------- */
+ pointer-events:none;
+    border-radius:200rem;
+    border: 1.5px solid rgba(var(--slider-outline), .275);
+    z-index:1000;
+
+    box-shadow:
+        /* External drop shadow */
+        0vw 0vw 1.5px 0vw rgba(0,0,0,.2);
+}
+    @media (min-width:1000px) {  .glass-nav .panel{ box-shadow:
+        /* External drop shadow */
+        0vw 0vw .5px 0vw rgba(0,0,0,.2);}}
+    @media (max-width:400px) {  .glass-nav .panel{ box-shadow:
+        /* External drop shadow */
+        0vw 0vw 5px 0vw rgba(0,0,0,.14);
+        top:calc(.2vh + 1.5px); left:0; bottom:calc(.2vh + 0px);}}
+
+/* Fallback for browsers that don’t support backdrop‑filter
+@supports not (backdrop-filter: blur(var(--nav-blur-strength))) {
+    .glass-nav{
+        background: rgba(var(--nav-tint),var(--nav-bg-opacity));
+    }
+}*/
+
+/* Blog & preview ------------------------------------------------------- */
+img{max-width:100%;height:auto;margin:20px auto;display:block;}
+.blog-container{display:flex;}
+.preview-list{
+  width:calc(21vw + 3rem);flex-shrink:0;padding-right:0px;
+  height:calc(99.5vh - var(--nav-height));
+}
+.post-detail{flex-grow:1;background:#e8e8e8;border-radius:8px;margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
+  box-shadow:0 2x 6px rgba(0,0,0,.08);}
+.post{
+  padding:15px;margin-bottom:4px;background:white;border-radius:8px;cursor:pointer;border:1px solid #eaeaea;
+}
+.preview-list .post .full-body{display:none;}
+.meta{font-size:.9rem;color:#555;margin-bottom:.5rem;}
+.post h3{margin:0 0 .2rem;font-size:1.1rem;}
+.post:not(.static):hover{
+  transform:translateY(-2px);transition:transform .15s ease-out;background:#f8f8f8;
+}
+.post.static{cursor:default;background:#f7fafc;border-left:6px solid #2c3e50;
+  border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:4px;border-bottom-left-radius:4px;}
+.post.static h3{font-family:'Arial',serif;font-weight:600;}
+
+/* Text justification in Home section */
+#section1 .post-detail article .full-body p,
+#section1 .post-detail article .full-body *:not(figure):not(img) {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+}
+
+/* Highlight selected preview */
+.preview-list .post.active {background:#d6d6d6;}
+.preview-list .post.active:hover{background:#d6d6d6;}
+
+/* CV styling WHITE SPACE above and below download button */
+.cv-header-wrapper{
+  display:flex;align-items:center;margin-bottom:0px;margin-top:1px;
+}
+.cv-header-wrapper a.download-btn{
+  padding:.6rem 1.2rem;background:#2c3e50;color:#fff;text-decoration:none;border-radius:4px;font-size:1.1rem;
+  border:1x solid #d4af37;
+}
+.cv-header-wrapper a.download-btn:hover{background:#d4af35;color:#222;}
+.cv-header-wrapper h2{flex:1;text-align:center;}
+.cv-container{
+  overflow:auto;border:3px solid #eaeaea;border-radius:8px;margin-top:0px;
+}
+.cv-container iframe{
+  width:100%;aspect-ratio:8.5 / 11;border:none;
+}
+
+/* Hide CV title in expanded detail */
+.post-detail article > h3[data-no-title] {display:none;}
+/* Image row */
+.image-row{display:flex;flex-wrap:wrap;gap:10px;}
+
+/* -------------  GALLERY CONTAINER ------------- */
+.gallery {
+    display:flex;                /* Flexbox = easy centering */
+    flex-wrap:wrap;              /* Wrap to next line if needed */
+    justify-content:center;
+    align-items:center;
+    gap:6vw;  /* Optional spacing between items */
+    padding:0;
+}
+
+/* -------------  IMAGE STYLES ------------- */
+.gallery figure {
+    margin:0;                    /* Reset default figure margin */
+}
+
+.gallery img {
+    display:block;                /* Remove inline‑space */
+    max-width:100%;
+    height:auto;
+    border-radius:8px;            /* Optional styling */
+    box-shadow:0 2px 8px rgba(0,0,0,.1);
+
+}
+.gallery-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:36vw;
+}
+.gallery-item img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border:3px solid #ffffff;
+  box-shadow:
+      0 4px 8px rgba(0,0,0,.25),
+      0 1px 2px rgba(0,0,0,.12);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.gallery-item img:hover{transform:scale(1.05);z-index:-0;}
+.gallery-item .description{
+  display:block;margin-top:.5rem;padding:.5rem .5rem;font-size:.9rem;color:#444;text-align:center;
+  background:#ffffff;border:1px solid #e0e0e0;border-radius:4px;box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+.gallery-item figure{position:relative;}
+
+/* Modal for gallery preview */
+.modal{
+  position:fixed; top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,.8);
+  display:flex;
+  flex-direction:column;
+  align-items:center; justify-content:top;
+  visibility:hidden; opacity:0;
+  transition:.3s ease;
+}
+.modal.show{visibility:visible; opacity:1;}
+.modal img{
+  max-width:90vw; max-height:80vh;
+  border-radius:4px;
+  margin-bottom:8px;              /* space between image & caption */
+}
+.modal-caption{
+  color:#fff; font-size:1rem; padding:0 12px;
+  text-align:center;             /* <‑‑ NEW: simple caption styling          */
+}
+
+/* ---------- COIN FLIP------------------------------------ */
+#coin-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0 auto;           /* center horizontally on the page */
+  }
+
+/* ---------- Controls ------------------------------- */
+#coin-demo #controls {
+  position: relative;
+  top: 20vh;
+}
+#coin-demo button,
+#coin-demo select {
+  padding:.75rem 1.25rem;
+  font-size:1.125rem;
+  margin-right:.5rem;
+  border:none;
+  background:#444;
+  color:white;
+  cursor:pointer;
+  border-radius:6px;
+}
+#coin-demo button:hover {background:#555;}
+#coin-demo .coin-btn.selected{background-color:#777;color:white;}
+
+/* ---------- Coins container ------------------------ */
+#coin-demo .coins-wrapper{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end; /* so coins start at bottom */
+  position:relative;
+  height:270px;          /*  space for fly animation */
+  transform: translateX(50px);
+}
+
+/* ---------- Coin ----------------------------------- */
+#coin-demo .coin-flip{
+  width:150px;
+  height:150px;
+  transform-style:preserve-3d;
+  position:absolute;
+  top:calc(100% - 0px);   /* start slightly above the bottom of wrapper */
+}
+
+/* ---------- Heads / Tails -------------------------- */
+#coin-demo .coin-heads,
+#coin-demo .coin-tails{
+  position:absolute;
+  top:0;
+  left:0;
+  clip-path:circle(44%);
+}
+#coin-demo .coin-heads{animation:flip-head 1.5s ease-out forwards;}
+#coin-demo .coin-tails{animation:flip-tail 1.5s ease-out forwards;}
+
+/* ---------- Result after animation ----------------- */
+#coin-demo .coin-flip.result-h .coin-heads {transform:rotateX(0deg); }
+#coin-demo .coin-flip.result-h .coin-tails{display:none;}
+#coin-demo .coin-flip.result-t .coin-tails{transform:rotateX(0deg);}
+#coin-demo .coin-flip.result-t .coin-heads{display:none;}
+
+
+/* ---------- Animations ----------------------------- */
+@keyframes fly { from {top:100%;} to   {top:10%;} }
+@keyframes flip-head{
+  0%,100%{transform:rotateX(0deg);}
+  50%    {transform:rotateX(180deg);}
+}
+@keyframes flip-tail{
+  0%,100%{transform:rotateX(180deg);}
+  50%    {transform:rotateX(0deg);}
+}
+
+@media (max-width:500px) {
+  #coin-demo { max-width: 100%; }
+#coin-demo .coin-tails{
+  clip-path:circle(44%);
+  #coin-demo .coin-heads img,
+  #coin-demo .coin-tails img { max-width:100%; height:auto; }
+}
+}
+@media (max-height:600px) {
+#coin-demo .coins-wrapper{
+  height:30px;}
+}
+</style>
+</head>
+
+<body>
+<nav class="glass-nav">
+ <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
+    <a href="#" data-target="section2">Photos</a>
+    <a href="#" data-target="section3">Coin Flip</a>
+
+    <!-- Sliding panel (one element for all links) -->
+    <div class="panel"></div>
+</nav>
+
+<h1></h1>
+
+<main>
+  <!-- Section 1 – Home -->
+  <section id="section1">
+    <h2></h2>
+    <div class="blog-container">
+
+      <div class="preview-list">
+
+        <!-- Contact card (static) -->
+        <article class="post static"><h3>Contact</h3>
+          <div class="contact-card">
+            <p><strong>Email:</strong> </p>
+            <p><strong>Phone:</strong> (123) 456‑7890</p>
+            <p><strong>Address:</strong> City, Country</p>
+          </div>
+        </article>
+
+        <!-- Featured image -->
+        <article class="post"><h3>Featured Image</h3>
+          <div class="preview">Click to view the featured picture.</div>
+          <div class="full-body">
+            <img src="assets/pic.png" alt="A descriptive caption of pic.png">
+            <p>A descriptive caption for pic.png.</p>
+          </div>
+        </article>
+
+        <!-- Recent project showcase -->
+        <article class="post"><h3>Recent Project Showcase</h3>
+          <p class="meta">20 Sep 2025</p>
+          <div class="preview">A sneak peek of the latest work – click to expand.</div>
+          <div class="full-body">
+            <p>This project involved building a cutting‑edge web application that integrates real‑time data visualisation and AI‑powered analytics.</p>
+            <div class="image-row">
+              <img src="assets/pic.png" alt="Screenshot of the first feature in the recent project.">
+              <img src="assets/pic.png" alt="Screenshot of the second feature in the recent project.">
+            </div>
+            <p>Both images illustrate how the user interface adapts across devices, showcasing responsive design and dynamic content loading.</p>
+          </div>
+        </article>
+
+        <!-- CV -->
+        <article class="post"><h3 data-no-title="true">Curriculum Vitae</h3>
+          <div class="preview">Click to view or download here.</div>
+          <div class="full-body">
+            <div class="cv-header-wrapper">
+              <a href="assets/cv.pdf" target="_blank" class="download-btn">Download CV</a>
+            </div>
+            <div class="cv-container">
+              <iframe src="assets/cv.pdf"></iframe>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Detail area – shows the currently selected post -->
+      <div class="post-detail"></div>
+    </div>
+
+  </section>
+  <section id="section2">
+    <h2></h2>
+
+    <div class="gallery" id="gallery">
+
+      <!-- Example image 1 -->
+      <figure class="gallery-item">
+        <img src="assets/gallery1.png" alt="Gallery image 1">
+        <figcaption class="description">A brief description of Gallery image 1.</figcaption>
+      </figure>
+
+      <!-- Repeat for the remaining images… -->
+      <figure class="gallery-item"><img src="assets/gallery2.png" alt="Gallery image 2"><figcaption class="description">A brief description of Gallery image 2.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery3.png" alt="Gallery image 3"><figcaption class="description">A brief description of Gallery image 3.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery4.png" alt="Gallery image 4"><figcaption class="description">A brief description of Gallery image 4.</figcaption></figure>
+    </div>
+  </section>
+
+
+   </section>
+  <section id="section3">
+<div id="coin-demo">
+  <div class="coins-wrapper" id="wrapper"></div>
+
+  <div id="controls">
+    <label>&nbsp;</label>
+    <div id="numCoinsContainer">
+      <button class="coin-btn selected" data-num="1">1</button>
+      <button class="coin-btn" data-num="2">2</button>
+      <button class="coin-btn" data-num="3">3</button>
+      <button class="coin-btn" data-num="4">4</button>
+    </div>
+    <button id="flipBtn">Flip!</button>
+  </div>
+
+
+</div> <!-- /#coin-demo -->
+     </section>
+
+</main>
+
+<!-- Modal for gallery preview -->
+<div id="imageModal" class="modal">
+  <img src="" alt="">
+  <div class="modal-caption"></div>
+</div>
+<script>
+/* ------------------------------------------------------------------ */
+/* 1️⃣ Navigation & section activation --------------------------------*/
+document.addEventListener('DOMContentLoaded', () => {
+    const navLinks = document.querySelectorAll('[data-target]');
+    const sections = document.querySelectorAll('section');
+    const nav      = document.querySelector('.glass-nav');
+    const panel    = nav.querySelector('.panel');
+
+    /* Track the index of the link that is currently active */
+    let currentNavIndex = null;
+
+    function clearActive(sectionId) {
+        document.querySelectorAll(`#${sectionId} .post.active`).forEach(p => p.classList.remove('active'));
+    }
+
+    function movePanelTo(idx) {
+        const linkRect = navLinks[idx].getBoundingClientRect();
+        const navRect  = nav.getBoundingClientRect();
+
+        // Center the panel on the link text
+        const targetLeft =
+            linkRect.left + (linkRect.width / 2)
+            - navRect.left
+            - (panel.clientWidth / 2);
+
+        panel.style.transform = `translateX(${targetLeft}px)`;
+    }
+
+    function showSection(id, linkIdx = null) {
+        // Hide all sections, then reveal the requested one
+        sections.forEach(s => s.classList.remove('active'));
+        const targetSec = document.getElementById(id);
+        if (!targetSec) return;
+        targetSec.classList.add('active');
+        clearActive(id);
+        expandFirstInSection(id);
+        if (linkIdx !== null) {
+            movePanelTo(linkIdx);
+            currentNavIndex = linkIdx;
+            navLinks.forEach((l, i) => l.classList.toggle('active-link', i === currentNavIndex));
+        }
+    }
+
+    function expandFirstInSection(sectionId){
+        const list = document.querySelector(`#${sectionId} .preview-list`);
+        if (!list) return;
+        list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+        const firstPost = list.querySelector('.post:not(.static)');
+        if(!firstPost) return;
+        firstPost.classList.add('active');
+        const detailArea = document.querySelector(`#${sectionId} .post-detail`);
+        const title   = firstPost.querySelector('h3').outerHTML;
+        const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
+        const body    = firstPost.querySelector('.full-body')?.innerHTML || '';
+        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+    }
+
+
+    const initialIdx = 0; // index of navLinks[0]
+    showSection(navLinks[initialIdx].dataset.target, initialIdx);
+
+
+    navLinks.forEach((link, i) => {
+        link.addEventListener('click', e => {
+            e.preventDefault();
+            showSection(link.dataset.target, i);
+        });
+    });
+
+    document.querySelectorAll('.preview-list').forEach(list => {
+        list.addEventListener('click', e => {
+            const post = e.target.closest('.post');
+            if (!post || post.classList.contains('static')) return;
+            list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+            post.classList.add('active');
+            const detailArea = list.nextElementSibling; // .post-detail
+            const title   = post.querySelector('h3').outerHTML;
+            const meta    = post.querySelector('.meta')?.outerHTML || '';
+            const body    = post.querySelector('.full-body')?.innerHTML || '';
+            detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+        });
+    });
+
+  /* Gallery modal logic – now that the modal element exists */
+  const modal = document.getElementById('imageModal');
+  const modalImg = modal.querySelector('img');
+  const modalCaption = modal.querySelector('.modal-caption');
+
+  document.getElementById('gallery').addEventListener('click', e => {
+    if (e.target.tagName.toLowerCase() !== 'img') return;
+    const img = e.target;
+    modalImg.src = img.src;
+    modalImg.alt = img.alt;
+
+    // Grab the caption text from the closest .gallery-item
+    const captionEl = img.closest('.gallery-item').querySelector('.description');
+    const captionText = captionEl ? captionEl.innerText : '';
+    if (captionText) {
+      modalCaption.textContent = captionText;
+      modalCaption.style.display = 'block';
+    } else {
+      modalCaption.style.display = 'none';
+    }
+    modal.classList.add('show');
+  });
+
+  modal.addEventListener('click', () => {
+    modal.classList.remove('show');
+    modalImg.src = '';
+    modalImg.alt = '';
+    modalCaption.textContent = '';
+    modalCaption.style.display = 'none';
+  });
+});
+
+// ------------------------------------------------------------------
+// GLASS NAV PANEL distance → duration (px per second)
+// ------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    const nav   = document.querySelector('.glass-nav');
+    const panel = nav.querySelector('.panel');
+    const links = Array.from(nav.querySelectorAll('a'));
+    const count = links.length;
+
+    // ------------------------------------------------------------------
+    // Helper: distance → duration (px per second)
+    // ------------------------------------------------------------------
+    const msPerPixel = 1000 / 550;            // ms for each pixel
+    const minDur = .85;                       // seconds
+    const maxDur = 1.25;                       // seconds
+
+    const durationForDistance = dist => {
+        const raw = Math.abs(dist) * msPerPixel / 1000;   // convert to s
+        return Math.min(Math.max(raw, minDur), maxDur);
+    };
+
+ let currentLeft = 0;   // start at left‑most (will be set later)
+
+    const setPanel = idx => {
+        const linkRect = links[idx].getBoundingClientRect();
+        const navRect  = nav.getBoundingClientRect();
+        const panelW   = panel.clientWidth;
+
+        // Desired left offset so the panel is centered on the link text
+        const targetLeft =
+            linkRect.left + (linkRect.width / 2)
+            - navRect.left
+            - (panelW / 2);
+
+        // Compute duration based on how far we need to travel
+        const dur = durationForDistance(targetLeft - currentLeft);
+        panel.style.transitionDuration = `${dur}s`;
+
+        // Move the panel
+        panel.style.transform = `translateX(${targetLeft}px)`;
+
+        // Remember for the next move
+        currentLeft = targetLeft;
+    };
+
+    // ------------------------------------------------------------------
+    // Initial position – use the link marked with aria‑current="page"
+    // ------------------------------------------------------------------
+    const currentIdx = links.findIndex(a => a.hasAttribute('aria-current'));
+    if (currentIdx !== -1) {
+        setPanel(currentIdx);
+    } else {
+        panel.style.opacity = '0';   // hide until hovered
+    }
+
+    // ------------------------------------------------------------------
+    // Hover logic
+    // ------------------------------------------------------------------
+    links.forEach((link, i) => {
+        link.addEventListener('mouseenter', () => {
+            setPanel(i);
+            panel.style.opacity = '1';
+        });
+
+            /* ------------------------------------------------------------------
+       ** Return to the active section when leaving the nav bar **
+    ------------------------------------------------------------------*/
+    nav.addEventListener('mouseleave', () => {
+        const activeLink = nav.querySelector(
+            'a.active-link'
+        );
+        if (!activeLink) return;          // nothing to do
+
+        const idx = links.indexOf(activeLink);
+        if (idx === -1) return;
+
+        setPanel(idx);                     // slide back
+        panel.style.opacity = '1';         // keep it visible
+    });
+    });
+});
+
+
+// --------------------------COIN FLIP
+(() => {
+  /* ----- Utility: create a coin element ---------------- */
+  function createCoin() {
+    const c = document.createElement('div');
+    c.className='coin-flip';
+
+    const heads = document.createElement('div');
+    heads.className='coin-heads';
+    const himg = document.createElement('img');
+    // If you don't have assets/pic3.png, replace with a data‑URI or another URL
+    himg.src='assets/pic5.png';
+    heads.appendChild(himg);
+
+    const tails = document.createElement('div');
+    tails.className='coin-tails';
+    const timg = document.createElement('img');
+    // If you don't have assets/pic2.png, replace with a data‑URI or another URL
+    timg.src='assets/pic4.png';
+    tails.appendChild(timg);
+
+    c.appendChild(heads);
+    c.appendChild(tails);
+    return c;
+  }
+
+  /* ----- Animation helpers ---------------------------- */
+  function startAnimation(coin) {
+    // Force restart of animation
+    coin.style.animation = 'none';
+    void coin.offsetWidth;                     // trigger reflow
+    // Start the fly animation with an ease‑out timing for faster start
+    coin.style.animation = 'fly 1.5s ease-out forwards';
+
+    // After fly + flip finishes, set the result
+    setTimeout(() => setResult(coin), 1500);
+  }
+
+  function setResult(coin) {
+    const heads = Math.random() < 0.5;          // true=heads, false=tails
+    if (heads) coin.classList.add('result-h');
+    else       coin.classList.add('result-t');
+    // stop the fly animation so coin stays at final position
+    coin.style.animation = 'none';
+  }
+
+  function flipCoins(n) {
+    const wrapper = document.getElementById('wrapper');
+    wrapper.innerHTML = '';                     // clear previous coins
+
+    let delay = 0;                              // ms before we start a coin
+    const centerDistance = 80;                 // spacing between centers
+    const staggerMs = 260;                      // <‑– change this to tweak the gap
+
+    for (let i = 0; i < n; i++) {
+      const coin = createCoin();
+
+      /* ---- Position the coin so its centre is over the wrapper’s centre */
+      const leftOffset = (i - (n - 1) / 2) * centerDistance;
+      coin.style.left = `calc(50% + ${leftOffset}px - 50px)`;
+      coin.style.transform = 'translateX(-50%)';
+
+      wrapper.appendChild(coin);
+
+      /* ---- Start the fly animation after a staggered delay */
+      setTimeout(() => startAnimation(coin), delay);
+      delay += staggerMs;                       // next coin starts `staggerMs` later
+    }
+  }
+
+  /* ----- Handle coin count button selection ---------------- */
+  let selectedNum = 1;
+  const coinBtns = document.querySelectorAll('#numCoinsContainer .coin-btn');
+  coinBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedNum = parseInt(btn.dataset.num, 10);
+      coinBtns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  /* ----- Event listeners -------------------------------- */
+  document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
+
+})();
+
+
+</script>
+</body>
+</html>
+
 
 /* Custom properties for glass nav (from nav.html) --------------------- */
 :root{
