@@ -118,7 +118,7 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
    /* transition: transform 0.4s cubic-bezier(.22,.61,.36,1);*/
     position:absolute;
-    top:calc(.2vh + 2px); left:0; bottom:calc(.2vh);
+    top:calc(.2vh + 2px); left:0; bottom:1px;
 
     width: calc((100vw / 5) + 9vw);
     height: calc(var(--nav-height) - (.5vh) -1.5px );
@@ -139,7 +139,7 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     @media (max-width:400px) {  .glass-nav .panel{ box-shadow:
         /* External drop shadow */
         0vw 0vw 6px 0vw rgba(0,0,0,.14);
-        top:calc(.2vh + 2px); left:0; bottom:calc(.2vh+1px);}}
+        top:calc(.2vh + 2px); left:0; bottom:calc(.2vh+2px);}}
 
 /* Fallback for browsers that don’t support backdrop‑filter
 @supports not (backdrop-filter: blur(var(--nav-blur-strength))) {
