@@ -12,8 +12,9 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 1vw;
-  --post-background:#f7fafc;
-  --section-background:#f7fafc;
+  --post-background:#F6FBFD;
+  --section-background:#F6FBFD;
+  --contact-background:#E2E7ED;
 }
 
 /* Custom properties for glass nav (from nav.html) --------------------- */
@@ -22,7 +23,7 @@
     --nav-height: 17vh;
     --background-color:#1C4364;
     --navtext-color: #B4AC58;
-    --nav-bg-opacity: .15;
+    --nav-bg-opacity: .175;
     --hover-bg-opacity: .1;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
@@ -164,8 +165,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 .post:not(.static):hover{
   transform:translateY(-2px);transition:transform .15s ease-out;background:#f8f8f8;
 }
-.post.static{cursor:default;background:#f7fafc;border-left:6px solid #2c3e50;
-  border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:4px;border-bottom-left-radius:4px;}
+.post.static{cursor:default;background:var(--contact-background);border-left:6px solid #2c3e50;
+  border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:0px;border-bottom-left-radius:0px;}
 .post.static h3{font-family:'Arial',serif;font-weight:600;}
 
 /* Text justification in Home section */
