@@ -177,9 +177,8 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
 .post.static p + p {
     margin-top: .25em;
     }
-.preview-list{
-        overflow-y: auto;
-    }
+.post-detail{max-height:calc(100vh - 2px - var(--nav-height));
+overflow-y:auto;}
 }
 /* Highlight selected preview */
 .preview-list .post.active {background:#d6d6d6;}
