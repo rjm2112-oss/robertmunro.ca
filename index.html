@@ -177,7 +177,7 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
 .post.static p + p {
     margin-top: .25em;
     }
-.post-detail{max-height:calc(100vh - 2px - var(--nav-height));
+.post-detail{
 overflow-y:auto;}
 }
 /* Highlight selected preview */
@@ -487,43 +487,73 @@ WHITE SPACE above and below download button */
 /* ------------------------------------------------------------------ */
 /* 1️⃣ Navigation & section activation --------------------------------*/
 document.addEventListener('DOMContentLoaded', () => {
+    /* --- existing code unchanged --------------------------------- */
     const navLinks = document.querySelectorAll('[data-target]');
     const sections = document.querySelectorAll('section');
     const nav      = document.querySelector('.glass-nav');
     const panel    = nav.querySelector('.panel');
 
-    /* Track the index of the link that is currently active */
     let currentNavIndex = null;
 
+    /* ---------------------------------------------------------------- */
+
     function clearActive(sectionId) {
-        document.querySelectorAll(`#${sectionId} .post.active`).forEach(p => p.classList.remove('active'));
+        document
+            .querySelectorAll(`#${sectionId} .post.active`)
+            .forEach(p => p.classList.remove('active'));
     }
 
     function movePanelTo(idx) {
         const linkRect = navLinks[idx].getBoundingClientRect();
         const navRect  = nav.getBoundingClientRect();
 
-        // Center the panel on the link text
         const targetLeft =
             linkRect.left + (linkRect.width / 2)
-            - navRect.left
-            - (panel.clientWidth / 2);
+                - navRect.left
+                - (panel.clientWidth / 2);
 
         panel.style.transform = `translateX(${targetLeft}px)`;
     }
 
+    /* ----- NEW helper ------------------------------------------------ */
+    function scrollToWithOffset(el, offset = 0) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => window.scrollBy(0, offset), 300);
+    }
+    /* ---------------------------------------------------------------- */
+
+    /* ----------------------------------------------------------------- */
+    const THRESHOLD_TOP = nav.offsetHeight + 0; // tweak if you need more room
+
     function showSection(id, linkIdx = null) {
-        // Hide all sections, then reveal the requested one
         sections.forEach(s => s.classList.remove('active'));
         const targetSec = document.getElementById(id);
         if (!targetSec) return;
         targetSec.classList.add('active');
+
         clearActive(id);
         expandFirstInSection(id);
+
+        /* ----------------------------------------------------------------- */
+        /* 1️⃣  Only scroll when we’re *not* at the very top of the page   */
+        /* ----------------------------------------------------------------- */
+        const isAtTop = window.scrollY < THRESHOLD_TOP;
+
+        if (linkIdx !== null && !isAtTop) {
+            const navHeight = nav.offsetHeight;
+            // Move the page so that the section starts just below the nav
+            scrollToWithOffset(targetSec, -navHeight);
+        }
+
+        /* ----------------------------------------------------------------- */
+        /* 2️⃣  Update panel & active link (always run – we still want it) */
+        /* ----------------------------------------------------------------- */
         if (linkIdx !== null) {
             movePanelTo(linkIdx);
             currentNavIndex = linkIdx;
-            navLinks.forEach((l, i) => l.classList.toggle('active-link', i === currentNavIndex));
+            navLinks.forEach((l, i) =>
+                l.classList.toggle('active-link', i === currentNavIndex)
+            );
         }
     }
 
@@ -541,10 +571,9 @@ document.addEventListener('DOMContentLoaded', () => {
         detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
     }
 
-
+    /* ----------------------------------------------------------------- */
     const initialIdx = 0; // index of navLinks[0]
     showSection(navLinks[initialIdx].dataset.target, initialIdx);
-
 
     navLinks.forEach((link, i) => {
         link.addEventListener('click', e => {
@@ -553,19 +582,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    /* ----------------------------------------------------------------- */
+    /* 3️⃣  Preview‑list clicks – same “no‑scroll‑when‑at‑top” guard     */
+    /* ----------------------------------------------------------------- */
     document.querySelectorAll('.preview-list').forEach(list => {
         list.addEventListener('click', e => {
             const post = e.target.closest('.post');
             if (!post || post.classList.contains('static')) return;
-            list.querySelectorAll('.post.active').forEach(p=>p.classList.remove('active'));
+
+            list.querySelectorAll('.post.active')
+                .forEach(p => p.classList.remove('active'));
             post.classList.add('active');
+
             const detailArea = list.nextElementSibling; // .post-detail
             const title   = post.querySelector('h3').outerHTML;
             const meta    = post.querySelector('.meta')?.outerHTML || '';
             const body    = post.querySelector('.full-body')?.innerHTML || '';
-            detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+            detailArea.innerHTML =
+                `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+
+            /* Only scroll if we’re not already at the top of the page */
+            const isAtTop = window.scrollY < THRESHOLD_TOP;
+            if (!isAtTop) {
+                const navHeight = nav.offsetHeight;
+                scrollToWithOffset(detailArea, -navHeight);
+            }
         });
     });
+
+
+
 
   /* Gallery modal logic – now that the modal element exists */
   const modal = document.getElementById('imageModal');
