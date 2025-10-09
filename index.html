@@ -120,19 +120,19 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
     backdrop-filter: hue-rotate(var(--hover-hue-change));
     -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
     position:absolute;
-    top: 0; left:0; bottom:0px;
+    top: -1px; left:0; bottom:0px;
 
     width: calc((100vw / 5) + 9vw);
-    height: calc(var(--nav-height));
+    height: calc(var(--nav-height)-2px);
 
     /* ------------------------------------------------- */
  pointer-events:none;
     border-radius:200rem;
     border: 1.5px solid rgba(var(--slider-outline), .275);
-    z-index:1000;
+    z-index:1000;}
 
-    box-shadow:
-        /* External drop shadow 
+     /* box-shadow:
+       External drop shadow 
         0vw 0vw 1.5px 0vw rgba(0,0,0,.2);
 }
     @media (min-width:1000px) {  .glass-nav .panel{ box-shadow:
