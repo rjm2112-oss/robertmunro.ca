@@ -140,19 +140,27 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 .post-detail{flex-grow:1;background:var(--post-background);
 border-radius:8px;
 margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);
-box-shadow:0 2x 6px rgba(0,0,0,.08);
 }
 .post{
   padding:15px;margin-bottom:4px;background:white;border-radius:8px;cursor:pointer;border:1px solid #eaeaea;
 }
 .preview-list .post .full-body{display:none;}
-.meta{font-size:.9rem;color:#555;margin-bottom:.5rem;}
-.post h3{margin:0 0 .2rem;font-size:1.1rem;}
+.meta{font-size:1rem;color:#555;margin-top:.1rem;margin-bottom:1rem;}
+.post h3{margin:0 0 1rem 0;font-size:1.1rem;}
 .post:not(.static):hover{
   transform:translateY(-2px);transition:transform .15s ease-out;background:#f8f8f8;
 }
 .post.static{cursor:default;background:var(--contact-background);border-left:6px solid #2c3e50;
   border-top-right-radius:8px;border-bottom-right-radius:8px;border-top-left-radius:0px;border-bottom-left-radius:0px;}
+  /* 1️⃣  Space after every <p> in a post */
+.post.static p {
+    margin-top:   0;      /* keep the default top margin if you like */
+    margin-bottom: 0.5em; /* <-- change this value to make the space bigger or smaller */
+}
+/* 2️⃣  Optional – space only between paragraphs (no bottom margin after the last one) */
+.post.static p + p {
+    margin-top: 1em;   /* same value as above – you can also use a different one */
+}
 .post.static h3{font-family:'Arial',serif;font-weight:600;}
 /* Text justification in Home section */
 #section1 .post-detail article .full-body p,
@@ -160,6 +168,14 @@ box-shadow:0 2x 6px rgba(0,0,0,.08);
     text-align: justify;
     text-justify: inter-word;
     hyphens: auto;
+}
+ @media (max-width:400px) {.post h3{margin:0 0 .25rem 0;}.meta{margin-top:.25rem;margin-bottom:.25rem;}
+ .post.static p {
+    margin-top:   0.5em;
+    margin-bottom: 0em;
+}
+.post.static p + p {
+    margin-top: .25em;  }
 }
 /* Highlight selected preview */
 .preview-list .post.active {background:#d6d6d6;}
@@ -372,7 +388,7 @@ WHITE SPACE above and below download button */
           <div class="contact-card">
             <p><strong>Email:</strong> </p>
             <p><strong>Phone:</strong> (123) 456‑7890</p>
-            <p><strong>Address:</strong> City, Country</p>
+            <p><strong>Address:</strong></p>
           </div>
         </article>
 
