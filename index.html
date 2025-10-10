@@ -655,90 +655,161 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
-
-// ------------------------------------------------------------------
-// GLASS NAV PANEL distance → duration (px per second)
-// ------------------------------------------------------------------
-
+/* --------------------------------------------------------------
+   GLASS NAV PANEL – distance → duration (px per second)
+-------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     const nav   = document.querySelector('.glass-nav');
     const panel = nav.querySelector('.panel');
     const links = Array.from(nav.querySelectorAll('a'));
     const count = links.length;
 
-    // ------------------------------------------------------------------
-    // Helper: distance → duration (px per second)
-    // ------------------------------------------------------------------
-    const msPerPixel = 1000 / 550;            // ms for each pixel
-    const minDur = .85;                       // seconds
-    const maxDur = 1.25;                       // seconds
+    /* ----------------------------------------------------------
+       Helper: distance → duration (px per second)
+    ---------------------------------------------------------- */
+    const msPerPixel = 1000 / 550;   // ms for each pixel
+    const minDur     = .85;          // seconds
+    const maxDur     = 1.25;         // seconds
 
     const durationForDistance = dist => {
-        const raw = Math.abs(dist) * msPerPixel / 1000;   // convert to s
+        const raw = Math.abs(dist) * msPerPixel / 1000;
         return Math.min(Math.max(raw, minDur), maxDur);
     };
 
- let currentLeft = 0;   // start at left‑most (will be set later)
+    /* ----------------------------------------------------------
+       State variables
+    ---------------------------------------------------------- */
+    let currentLeft = 0;          // left offset of the panel (px)
+    let activeIdx   = -1;         // index of the link that is currently “active”
 
+    /* ----------------------------------------------------------
+       Move the selector to the link at position `idx`
+    ---------------------------------------------------------- */
     const setPanel = idx => {
+        if (idx < 0 || idx >= count) return;
+
         const linkRect = links[idx].getBoundingClientRect();
         const navRect  = nav.getBoundingClientRect();
         const panelW   = panel.clientWidth;
 
         // Desired left offset so the panel is centered on the link text
         const targetLeft =
-            linkRect.left + (linkRect.width / 2)
-            - navRect.left
-            - (panelW / 2);
+            linkRect.left + (linkRect.width / 2) - navRect.left - (panelW / 2);
 
-        // Compute duration based on how far we need to travel
+        // Animate over a duration that depends on how far we must travel
         const dur = durationForDistance(targetLeft - currentLeft);
         panel.style.transitionDuration = `${dur}s`;
 
-        // Move the panel
         panel.style.transform = `translateX(${targetLeft}px)`;
-
-        // Remember for the next move
         currentLeft = targetLeft;
     };
 
-    // ------------------------------------------------------------------
-    // Initial position – use the link marked with aria‑current="page"
-    // ------------------------------------------------------------------
-    const currentIdx = links.findIndex(a => a.hasAttribute('aria-current'));
-    if (currentIdx !== -1) {
-        setPanel(currentIdx);
+    /* ----------------------------------------------------------
+       Initial position – use the link marked with aria‑current
+    ---------------------------------------------------------- */
+    activeIdx = links.findIndex(a => a.hasAttribute('aria-current'));
+    if (activeIdx !== -1) {
+        setPanel(activeIdx);
     } else {
         panel.style.opacity = '0';   // hide until hovered
     }
 
-    // ------------------------------------------------------------------
-    // Hover logic
-    // ------------------------------------------------------------------
+    /* ----------------------------------------------------------
+       Hover logic – update the selector and remember the index
+    ---------------------------------------------------------- */
     links.forEach((link, i) => {
         link.addEventListener('mouseenter', () => {
+            activeIdx = i;
             setPanel(i);
             panel.style.opacity = '1';
         });
+    });
 
-            /* ------------------------------------------------------------------
-       ** Return to the active section when leaving the nav bar **
-    ------------------------------------------------------------------*/
+    /* ----------------------------------------------------------
+       Return to the active section when leaving the nav bar
+    ---------------------------------------------------------- */
     nav.addEventListener('mouseleave', () => {
-        const activeLink = nav.querySelector(
-            'a.active-link'
-        );
-        if (!activeLink) return;          // nothing to do
+        const activeLink = nav.querySelector('a.active-link');
+        if (!activeLink) return;
 
         const idx = links.indexOf(activeLink);
         if (idx === -1) return;
 
-        setPanel(idx);                     // slide back
-        panel.style.opacity = '1';         // keep it visible
+        activeIdx = idx;
+        setPanel(idx);
+        panel.style.opacity = '1';
     });
-    });
-});
 
+    /* ----------------------------------------------------------
+       Flick / swipe detection
+    ---------------------------------------------------------- */
+    let startX   = null;          // X coordinate where the gesture started
+    let startT   = null;          // Timestamp when the gesture started
+
+    const minDistance = 30;       // px – minimal distance for a flick
+    const minSpeed    = 0.3;      // px/ms (≈300 px/s)
+
+    const handlePointerDown = e => {
+        startX = e.clientX;
+        startT = performance.now();
+    };
+
+    const handlePointerUp = e => {
+        if (startX === null) return;
+
+        const endX   = e.clientX;
+        const deltaX = endX - startX;          // signed distance
+        const deltaT = performance.now() - startT;  // time in ms
+
+        // Only consider horizontal flicks that are fast enough
+        if (
+            Math.abs(deltaX) > minDistance &&
+            Math.abs(deltaX) / deltaT >= minSpeed
+        ) {
+            const dir   = deltaX > 0 ? +1 : -1;     // right or left
+            let newIdx  = activeIdx + dir;
+
+            // Clamp to the bounds of the link list
+            if (newIdx < 0)    newIdx = 0;
+            if (newIdx >= count) newIdx = count - 1;
+
+            if (newIdx !== activeIdx) {
+                activeIdx = newIdx;
+                setPanel(newIdx);
+                panel.style.opacity = '1';
+            }
+        }
+
+        // Reset
+        startX = null;
+        startT = null;
+    };
+
+    /* ----------------------------------------------------------
+       Attach the gesture listeners – use PointerEvents if available,
+       otherwise fall back to touch events.
+    ---------------------------------------------------------- */
+    if ('PointerEvent' in window) {
+        nav.addEventListener('pointerdown',  handlePointerDown);
+        nav.addEventListener('pointerup',    handlePointerUp);
+        nav.addEventListener('pointercancel', () => { startX = null; startT = null; });
+    } else {
+        // Touch‑only browsers
+        nav.addEventListener('touchstart', e => {
+            if (e.touches.length === 1) {
+                const t = e.touches[0];
+                handlePointerDown({ clientX: t.clientX });
+            }
+        });
+
+        nav.addEventListener('touchend', e => {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                const t = e.changedTouches[0];
+                handlePointerUp({ clientX: t.clientX });
+            }
+        });
+    }
+});
 
 // --------------------------COIN FLIP
 (() => {
