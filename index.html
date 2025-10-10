@@ -555,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Smooth scroll – used only inside the Home section
     function scrollToWithOffset(el, offset = 0) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: 'auto', block: 'start' });
         setTimeout(() => window.scrollBy(0, offset), 0);
     }
 
