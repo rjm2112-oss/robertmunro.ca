@@ -561,12 +561,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Instant (no‑smooth) jump – used when moving between sections
     function scrollToInstantWithOffset(el, offset = 0) {
         el.scrollIntoView({ behavior: 'auto', block: 'start' });
-        setTimeout(() => window.scrollBy(0, offset), 0);
+        setTimeout(() => window.scrollBy(0, offset = -nav.offsetHeight ), 0);
     }
 
     /* ---------------------------------------------------------------- */
 
-    const THRESHOLD_TOP = nav.offsetHeight - 70; // tweak if you need more room
+    const THRESHOLD_TOP = nav.offsetHeight / 3; // tweak if you need more room
 
     function showSection(id, linkIdx = null) {
         // --------- hide the previous section --------------------------------
