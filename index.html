@@ -654,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAtTop = window.scrollY < THRESHOLD_TOP;
             if (!isAtTop) {
                 // Smooth scroll *inside* the Home section
-                scrollToWithOffset(detailArea);
+                scrollToWithOffset(detailArea, -600);
             }
         });
     });
