@@ -262,18 +262,40 @@ WHITE SPACE above and below download button */
   align-items:center; justify-content:top;
   visibility:hidden; opacity:0;
   transition:.3s ease;
+  z-index:0;
 }
-.modal.show{visibility:visible; opacity:1;}
+.modal.show{visibility:visible; opacity:1;display: flex;}
 .modal img{
-  max-width:90vw; max-height:80vh;
+  max-width:90vw; max-height:75vh;
   border-radius:4px;
   margin-bottom:8px;              /* space between image & caption */
 }
 .modal-caption{
   color:#fff; font-size:1rem; padding:0 12px;
-  text-align:center;             /* <‑‑ NEW: simple caption styling          */
+  text-align:center;
+}
+/* ----------  Zoom wrapper ---------- */
+.modal-zoom {
+  max-width: 90vw;          /* keep inside viewport */
+  max-height: 90vh;
+  text-align: center;
+  overflow: hidden;
+
+  /* Initial state – tiny & invisible */
+  transform: scale(.6);
+  opacity: 0;
+
+  /* Animation when .show is added */
+  transition:
+    transform .5s ease-out,
+    opacity   .3s ease-in;
 }
 
+/* When the modal is shown, grow to full size and fade in */
+#imageModal.modal.show .modal-zoom {
+  transform: scale(1);
+  opacity: 1;
+}
 /* ---------- COIN FLIP------------------------------------ */
 #coin-demo {
   display: flex;
@@ -499,7 +521,6 @@ WHITE SPACE above and below download button */
 /* ------------------------------------------------------------------ */
 /* 1️⃣ Navigation & section activation --------------------------------*/
 document.addEventListener('DOMContentLoaded', () => {
-    /* --- existing code unchanged --------------------------------- */
     const navLinks = document.querySelectorAll('[data-target]');
     const sections = document.querySelectorAll('section');
     const nav      = document.querySelector('.glass-nav');
@@ -806,7 +827,43 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
 
 })();
+// Gallery modal --------------------------------------------
+const modal = document.getElementById('imageModal');
+const modalImg = modal.querySelector('img');
+const modalCaption = modal.querySelector('.modal-caption');
 
+document.getElementById('gallery').addEventListener('click', e => {
+  if (e.target.tagName.toLowerCase() !== 'img') return;
+
+  const img = e.target;
+  modalImg.src   = img.src;
+  modalImg.alt   = img.alt;
+
+  // Grab the caption text from the closest .gallery-item
+  const captionEl = img.closest('.gallery-item').querySelector('.description');
+  const captionText = captionEl ? captionEl.innerText : '';
+  if (captionText) {
+    modalCaption.textContent = captionText;
+    modalCaption.style.display = 'block';
+  } else {
+    modalCaption.style.display = 'none';
+  }
+
+  /* ---- open the modal & trigger the animation ---- */
+  modal.classList.add('show');
+
+  // Force a re‑flow so that if you click the same image again,
+  // the animation will restart.
+  void modal.offsetWidth;            // <-- this line is optional but safe
+});
+
+modal.addEventListener('click', () => {
+  modal.classList.remove('show');
+  modalImg.src = '';
+  modalImg.alt = '';
+  modalCaption.textContent = '';
+  modalCaption.style.display = 'none';
+});
 
 </script>
 </body>
