@@ -683,6 +683,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentLeft = 0;          // left offset of the panel (px)
     let activeIdx   = -1;         // index of the link that is currently “active”
 
+    if (activeIdx !== -1) {
+    // Trigger reflow:
+    void panel.offsetWidth;   // reading offsetWidth forces layout
+    setPanel(activeIdx);
+}
+
     /* ----------------------------------------------------------
        Move the selector to the link at position `idx`
     ---------------------------------------------------------- */
