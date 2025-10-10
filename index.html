@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -146,7 +147,7 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
 }
 .preview-list .post .full-body{display:none;}
 .meta{font-size:1rem;color:#555;margin-top:.1rem;margin-bottom:1rem;}
-.post h3{margin:0 0 1rem 0;font-size:1.2rem;} /* post preview font size  */
+.post h3{margin:0 0 1rem 0;font-size:1.2rem;color:#000;} /* post preview title font size  */
 .post:not(.static):hover{
   transform:translateY(-2px);transition:transform .15s ease-out;background:#f8f8f8;
 }
@@ -479,15 +480,15 @@ WHITE SPACE above and below download button */
       <!-- Example image 1 -->
       <figure class="gallery-item">
         <img src="assets/gallery5.png" alt="Gallery image 1">
-        <figcaption class="description">A brief description of Gallery image 1.</figcaption>
+        <figcaption class="description">A brief description of Gallery image 1.</figcaption>
       </figure>
 
       <!-- Repeat for the remaining images… -->
-      <figure class="gallery-item"><img src="assets/gallery6.png" alt="Gallery image 2"><figcaption class="description">A brief description of Gallery image 2.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery3.png" alt="Gallery image 3"><figcaption class="description">A brief description of Gallery image 3.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery4.png" alt="Gallery image 4"><figcaption class="description">A brief description of Gallery image 4.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery1.png" alt="Gallery image 5"><figcaption class="description">A brief description of Gallery image 5.</figcaption></figure>
-      <figure class="gallery-item"><img src="assets/gallery2.png" alt="Gallery image 6"><figcaption class="description">A brief description of Gallery image 6.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery6.png" alt="Gallery image 2"><figcaption class="description">A brief description of Gallery image 2.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery3.png" alt="Gallery image 3"><figcaption class="description">A brief description of Gallery image 3.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery4.png" alt="Gallery image 4"><figcaption class="description">A brief description of Gallery image 4.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery1.png" alt="Gallery image 5"><figcaption class="description">A brief description of Gallery image 5.</figcaption></figure>
+      <figure class="gallery-item"><img src="assets/gallery2.png" alt="Gallery image 6"><figcaption class="description">A brief description of Gallery image 6.</figcaption></figure>
     </div>
   </section>
 
@@ -587,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
         /* ------------------------------------------------- */
         const isAtTop = window.scrollY < THRESHOLD_TOP;
 
-        if (linkIdx !== null && !isAtTop) {
+        if (linkIdx !== null) {
             // **no smooth** – instant jump between sections
             // If you want a small offset to keep the section just below the nav,
             // pass `-nav.offsetHeight` as the second argument.
