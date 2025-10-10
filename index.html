@@ -496,7 +496,6 @@ WHITE SPACE above and below download button */
   <div class="modal-caption"></div>
 </div>
 <script>
-
 /* ------------------------------------------------------------------ */
 /* 1️⃣ Navigation & section activation --------------------------------*/
 document.addEventListener('DOMContentLoaded', () => {
@@ -506,7 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav      = document.querySelector('.glass-nav');
     const panel    = nav.querySelector('.panel');
 
-    let currentNavIndex = null;
+    let currentNavIndex = null;        // index of the link that is currently active
+    let currentSectionId = null;       // id of the section that is currently shown
 
     /* ---------------------------------------------------------------- */
 
@@ -528,39 +528,52 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.transform = `translateX(${targetLeft}px)`;
     }
 
-    /* ----- NEW helper ------------------------------------------------ */
+
+    // Smooth scroll – used only inside the Home section
     function scrollToWithOffset(el, offset = 0) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => window.scrollBy(0, offset), 0);
     }
+
+    // Instant (no‑smooth) jump – used when moving between sections
+    function scrollToInstantWithOffset(el, offset = 0) {
+        el.scrollIntoView({ behavior: 'auto', block: 'start' });
+        setTimeout(() => window.scrollBy(0, offset), 0);
+    }
+
     /* ---------------------------------------------------------------- */
 
-    /* ----------------------------------------------------------------- */
-    const THRESHOLD_TOP = nav.offsetHeight + 0; // tweak if you need more room
+    const THRESHOLD_TOP = nav.offsetHeight - 65; // tweak if you need more room
 
     function showSection(id, linkIdx = null) {
+        // --------- hide the previous section --------------------------------
         sections.forEach(s => s.classList.remove('active'));
+
         const targetSec = document.getElementById(id);
         if (!targetSec) return;
+
         targetSec.classList.add('active');
 
+        // remember which section is now active (used to decide on scrolling)
+        currentSectionId = id;
         clearActive(id);
         expandFirstInSection(id);
 
-        /* ----------------------------------------------------------------- */
-        /* 1️⃣  Only scroll when we’re *not* at the very top of the page   */
-        /* ----------------------------------------------------------------- */
+        /* ------------------------------------------------- */
+        /* 1️⃣ Only scroll when we’re *not* at the very top of the page   */
+        /* ------------------------------------------------- */
         const isAtTop = window.scrollY < THRESHOLD_TOP;
 
         if (linkIdx !== null && !isAtTop) {
-            const navHeight = nav.offsetHeight;
-            // Move the page so that the section starts just below the nav
-            scrollToWithOffset(targetSec);
+            // **no smooth** – instant jump between sections
+            // If you want a small offset to keep the section just below the nav,
+            // pass `-nav.offsetHeight` as the second argument.
+            scrollToInstantWithOffset(targetSec);
         }
 
-        /* ----------------------------------------------------------------- */
-        /* 2️⃣  Update panel & active link (always run – we still want it) */
-        /* ----------------------------------------------------------------- */
+        /* ------------------------------------------------- */
+        /* 2️⃣ Update panel & active link (always run – we still want it) */
+        /* ------------------------------------------------- */
         if (linkIdx !== null) {
             movePanelTo(linkIdx);
             currentNavIndex = linkIdx;
@@ -596,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     /* ----------------------------------------------------------------- */
-    /* 3️⃣  Preview‑list clicks – same “no‑scroll‑when‑at‑top” guard     */
+    /* 3️⃣ Preview‑list clicks – same “no‑scroll‑when‑at‑top” guard     */
     /* ----------------------------------------------------------------- */
     document.querySelectorAll('.preview-list').forEach(list => {
         list.addEventListener('click', e => {
@@ -617,12 +630,12 @@ document.addEventListener('DOMContentLoaded', () => {
             /* Only scroll if we’re not already at the top of the page */
             const isAtTop = window.scrollY < THRESHOLD_TOP;
             if (!isAtTop) {
-                const navHeight = nav.offsetHeight;
+                // Smooth scroll *inside* the Home section
                 scrollToWithOffset(detailArea, -500);
             }
         });
-    });|
-
+    });
+});
 
 // ------------------------------------------------------------------
 // GLASS NAV PANEL distance → duration (px per second)
