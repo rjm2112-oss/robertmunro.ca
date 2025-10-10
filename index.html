@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Smooth scroll – used only inside the Home section
     function scrollToWithOffset(el, offset = 0) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(() => window.scrollBy(0, offset), 0);
+        setTimeout(() => window.scrollBy(0, offset), 300);
     }
 
     // Instant (no‑smooth) jump – used when moving between sections
