@@ -665,6 +665,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const links = Array.from(nav.querySelectorAll('a'));
     const count = links.length;
 
+
+
+    /* ----------------------------------------------------------
+       State variables
+    ---------------------------------------------------------- */
+    let currentLeft = 0;          // left offset of the panel (px)
+    let activeIdx   = -1;         // index of the link that is currently “active”
+
     /* ----------------------------------------------------------
        Helper: distance → duration (px per second)
     ---------------------------------------------------------- */
@@ -676,19 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const raw = Math.abs(dist) * msPerPixel / 1000;
         return Math.min(Math.max(raw, minDur), maxDur);
     };
-
-    /* ----------------------------------------------------------
-       State variables
-    ---------------------------------------------------------- */
-    let currentLeft = 0;          // left offset of the panel (px)
-    let activeIdx   = -1;         // index of the link that is currently “active”
-
-    if (activeIdx !== -1) {
-    // Trigger reflow:
-    void panel.offsetWidth;   // reading offsetWidth forces layout
-    setPanel(activeIdx);
-}
-
     /* ----------------------------------------------------------
        Move the selector to the link at position `idx`
     ---------------------------------------------------------- */
@@ -710,6 +705,16 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.transform = `translateX(${targetLeft}px)`;
         currentLeft = targetLeft;
     };
+
+
+       activeIdx = links.findIndex(a => a.hasAttribute('aria-current'));
+    if (activeIdx !== -1) {
+        // Defer until layout is ready
+        requestAnimationFrame(() => setPanel(activeIdx));
+    } else {
+        panel.style.opacity = '0';
+    }
+
 
 function initNav() {
     // … all the constants / state variables …
