@@ -750,6 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minSpeed    = 0.3;      // px/ms (≈300 px/s)
 
     const handlePointerDown = e => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return; // ignore right‑clicks
         startX = e.clientX;
         startT = performance.now();
     };
@@ -758,8 +759,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (startX === null) return;
 
         const endX   = e.clientX;
-        const deltaX = endX - startX;          // signed distance
-        const deltaT = performance.now() - startT;  // time in ms
+        const deltaX = endX - startX;
+        const deltaT = performance.now() - startT;
 
         // Only consider horizontal flicks that are fast enough
         if (
@@ -785,31 +786,78 @@ document.addEventListener('DOMContentLoaded', () => {
         startT = null;
     };
 
+    nav.addEventListener('pointerdown', handlePointerDown, {passive: true});
+    nav.addEventListener('pointerup',   handlePointerUp);
+
     /* ----------------------------------------------------------
-       Attach the gesture listeners – use PointerEvents if available,
-       otherwise fall back to touch events.
+       Touch‑only fallback – blocks vertical scroll during horizontal swipe
     ---------------------------------------------------------- */
-    if ('PointerEvent' in window) {
-        nav.addEventListener('pointerdown',  handlePointerDown);
-        nav.addEventListener('pointerup',    handlePointerUp);
-        nav.addEventListener('pointercancel', () => { startX = null; startT = null; });
-    } else {
-        // Touch‑only browsers
+    if ('ontouchstart' in window) {
+        let startY = null;           // Y coordinate at touchstart (for direction test)
+        let isHorizontalTouch = null; // unknown until we see the first move
+
         nav.addEventListener('touchstart', e => {
-            if (e.touches.length === 1) {
-                const t = e.touches[0];
-                handlePointerDown({ clientX: t.clientX });
+            if (e.touches.length !== 1) return;
+
+            const t = e.touches[0];
+            startX   = t.clientX;
+            startY   = t.clientY;
+            startT   = performance.now();
+            isHorizontalTouch = null; // reset
+        }, {passive: false});          // must be non‑passive to call preventDefault()
+
+        nav.addEventListener('touchmove', e => {
+            if (!e.touches || e.touches.length !== 1) return;
+
+            const t   = e.touches[0];
+            const dx  = t.clientX - startX;
+            const dy  = t.clientY - startY;
+
+            // Decide direction only once
+            if (isHorizontalTouch === null) {
+                isHorizontalTouch = Math.abs(dx) > Math.abs(dy);
             }
-        });
+
+            // If a horizontal swipe is detected, block vertical scrolling
+            if (isHorizontalTouch) {
+                e.preventDefault();
+            }
+        }, {passive: false});
 
         nav.addEventListener('touchend', e => {
-            if (e.changedTouches && e.changedTouches.length > 0) {
-                const t = e.changedTouches[0];
-                handlePointerUp({ clientX: t.clientX });
+            if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+            const t   = e.changedTouches[0];
+            const endX = t.clientX;
+            const deltaX = endX - startX;
+            const deltaT = performance.now() - startT;
+
+            // Re‑use the same flick logic as for pointer events
+            if (
+                Math.abs(deltaX) > minDistance &&
+                Math.abs(deltaX) / deltaT >= minSpeed
+            ) {
+                const dir   = deltaX > 0 ? +1 : -1;
+                let newIdx  = activeIdx + dir;
+
+                if (newIdx < 0)    newIdx = 0;
+                if (newIdx >= count) newIdx = count - 1;
+
+                if (newIdx !== activeIdx) {
+                    activeIdx = newIdx;
+                    setPanel(newIdx);
+                    panel.style.opacity = '1';
+                }
             }
+
+            // Reset
+            startX   = null;
+            startY   = null;
+            isHorizontalTouch = null;
         });
     }
 });
+
 
 // --------------------------COIN FLIP
 (() => {
