@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (linkIdx !== null && !isAtTop) {
             const navHeight = nav.offsetHeight;
             // Move the page so that the section starts just below the nav
-            scrollToWithOffset(targetSec, -navHeight);
+            scrollToWithOffset(targetSec);
         }
 
         /* ----------------------------------------------------------------- */
@@ -617,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const isAtTop = window.scrollY < THRESHOLD_TOP;
             if (!isAtTop) {
                 const navHeight = nav.offsetHeight;
-                scrollToWithOffset(detailArea, -navHeight);
+                scrollToWithOffset(detailArea, -200);
             }
         });
     });
