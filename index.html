@@ -516,6 +516,7 @@ WHITE SPACE above and below download button */
 <script>
 /* ------------------------------------------------------------------ */
 /* 1️⃣ Navigation & section activation --------------------------------*/
+
 document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('[data-target]');
     const sections = document.querySelectorAll('section');
@@ -704,15 +705,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLeft = targetLeft;
     };
 
-    /* ----------------------------------------------------------
-       Initial position – use the link marked with aria‑current
-    ---------------------------------------------------------- */
+function initNav() {
+    // … all the constants / state variables …
+
+    /* ---------- INITIAL POSITION ---------- */
     activeIdx = links.findIndex(a => a.hasAttribute('aria-current'));
     if (activeIdx !== -1) {
-        setPanel(activeIdx);
+        // Let Safari finish layout first
+        requestAnimationFrame(() => setPanel(activeIdx));
     } else {
-        panel.style.opacity = '0';   // hide until hovered
+        panel.style.opacity = '0';
     }
+}
+
+document.addEventListener('DOMContentLoaded', initNav);
 
     /* ----------------------------------------------------------
        Hover logic – update the selector and remember the index
