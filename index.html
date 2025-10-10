@@ -76,6 +76,37 @@ body{
       pointer-events:auto;
 }
 
+
+
+.glass-nav a::before{
+    content:"";
+    position:absolute;
+  /* independent X & Y offsets   */
+  inset:-6.5vh -6.5vw;          /* top/bottom  left/right */
+    background:transparent;
+    pointer-events:auto;
+    z-index:0;
+}
+
+/* ────────────────────────────────────── */
+/* The sliding glass panel – enhanced 3D shading */
+.glass-nav .panel{
+    content:"";
+    backdrop-filter: hue-rotate(var(--hover-hue-change));
+    -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
+    position:absolute;
+    top: 0px; left:0; bottom:0px;
+
+    width: calc((100vw / 5) + 9vw);
+    height: calc(var(--nav-height)-2px);
+
+    /* ------------------------------------------------- */
+ pointer-events:none;
+    border-radius:200rem;
+    border: 1.5px solid rgba(var(--slider-outline), .275);
+    z-index:1;}
+    @media (max-width:400px) {  .glass-nav .panel{ bottom:1.5px;height: calc(var(--nav-height)-1.5px);}}
+
 /* ────────────────────────────────────────────────────── */
 /* Links – relative so we can position the pane absolutely inside each one */
 .glass-nav a{
@@ -101,38 +132,6 @@ touch-action: manipulation;   /* iOS Safari + Chrome Android */
 }
     @media (max-width:500px) {  .glass-nav a{  padding:0 0;}  /*  margin for nav text */}
     @media (min-width:1000px) {  .glass-nav a{  padding:0 2.2vw;}  /*  margin for nav text */}
-
-.glass-nav a::before{
-    content:"";
-    position:absolute;
-  /* independent X & Y offsets   */
-  inset:-6.5vh -6.5vw;          /* top/bottom  left/right */
-    background:transparent;
-    pointer-events:auto;
-    z-index:0;
-}
-
-/* ────────────────────────────────────── */
-/* The sliding glass panel – enhanced 3D shading */
-.glass-nav .panel{
-    content:"";
-    backdrop-filter: hue-rotate(var(--hover-hue-change));
-    -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
-    position:absolute;
-    top: 0px; left:0; bottom:0px;
-    background:transparent;
-
-    width: calc((100vw / 5) + 9vw);
-    height: calc(var(--nav-height)-2px);
-
-    /* ------------------------------------------------- */
- pointer-events:none;
-    border-radius:200rem;
-    border: 1.5px solid rgba(var(--slider-outline), .275);
-    z-index:1;}
-    @media (max-width:400px) {  .glass-nav .panel{ bottom:1.5px;height: calc(var(--nav-height)-1.5px);}}
-
-
 
 /* Blog & preview ------------------------------------------------------- */
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
