@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Instant (no‑smooth) jump – used when moving between sections
     function scrollToInstantWithOffset(el, offset = 0) {
         el.scrollIntoView({ behavior: 'auto', block: 'start' });
-        setTimeout(() => window.scrollBy(0, offset = -nav.offsetHeight ), 0);
+        setTimeout(() => window.scrollBy(0, offset = -1000 ), 0);
     }
 
     /* ---------------------------------------------------------------- */
