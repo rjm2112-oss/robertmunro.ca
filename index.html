@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,7 +41,7 @@
 /* Sections ------------------------------------------------------------- */
 main section{
  min-height: calc(100vh - var(--nav-height));
-  width:100vw;width:100%;background:var(--section-background);
+  width:100%;background:var(--section-background);
   padding:0 var(--section-padding-horizontal);
   border-top: 1px 0 0 solid rgba(28, 67, 100,1);
   display:none;
@@ -51,18 +52,18 @@ body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
 background:var(--background-color);
+width:100%
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
 
 /* 3️⃣ Navigation bar */
 body{
-    width:100vw;margin:0; padding:0; font-family:'Arial', sans-serif;
+    width:100%;margin:0; padding:0; font-family:'Arial', sans-serif;
 }
 .glass-nav {
     position: fixed;
     top:0; left:0; right:0;
     height: var(--nav-height);
-        width:100vw;
 
     display:flex;
     align-items:center;
@@ -82,7 +83,7 @@ body{
 /* Links – relative so we can position the pane absolutely inside each one */
 .glass-nav a{
     position:relative;
-        width:100vw;
+        width:100%;
 
     text-align:center;     /*  center link text inside its block */
     color:var(--navtext-color);
