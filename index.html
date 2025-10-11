@@ -45,6 +45,7 @@ main section{
   padding:0 var(--section-padding-horizontal);
   border-top: 1px 0 0 solid rgba(28, 67, 100,1);
   display:none;
+  max-width:calc(100vw -2px)
 }
 main section.active{display:block;opacity:1;}
 /* Normalisation -------------------------------------------------------- */
@@ -52,7 +53,8 @@ body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
 background:var(--background-color);
-width:100%
+width:100%;
+max-width:calc(100vw -2px)
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
 
