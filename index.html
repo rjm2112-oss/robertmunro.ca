@@ -12,8 +12,8 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 4vw;
-  --post-background:#F1F1F1;
-  --section-background:#F1F1F1;
+  --post-background:#F7F7F7;
+  --section-background:#F7F7F7;
   --contact-background:#E2E7ED;
 }
 
@@ -209,7 +209,26 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     /* keep background transparent – glass already has opacity */
     background:transparent;
 }
+/* ------------------------------------------------------------------
+   4️⃣ Active state – mirror the hover animation
+-------------------------------------------------------------------*/
+/*  • If you use a different active‑class name, just swap it in here.
+    • The selector below is written as “:not(.static)” so static posts
+      (the sidebar meta boxes) are left untouched. */
+.post.active:not(.static),
+/* optional alias – handy if your JS uses `.current` instead of `.active`  */
+.post.current:not(.static) {
+    /* glass‑panel depth + hue shift   */
+    backdrop-filter: blur(6px) hue-rotate(var(--hover-hue-change));
+    -webkit-backdrop-filter: blur(6px) hue-rotate(var(--hover-hue-change));
 
+    /* remove the original background – same as on hover  */
+    background: transparent;
+
+    /* keep the post visually “active” (no transform/transition) */
+    transform: none;
+    transition: none;
+}
 
  @media (max-width:900px) {.post h3{margin:0 0 .25rem 0;}.meta{margin-top:.25rem;margin-bottom:.25rem;}
  .post.static p {
