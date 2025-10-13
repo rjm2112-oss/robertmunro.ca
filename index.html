@@ -21,6 +21,7 @@
 :root{
     /* Navigation bar */
     --nav-height: 16vh;
+    --sliding-panel-border-radius: var(--nav-height);
     --background-color:#1C4364;
     --navtext-color: #B4AC58; /*180, 172, 88*/
     --nav-bg-opacity: .175;
@@ -92,11 +93,12 @@ body{
     text-align:center;     /*  center link text inside its block */
     color:var(--navtext-color);
     text-decoration:none;
-    font-weight:650;
-    padding:0 0;  /*  margin for nav text */
+    font-weight:600;
+    padding-left:5px;
+    padding-right:5px;/*  margin for nav text */
     z-index:0;
     /* Responsive font‑size  */
-    font-size: clamp(1rem, 5vw, 1.8rem);   /* min = 1rem, max = 2rem */
+    font-size: clamp(1rem, 4vw, 1.6rem);   /* min = 1rem, max = 2rem */
     text-shadow:
         0 1px 0 #000,
        -1px 0 0 #000,
@@ -125,16 +127,16 @@ body{
     backdrop-filter: hue-rotate(var(--hover-hue-change));
     -webkit-backdrop-filter: hue-rotate(var(--hover-hue-change));
     position:absolute;
-    top: 0px; left:0; bottom:0px;
+    top:3px; left:0; bottom:1px;
 
-    width: calc((100vw / 5) + 9vw);
-    height: calc(var(--nav-height)-2px);
+    width: calc(var(--nav-height) - 6px);
+    height: calc(var(--nav-height) - 6px); /*calc(var(--nav-height)-2px);
 
     /* ------------------------------------------------- */
  pointer-events:none;
-    border-radius:200rem;
+    border-radius:var(--sliding-panel-border-radius);
     border: 1.5px solid rgba(var(--slider-outline), .35);
-    z-index:1;}
+    z-index:2;}
     @media (max-width:400px) {  .glass-nav .panel{ bottom:1.5px;height: calc(var(--nav-height)-1.5px);}}
 
 
