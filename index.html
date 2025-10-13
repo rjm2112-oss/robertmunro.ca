@@ -12,8 +12,8 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 4vw;
-  --post-background:#E2E7ED;
-  --section-background:#E2E7ED;
+  --post-background:#F7F7F7;
+  --section-background:#F7F7F7;
   --contact-background:#E2E7ED;
 }
 
@@ -198,8 +198,8 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
    3️⃣  Hover effect – same as .glass-blog-panel:hover
 -------------------------------------------------------------------*/
 .post:not(.static):hover{
-   backdrop-filter: blur(0px) hue-rotate(-10deg);
-    -webkit-backdrop-filter: blur(0px) hue-rotate(-10deg);
+   backdrop-filter: blur(0px) hue-rotate(var(--hover-hue-change));
+    -webkit-backdrop-filter: blur(0px) hue-rotate(var(--hover-hue-change));
 
     /* remove the old transform/transition that came with .post:hover */
     transform:none;
@@ -465,7 +465,8 @@ WHITE SPACE above and below download button */
 
       <div class="preview-list">
 
-        
+        <!-- Contact card (static) -->
+
 
         <!-- Featured image -->
         <article class="post"><h3>Featured Image</h3>
