@@ -144,7 +144,7 @@ body{
 
 /* Blog & preview ------------------------------------------------------- */
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
-.blog-container{display:flex;z-index:-2}
+.blog-container{display:flex;}
 .preview-list{
   width:calc(20vw + 3rem);flex-shrink:0;padding-right:0px;
   height:calc(100vh - 2px - var(--nav-height));
@@ -210,7 +210,7 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     /* remove the old transform/transition that came with .post:hover */
     transform:none;
     transition:none;
-
+    background: transparent
     /* keep background transparent – glass already has opacity */
 }
 /* ------------------------------------------------------------------
@@ -245,13 +245,6 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     padding-bottom: 1rem;
     padding-top: 1rem;}
 .post.static{        padding-left: .75rem;padding-right: .75rem;}
-
-.post:not(.static):hover{
-   backdrop-filter:  hue-rotate(var(--active-blog-hue-change));
-    -webkit-backdrop-filter:hue-rotate(var(--active-blog-hue-change));
-    background: rgba(var(--nav-tint), var(--nav-bg-opacity));
-}
-
 }
 
 /* ------------------------CV styling ---------------------
