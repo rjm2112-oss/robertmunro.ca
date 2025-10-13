@@ -12,8 +12,8 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 4vw;
-  --post-background:#E2E7ED;
-  --section-background:#E2E7ED;
+  --post-background:white;
+  --section-background:white;
   --contact-background:#E2E7ED;
 }
 
@@ -28,12 +28,12 @@
     --hover-bg-opacity: .1;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
-    --hover-hue-change: -70deg;
+    --hover-hue-change: -75deg;
     --nav-tint: 28, 67, 100;
     --hover-tint: 0, 0, 0;
     --slider-outline: 0, 0, 0;
     --active-post-tint: 180, 172, 88;
-    --active-blog-hue-change:85deg;
+    --active-blog-hue-change:-70deg;
 
     /* Background Base colours */
     --bg-base: #001f3f;             /* deep navy 0, 31, 63*/
@@ -98,7 +98,7 @@ body{
     padding-right:0px;/*  margin for nav text */
     z-index:0;
     /* Responsive font‑size  */
-    font-size: clamp(1.2rem, 4vw, 1.6rem);   /* min = 1rem, max = 2rem */
+    font-size: clamp(1rem, 4vw, 1.6rem);   /* min = 1rem, max = 2rem */
     text-shadow:
         0 1px 0 #000,
        -1px 0 0 #000,
@@ -144,7 +144,7 @@ body{
 
 /* Blog & preview ------------------------------------------------------- */
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
-.blog-container{display:flex;}
+.blog-container{display:flex;z-index:-2}
 .preview-list{
   width:calc(20vw + 3rem);flex-shrink:0;padding-right:0px;
   height:calc(100vh - 2px - var(--nav-height));
@@ -203,15 +203,15 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
    3️⃣  Hover effect – same as .glass-blog-panel:hover
 -------------------------------------------------------------------*/
 .post:not(.static):hover{
-   backdrop-filter:  hue-rotate(var(--hover-hue-change));
-    -webkit-backdrop-filter:hue-rotate(var(--hover-hue-change));
+   backdrop-filter:  hue-rotate(var(--active-blog-hue-change));
+    -webkit-backdrop-filter:hue-rotate(var(--active-blog-hue-change));
+    background: rgba(202, 197, 255, .75);
 
     /* remove the old transform/transition that came with .post:hover */
     transform:none;
     transition:none;
 
     /* keep background transparent – glass already has opacity */
-    background:transparent;
 }
 /* ------------------------------------------------------------------
    4️⃣ Active state – mirror the hover animation
@@ -224,6 +224,7 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     -webkit-backdrop-filter:hue-rotate(var(--active-blog-hue-change));
  border-top: 1.5px solid rgba(0, 0, 0, .2);
         border-bottom: 1.5px solid rgba(0, 0, 0, .2);
+    background: rgba(202, 197, 255, .75);
 
     transform: none;
     transition: none;
