@@ -15,6 +15,9 @@
   --post-background:white;
   --section-background:white;
   --contact-background:#E2E7ED;
+  --active-post-background:rgba(202, 197, 255, .75);
+  --active-post-tint: 255, 255, 255;
+
 }
 
 /* Custom properties for glass nav (from nav.html) --------------------- */
@@ -22,17 +25,16 @@
     /* Navigation bar */
     --nav-height: 16vh;
     --sliding-panel-border-radius: var(--nav-height);
-    --background-color:white;
-    --navtext-color: #B4AC58; /*180, 172, 88*/
-    --nav-bg-opacity: .2;
-    --hover-bg-opacity: .4;
+    --background-color:#225792;
+    --navtext-color: rgb(180, 172, 130); /*180, 172, 88*/
+
+    --nav-bg-opacity: .175;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
     --hover-hue-change: -75deg;
     --nav-tint: 28, 67, 100;
-    --hover-tint: 0, 0, 0;
+    --hover-tint: 255, 255, 255;
     --slider-outline: 0, 0, 0;
-    --active-post-tint: 180, 172, 88;
     --active-blog-hue-change:-70deg;
 
     /* Background Base colours */
@@ -98,7 +100,7 @@ body{
     padding-right:0px;/*  margin for nav text */
     z-index:0;
     /* Responsive font‑size  */
-    font-size: clamp(1rem, 4vw, 1.6rem);   /* min = 1rem, max = 2rem */
+    font-size: clamp(1.2rem, 4vw, 1.6rem);   /* min = 1rem, max = 2rem */
     text-shadow:
         0 1px 0 #000,
        -1px 0 0 #000,
@@ -224,7 +226,7 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     -webkit-backdrop-filter:hue-rotate(var(--active-blog-hue-change));
  border-top: 1.5px solid rgba(0, 0, 0, .2);
         border-bottom: 1.5px solid rgba(0, 0, 0, .2);
-    background: rgba(202, 197, 255, .75);
+    background: var(--active-post-background);
 
     transform: none;
     transition: none;
