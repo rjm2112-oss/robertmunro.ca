@@ -30,10 +30,10 @@
 
     --nav-bg-opacity: .175;
     --slider-tint:rgb(255, 255, 255);
-    --slider-bg-opacity:  1;
+    --slider-bg-opacity:  .9;
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
-    --hover-hue-change: -75deg;
+    --hover-hue-change: -180deg;
     --nav-tint: 28, 67, 100;
     --hover-tint: 255, 255, 255;
     --slider-outline: 0, 0, 0;
@@ -61,10 +61,11 @@ body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
 background:var(--background-color);
+width:100%;
+
 background-image:url(assets/background.png);
 background-repeat: repeat;
-        background-size: 4% auto;
-width:100%;
+        background-size: 4.1px auto;
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
 
