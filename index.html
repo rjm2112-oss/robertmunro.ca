@@ -12,10 +12,10 @@
   --section-padding-horizontal:0;
   --blog-margin-left: 1vw;
   --blog-margin-right: 4vw;
-  --post-background:white;
-  --section-background:white;
+  --post-background:#FEFEFE;
+  --section-background:#FAF9FF;
   --contact-background:#E2E7ED;
-  --active-post-background:rgba(202, 197, 255, .5);
+  --active-post-background:rgba(250, 249, 255, .12);
   --active-post-tint: 255, 255, 255;
 
 }
@@ -27,7 +27,7 @@
     --sliding-panel-border-radius: var(--nav-height);
     --sliding-panel-brightnesss:1.01;
 
-     --background-color:white;
+     --background-color:#7E7188;
     --navtext-color: #F9CD5D; /*180, 172, 88*/
 
     --nav-bg-opacity: .1;
@@ -63,15 +63,12 @@ body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
 background:var(--background-color);
-width:100%;
-
+margin:0;
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
 
 /* 3️⃣ Navigation bar */
-body{
-    width:100%;margin:0; padding:0; font-family:'Arial', sans-serif;
-}
+
 .glass-nav {
     position: fixed;
     top:0; left:0; right:0;
@@ -216,7 +213,6 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
 .post:not(.static):hover{
    backdrop-filter:  hue-rotate(var(--active-blog-hue-change));
     -webkit-backdrop-filter:hue-rotate(var(--active-blog-hue-change));
-    background: rgba(202, 197, 255, .75);
 
     /* remove the old transform/transition that came with .post:hover */
     transform:none;
@@ -225,13 +221,13 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
     /* keep background transparent – glass already has opacity */
 }
 /* ------------------------------------------------------------------
-   4️⃣ Active state – mirror the hover animation
+   4️⃣ Active state
 -------------------------------------------------------------------*/
 .post.active:not(.static),
-/* optional alias – handy if your JS uses `.current` instead of `.active`  */
 .post.current:not(.static) {
  border-top: 1.5px solid rgba(0, 0, 0, .0);
         border-bottom: 1.5px solid rgba(0, 0, 0, .0);
+    border-radius: 0;
 
     background: var(--active-post-background);
 
