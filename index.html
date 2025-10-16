@@ -17,7 +17,7 @@
   --contact-background:#E2E7ED;
   --active-post-background:rgba(250, 249, 255, .12);
   --active-post-tint: 255, 255, 255;
-
+--non-static-post-bg-opacity: 0.12;
 }
 
 /* Custom properties for glass nav (from nav.html) --------------------- */
@@ -25,7 +25,7 @@
     /* Navigation bar */
     --nav-height: 16vh;
     --sliding-panel-border-radius: var(--nav-height);
-    --sliding-panel-brightnesss:1.01;
+    --sliding-panel-brightnesss:1.05;
 
      --background-color:#7E7188;
     --navtext-color: #F9CD5D; /*180, 172, 88*/
@@ -36,7 +36,7 @@
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
     --hover-hue-change: -160deg;
-    --nav-tint: 28, 67, 100;
+    --nav-tint: 115, 108, 131;
     --hover-tint: 255, 255, 255;
     --slider-outline: 0, 0, 0;
     --active-blog-hue-change:-75deg;
@@ -186,10 +186,8 @@ margin-left:var(--blog-margin-left);margin-right:var(--blog-margin-right);font-s
 -------------------------------------------------------------------*/
 .post:not(.static){
     /* --- Base glass appearance --------------------------------- */
-    background: rgba(var(--nav-tint), var(--nav-bg-opacity));
+    background: rgba(var(--nav-tint), var(--non-static-post-bg-opacity));
     border-radius: 1.5rem;
-    border-top: 1.5px solid rgba(0, 0, 0, 0);
-        border-bottom: 1.5px solid rgba(0, 0, 0, 0);
 
  border-top: 1.5px solid rgba(0, 0, 0, .2);
         border-bottom: 1.5px solid rgba(0, 0, 0, .2);
