@@ -25,7 +25,7 @@
     /* Navigation bar */
     --nav-height: 16vh;
     --sliding-panel-border-radius: var(--nav-height);
-    --sliding-panel-brightnesss:1.1;
+    --sliding-panel-brightnesss:1.125;
 
      --background-color:#1F2E5C;
     --navtext-color: #F9CD5D; /*180, 172, 88*/
@@ -36,7 +36,7 @@
     --blur-strength: 6px;
     --hover-blur-strength: 0px;
     --hover-hue-change: -160deg;
-    --nav-tint: 0,0,0;
+    --nav-tint: 115, 108, 131;
     --hover-tint: 255, 255, 255;
     --slider-outline: 0, 0, 0;
     --active-blog-hue-change:-75deg;
@@ -63,7 +63,8 @@ body{
   font-family:'Arial',sans-serif;
 background-color: var(--background-color);
 background:var(--background-color);
-background-image: url('assets/background.png');"
+background-image: url('assets/background.png');
+max-width:100vw;
 margin:0;
 }
 body > *:not(.glass-nav){margin-top: calc(var(--nav-height) + var(--section-padding-vertical));}
