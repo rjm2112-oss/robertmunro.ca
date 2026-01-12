@@ -541,91 +541,6 @@ document.addEventListener('DOMContentLoaded', initNav);
 });
 
 
-// --------------------------COIN FLIP
-(() => {
-  /* ----- Utility: create a coin element ---------------- */
-  function createCoin() {
-    const c = document.createElement('div');
-    c.className='coin-flip';
-
-    const heads = document.createElement('div');
-    heads.className='coin-heads';
-    const himg = document.createElement('img');
-    // If you don't have assets/pic3.png, replace with a data‑URI or another URL
-    himg.src='assets/pic5.png';
-    heads.appendChild(himg);
-
-    const tails = document.createElement('div');
-    tails.className='coin-tails';
-    const timg = document.createElement('img');
-    // If you don't have assets/pic2.png, replace with a data‑URI or another URL
-    timg.src='assets/pic4.png';
-    tails.appendChild(timg);
-
-    c.appendChild(heads);
-    c.appendChild(tails);
-    return c;
-  }
-
-  /* ----- Animation helpers ---------------------------- */
-  function startAnimation(coin) {
-    // Force restart of animation
-    coin.style.animation = 'none';
-    void coin.offsetWidth;                     // trigger reflow
-    // Start the fly animation with an ease‑out timing for faster start
-    coin.style.animation = 'fly 1.5s ease-out forwards';
-
-    // After fly + flip finishes, set the result
-    setTimeout(() => setResult(coin), 1500);
-  }
-
-  function setResult(coin) {
-    const heads = Math.random() < 0.5;          // true=heads, false=tails
-    if (heads) coin.classList.add('result-h');
-    else       coin.classList.add('result-t');
-    // stop the fly animation so coin stays at final position
-    coin.style.animation = 'none';
-  }
-
-  function flipCoins(n) {
-    const wrapper = document.getElementById('wrapper');
-    wrapper.innerHTML = '';                     // clear previous coins
-
-    let delay = 0;                              // ms before we start a coin
-    const centerDistance = 80;                 // spacing between centers
-    const staggerMs = 260;                      // <‑– change this to tweak the gap
-
-    for (let i = 0; i < n; i++) {
-      const coin = createCoin();
-
-      /* ---- Position the coin so its centre is over the wrapper’s centre */
-      const leftOffset = (i - (n - 1) / 2) * centerDistance;
-      coin.style.left = `calc(50% + ${leftOffset}px - 50px)`;
-      coin.style.transform = 'translateX(-50%)';
-
-      wrapper.appendChild(coin);
-
-      /* ---- Start the fly animation after a staggered delay */
-      setTimeout(() => startAnimation(coin), delay);
-      delay += staggerMs;                       // next coin starts `staggerMs` later
-    }
-  }
-
-  /* ----- Handle coin count button selection ---------------- */
-  let selectedNum = 1;
-  const coinBtns = document.querySelectorAll('#numCoinsContainer .coin-btn');
-  coinBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedNum = parseInt(btn.dataset.num, 10);
-      coinBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    });
-  });
-
-  /* ----- Event listeners -------------------------------- */
-  document.getElementById('flipBtn').addEventListener('click', () => flipCoins(selectedNum));
-
-})();
 // Gallery modal --------------------------------------------
 const modal = document.getElementById('imageModal');
 const modalImg = modal.querySelector('img');
@@ -666,5 +581,10 @@ modal.addEventListener('click', () => {
 
 
 </script>
+
+<!--  External coin‑flip script -->
+<script src="coin-flip.js" defer></script>
+
+
 </body>
 </html>
