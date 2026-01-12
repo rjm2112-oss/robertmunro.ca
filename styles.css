@@ -59,6 +59,22 @@ body{
 body > *:not(.glass-nav){
     margin-top: calc(var(--nav-height) + var(--section-padding-vertical));
 }
+/* 1️⃣  Make sure <body> can host a positioned pseudo‑element */
+body{
+    position:relative;            /* allows ::after to be anchored inside it   */
+}
+
+/* 2️⃣  Bottom‑half overlay using the same CSS variable */
+body::after{
+    content:"";
+    position:fixed;               /* stays on screen even when scrolling   */
+    left:0; bottom:0;
+    width:100%;
+    height:50vh;                  /* exactly half of the viewport height   */
+    background-color:var(--section-background);
+    pointer-events:none;          /* lets clicks pass through to underlying content */
+    z-index:-1;                   /* sits behind everything else           */
+}
 
 /* ------------------------------------------------------------------
  *   3️⃣ Navigation bar -------------------------------------------------- */
