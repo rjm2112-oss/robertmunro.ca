@@ -14,7 +14,7 @@
     --non-static-post-bg-opacity: 0.12;
 
     /* Navigation bar */
-    --nav-height: 16vh;
+    --nav-height: 15vh;
     --sliding-panel-border-radius: var(--nav-height);
     --sliding-panel-brightnesss:1.02;
     --background-color:#033561;
