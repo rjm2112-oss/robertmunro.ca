@@ -124,8 +124,8 @@ body > *:not(.glass-nav){
 img{max-width:100%;height:auto;margin:20px auto;display:block;}
 .blog-container{display:flex;}
 .preview-list{
-    width:calc(20vw+3rem);flex-shrink:0;padding-right:0;
-    height:calc(100vh-2px-var(--nav-height));
+    width:calc(20vw + 3rem);flex-shrink:0;padding-right:0;
+    height:calc(100vh - 2px - var(--nav-height));
 }
 .post-detail{flex-grow:1;background:var(--post-background);
     border-radius:8px;margin-left:var(--blog-margin-left);
