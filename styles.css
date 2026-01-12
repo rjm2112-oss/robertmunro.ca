@@ -15,7 +15,7 @@
 
     /* Navigation bar */
     --nav-height: 12vh;
-    --sliding-panel-border-radius: var(--nav-height);
+    --sliding-panel-border-radius: calc(var(--nav-height) + 5em);
     --sliding-panel-brightnesss:1.02;
     --background-color:#033561;
     --navtext-color: #FFC42E; /*180, 172, 88*/
@@ -118,7 +118,7 @@ body::after{
     backdrop-filter:hue-rotate(var(--hover-hue-change)) brightness(var(--sliding-panel-brightnesss));
     -webkit-backdrop-filter:hue-rotate(var(--hover-hue-change)) brightness(var(--sliding-panel-brightnesss));
     position:absolute;
-    top:1px; left:0; bottom:0px;
+    top:0px; left:0; bottom:0px;
     width:calc(var(--nav-height)-1px);
     min-width:25vw;
     height:calc(var(--nav-height)-1px);
