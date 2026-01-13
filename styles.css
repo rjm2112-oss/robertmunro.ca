@@ -254,9 +254,11 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
      *   Image inside the panel
      * ---------------------------------------------------------- */
     .gallery-item img{
-        width:90%;
+        width:84%;
         height:100%;
         object-fit:cover;
+        object-position: top center;   /* show the *top* of the picture first */
+
         display:block;
         box-shadow:none;
         border-radius: 1rem;
