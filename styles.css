@@ -38,7 +38,7 @@
 /* ------------------------------------------------------------------
  *   Sections ------------------------------------------------------------- */
 main section{
-    min-height: calc(102vh - var(--nav-height));
+    min-height: calc(105vh - var(--nav-height));
     width:100%;
     background:var(--section-background);
     padding:0 var(--section-padding-horizontal);
@@ -113,13 +113,13 @@ body::after{
     z-index:1;
 }
 
-/* The sliding glass panel – enhanced 3D shading */
+/* The sliding glass panel */
 .glass-nav .panel{
     backdrop-filter:hue-rotate(var(--hover-hue-change)) brightness(var(--sliding-panel-brightnesss));
     -webkit-backdrop-filter:hue-rotate(var(--hover-hue-change)) brightness(var(--sliding-panel-brightnesss));
     position:absolute;
     top:0px; left:0; bottom:0px;
-    width:calc(var(--nav-height)-1px);
+    width:calc(var(--nav-height)-0px);
     min-width:25vw;
     height:calc(var(--nav-height)-0px);
     background:rgba(var(--slider-tint),var(--slider-bg-opacity));
