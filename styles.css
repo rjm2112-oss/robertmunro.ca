@@ -38,7 +38,7 @@
 /* ------------------------------------------------------------------
  *   Sections ------------------------------------------------------------- */
 main section{
-    min-height: calc(100vh - var(--nav-height));
+    min-height: calc(99vh - var(--nav-height));
     width:100%;
     background:var(--section-background);
     padding:0 var(--section-padding-horizontal);
@@ -194,6 +194,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
             padding-left:.75rem;padding-right:.75rem;
         }
     }
+    .post-detail article > h3[data-no-title]{display:none;}
 
     /* ------------------------------------------------------------------
      *   CV styling ------------------------------------------------------- */
@@ -210,49 +211,91 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     .cv-container iframe{
         width:100%;aspect-ratio:8.5/11;border:none;
     }
-    .post-detail article > h3[data-no-title]{display:none;}
 
     /* ------------------------------------------------------------------
      *   Image row -------------------------------------------------------- */
-    .image-row{display:flex;flex-wrap:wrap;gap:10px;}
-    .gallery{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6vw;padding:0;}
-    .gallery figure{margin:0;}
-    .gallery img{
-        display:block;margin:0;height:auto;
-        border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);
-    }
-    .gallery-item{display:flex;flex-direction:column;align-items:center;width:36vw;}
-    .gallery-item img{
-        width:100%;height:100%;object-fit:cover;
-        border:3px solid #fff;
-        box-shadow:
-        0 4px 8px rgba(0,0,0,.25),
-        0 1px 2px rgba(0,0,0,.12);
-        transition:transform .2s ease,box-shadow .2s ease;
-    }
-    .gallery-item img:hover{transform:scale(1.05);z-index:-0;}
-    .gallery-item .description{
-        display:block;margin-top:.5rem;padding:.5rem;
-        font-size:.9rem;color:#444;text-align:center;
-        background:#fff;border:1px solid #e0e0e0;border-radius:4px;
-        box-shadow:0 2px 6px rgba(0,0,0,.15);
-    }
-    .gallery-item figure{position:relative;}
 
-    /* ------------------------------------------------------------------
-     *   Modal for gallery preview ---------------------------------------- */
+    .image-row{display:flex;flex-wrap:wrap;}
+
+    /* ----------------------------------------------------------
+     *   Gallery container – CSS Grid layout
+     * ---------------------------------------------------------- */
+    .gallery{
+        display:grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .25%;
+        padding: 0;
+        overflow:hidden;
+    }
+
+    /* ----------------------------------------------------------
+     *   Gallery item – glass‑panel look
+     * ---------------------------------------------------------- */
+    .gallery-item {
+        background: rgba(255,255,255,.15);          /* translucent glass */
+        border-radius: 1.5rem;
+        background: rgba(var(--nav-tint), var(--non-static-post-bg-opacity));
+        box-shadow: 0 4px 6px rgba(0,0,0,.2);
+        overflow: hidden;                            /* clip rounded corners */
+        position: relative;
+        border-top:   1.5px solid rgba(0,0,0,.2);
+        border-bottom:1.5px solid rgba(0,0,0,.2);
+        /*border-left:  1.5px solid rgba(0,0,0,.2);
+         *     border-right: 1.5px solid rgba(0,0,0,.2);*/
+
+        margin-left: .5%;
+        margin-right: 1%;
+        margin-top: 1.5%;
+        margin-bottom: 0;
+        aspect-ratio: 4/3;
+        width:99%;
+    }
+
+    /* ----------------------------------------------------------
+     *   Image inside the panel
+     * ---------------------------------------------------------- */
+    .gallery-item img{
+        width:95%;
+        height:89%;
+        object-fit:cover;
+        display:block;
+        box-shadow:none;
+        border-radius: 1.5rem;
+
+    }
+
+    /* ----------------------------------------------------------
+     *   Caption overlay
+     * ---------------------------------------------------------- */
+    .gallery-item .description{
+        position:absolute;
+        left:0; right:0; bottom:0;
+        padding:.5rem 0.5rem;
+        background:rgba(255,255,255,.7);
+        backdrop-filter:blur(4px);
+        color:#444;
+        text-align:center;
+        max-height: 50%;    font-size: clamp(0.6rem, 2vw + 0.4rem, 1.1rem);
+        top:0rem;          /* <‑‑ from bottom → top */
+        bottom:auto;   /* clear the old value */
+    }
+
+    /* ----------------------------------------------------------
+     *   Modal for gallery preview
+     * ---------------------------------------------------------- */
     .modal{
         position:fixed;top:0;left:0;width:100%;height:100%;
         background:rgba(0,0,0,.8);display:flex;
-        flex-direction:column;align-items:center;justify-content:top;
+        flex-direction:column;align-items:center;justify-content:flex-start;
         visibility:hidden;opacity:0;transition:.3s ease;z-index:0;
     }
+    .modal-caption{color:#fff;font-size:1rem;padding:0 12px;text-align:center;}
+
+
     .modal.show{visibility:visible;opacity:1;display:flex;}
     .modal img{
         max-width:90vw;max-height:75vh;border-radius:4px;margin-bottom:8px;
     }
-    .modal-caption{color:#fff;font-size:1rem;padding:0 12px;text-align:center;}
-    /* Zoom wrapper */
     .modal-zoom{
         max-width:90vw;max-height:90vh;text-align:center;overflow:hidden;
         transform:scale(.6);opacity:0;
@@ -261,6 +304,16 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         opacity   .3s ease-in;
     }
     #imageModal.modal.show .modal-zoom{transform:scale(1);opacity:1;}
+
+    /* ----------------------------------------------------------
+     *   Responsive breakpoints – shrink to 2 columns on narrow screens
+     * ---------------------------------------------------------- */
+    @media (max-width:600px){
+        .gallery{
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     /* ------------------------------------------------------------------
      *   Coin flip demo ----------------------------------------------------- */
     #coin-demo{
