@@ -231,16 +231,16 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
      *   Gallery item – glass‑panel look
      * ---------------------------------------------------------- */
     .gallery-item {
-        background: rgba(255,255,255,.15);          /* translucent glass */
         border-radius: 1.5rem;
-        background: rgba(var(--nav-tint), var(--non-static-post-bg-opacity));
-        box-shadow: 0 4px 6px rgba(0,0,0,.2);
+
+        box-shadow: 0px -4px 8px rgba(0,0,0,.2);
+
         overflow: hidden;                            /* clip rounded corners */
         position: relative;
-        border-top:   1px solid rgba(0,0,0,.2);
-        border-bottom:1px solid rgba(0,0,0,.2);
+        border-top:   1.5px solid rgba(0,0,0,.2);
+        border-bottom:1.5px solid rgba(0,0,0,.2);
         border-left:  1.5px solid rgba(0,0,0,.2);
-             border-right: 1.5px solid rgba(0,0,0,.2);
+        border-right: 1.5px solid rgba(0,0,0,.2);
 
         margin-left: .5%;
         margin-right: 1%;
@@ -248,21 +248,20 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         margin-bottom: 0;
         aspect-ratio: 4/3;
         width:99%;
+
     }
 
     /* ----------------------------------------------------------
      *   Image inside the panel
      * ---------------------------------------------------------- */
     .gallery-item img{
-        width:84%;
+        width:100%;
         height:100%;
         object-fit:cover;
-        object-position: top center;   /* show the *top* of the picture first */
-
+        object-position:center center;
+        transform: translateY(-1.3em);/* centre‑focus – no top bleed */
         display:block;
         box-shadow:none;
-        border-radius: 1rem;
-
     }
 
     /* ----------------------------------------------------------
@@ -271,13 +270,14 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     .gallery-item .description{
         position:absolute;
         left:0; right:0; bottom:0;
-        padding:.5rem 0.5rem;
-        background:rgba(255,255,255,.7);
+        padding:.5rem 1rem;
+        background:#ffffff7f;                /* semi‑transparent white     */
         backdrop-filter:blur(4px);
         color:#444;
         text-align:center;
-        max-height: 50%;    font-size: clamp(0.6rem, 2vw + 0.4rem, 1.1rem);
-
+        font-size: clamp(.6rem, 2vw + .4rem, 1.1rem);
+        max-height:50%;
+        overflow:hidden;                     /* hide any overflow text      */
     }
 
     /* ----------------------------------------------------------
