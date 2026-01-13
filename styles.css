@@ -223,9 +223,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     .gallery{
         display:grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: .25%;
+        gap: 0%;
         padding: 0;
-        overflow:hidden;
     }
 
     /* ----------------------------------------------------------
@@ -238,14 +237,14 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         box-shadow: 0 4px 6px rgba(0,0,0,.2);
         overflow: hidden;                            /* clip rounded corners */
         position: relative;
-        border-top:   1.5px solid rgba(0,0,0,.2);
-        border-bottom:1.5px solid rgba(0,0,0,.2);
-        /*border-left:  1.5px solid rgba(0,0,0,.2);
-         *     border-right: 1.5px solid rgba(0,0,0,.2);*/
+        border-top:   1px solid rgba(0,0,0,.2);
+        border-bottom:1px solid rgba(0,0,0,.2);
+        border-left:  1.5px solid rgba(0,0,0,.2);
+             border-right: 1.5px solid rgba(0,0,0,.2);
 
         margin-left: .5%;
         margin-right: 1%;
-        margin-top: 1.5%;
+        margin-top: 1%;
         margin-bottom: 0;
         aspect-ratio: 4/3;
         width:99%;
@@ -255,12 +254,12 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
      *   Image inside the panel
      * ---------------------------------------------------------- */
     .gallery-item img{
-        width:95%;
-        height:89%;
+        width:90%;
+        height:100%;
         object-fit:cover;
         display:block;
         box-shadow:none;
-        border-radius: 1.5rem;
+        border-radius: 1rem;
 
     }
 
@@ -276,8 +275,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         color:#444;
         text-align:center;
         max-height: 50%;    font-size: clamp(0.6rem, 2vw + 0.4rem, 1.1rem);
-        top:0rem;          /* <‑‑ from bottom → top */
-        bottom:auto;   /* clear the old value */
+
     }
 
     /* ----------------------------------------------------------
