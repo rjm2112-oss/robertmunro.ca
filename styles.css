@@ -343,14 +343,14 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     #coin-demo .coin-flip.result-h .coin-tails{display:none;}
     #coin-demo .coin-flip.result-t .coin-tails{transform:rotateX(0deg);}
     #coin-demo .coin-flip.result-t .coin-heads{display:none;}
-    @keyframes fly { from{top:100%;} to{top:10%;}}
+    @keyframes fly { from{top:100%;} to{top:33%;}}
     @keyframes flip-head{
         0%,100%{transform:rotateX(0deg);}
         50%{transform:rotateX(180deg);}
     }
     @keyframes flip-tail{
-        0%,100%{transform:rotateX(180deg);}
-        50%{transform:rotateX(0deg);}
+        0%,100%{transform:rotateX(0deg);}
+        50%{transform:rotateX(180deg);}
     }
     @media (max-height:600px){
         #coin-demo .coins-wrapper{height:30px;}
