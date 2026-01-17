@@ -412,7 +412,7 @@ function setupInput() {
 
           case 'i':  rotate();  break;
           case 'j':  movePiece(-1, 0);  break;
-          case 'k':  hardDrop(); lockPiece();  break;
+          case 'k':  movePiece(0, 1); break;
           case 'l':  movePiece(1, 0); break;
         }
     });
