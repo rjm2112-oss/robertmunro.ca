@@ -361,7 +361,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     /* Hide the message by default */
     #tetris-message { display: none; }
 
-    @media (max-width: 768px) {
+    @media (max-width: 850px) {
         /* … hide the Tetris iframe … */
         #tetris-iframe { display: none; }
 
