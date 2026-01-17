@@ -404,16 +404,22 @@ function setupInput() {
         if (isPaused || gameOver) return;
 
         switch (e.key) {
-            case 'ArrowLeft':  movePiece(-1, 0); break;
-            case 'ArrowRight': movePiece(1, 0); break;
-            case 'ArrowDown':  movePiece(0, 1); break;
-            case 'ArrowUp':    rotate();        break;
+            case '8':  rotate();  break;
+            case '4':  movePiece(-1, 0);  break;
+            case '5':  movePiece(0, 1); break;
+            case '6':  movePiece(1, 0); break;
+
             case ' ':          hardDrop(); lockPiece(); break;
 
-          case 'i':  rotate();  break;
-          case 'j':  movePiece(-1, 0);  break;
-          case 'k':  movePiece(0, 1); break;
-          case 'l':  movePiece(1, 0); break;
+            case 'i':  rotate();  break;
+            case 'j':  movePiece(-1, 0);  break;
+            case 'k':  movePiece(0, 1); break;
+            case 'l':  movePiece(1, 0); break;
+
+            case 'w':  rotate();  break;
+            case 'a':  movePiece(-1, 0);  break;
+            case 's':  movePiece(0, 1); break;
+            case 'd':  movePiece(1, 0); break;
         }
     });
 }
