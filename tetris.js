@@ -274,11 +274,19 @@ function checkLines() {
 function finalizeClearing() {
     if (!clearingRows) return;
 
-    clearingRows.sort((a, b) => b - a);
-    for (let y of clearingRows) {
-        board.splice(y, 1);
-        board.unshift(Array(COLS).fill(0));
+    // 1️⃣ Build a new board that contains only the non‑cleared rows
+    const keep = Array.from({ length: ROWS }, (_, i) => !clearingRows.includes(i));
+    const newBoard = [];
+    for (let y = 0; y < ROWS; ++y) {
+        if (keep[y]) newBoard.push(board[y]);          // copy existing row
     }
+
+    // 2️⃣ Prepend empty rows equal to the number of cleared lines
+    while (newBoard.length < ROWS) {
+        newBoard.unshift(Array(COLS).fill(0));
+    }
+    board = newBoard;   // replace old board
+
 
     /* ----- Apply score / level updates ----------------------------- */
     if (pendingScoreData) {
