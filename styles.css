@@ -120,7 +120,7 @@ body::after{
     position:absolute;
     top:0px; left:0; bottom:0px;
     width:calc(var(--nav-height) + 0px);
-    min-width:22vw;
+    min-width:23vw;
     height:calc(var(--nav-height)+ 1px);
     background:rgba(var(--slider-tint),var(--slider-bg-opacity));
     pointer-events:none;
