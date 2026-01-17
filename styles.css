@@ -38,7 +38,7 @@
 /* ------------------------------------------------------------------
  *   Sections ------------------------------------------------------------- */
 main section{
-    min-height: calc(100vh - var(--nav-height));
+    min-height: calc(99vh - var(--nav-height));
     width:100%;
     background:var(--section-background);
     padding:0 var(--section-padding-horizontal);

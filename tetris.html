@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tetris</title>
+
+<!-- ------------- All styles in one block ---------------- -->
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #111;
+        color: white;
+    }
+    .game-container {display:flex;gap:20px;}
+    #tetris-board{
+        width:300px;height:600px;border:2px solid #444;background:#111;
+        position:relative;overflow:hidden;
+    }
+
+    /* side‑panel now a simple column – no space‑between */
+    .side-panel{
+        display:flex;
+        flex-direction:column;
+        gap:20px;
+    }
+    #next-piece{
+        width:150px;height:150px;border:2px solid #444;background:#111;
+        position:relative;overflow:hidden;
+    }
+    .stats{display:flex;flex-direction:column;gap:10px;}
+    .stat-item{padding:5px;text-align:center;font-size:14px;}
+    #next-label{
+        position:absolute;top:5px;left:5px;color:#aaa;font-size:12px;
+        background:rgba(0,0,0,.5);padding:2px 5px;
+    }
+    .controls{margin-top:20px;text-align:center;}
+
+    .bottom-section{
+        margin-top:auto;
+        align-self:flex-start; width:150px;
+        transform: translateY(-35px);
+    }
+
+    /* ---------- Eye component styles (example) ----------- */
+    /* If you have eye.css, copy its contents here or keep the link below. */
+    .eye-wrapper {margin-top: 20px;}
+    .eye-container {
+        width: 150px; height: 150px;
+        position: relative;
+        background: #eee;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+    .sclera, .moving-eye, .eye-inner, .cornea, .iris-texture, .iris, .pupil {
+        /* Add your eye component styles here or reference eye.css */
+    }
+
+    @keyframes rotateEye{
+        from{transform:rotate(0deg);}
+        to{transform:rotate(360deg);}
+    }
+    .eye-rotating{animation:rotateEye 2s linear;}
+</style>
+
+<!-- If you have a separate eye.css, keep the link below. -->
+<link rel="stylesheet" href="eye.css">
+</head>
+
+<body>
+<div class="game-container">
+
+    <!-- Tetris board -->
+    <canvas id="tetris-board" width="300" height="600"></canvas>
+
+    <!-- Right‑hand side panel -->
+    <div class="side-panel">
+
+        <!-- Next piece preview -->
+        <div id="next-piece">
+            <div id="next-label">Next</div>
+            <canvas id="next-canvas" width="150" height="150"></canvas>
+        </div>
+
+        <!-- Eye component (bottom‑right of side panel) -->
+        <div class="eye-wrapper">
+            <div class="eye-container">
+                <div class="sclera"></div>
+                <div class="moving-eye">
+                    <div class="eye-inner">
+                        <div class="cornea"></div>
+                        <div class="iris-texture"></div>
+                        <div class="iris"></div>
+                        <div class="pupil"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom block: stats + controls -->
+        <div class="bottom-section">
+
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-item"><strong>Score:</strong> <span id="score">0</span></div>
+                <div class="stat-item"><strong>Level:</strong> <span id="level">1</span></div>
+                <div class="stat-item"><strong>Lines:</strong> <span id="lines">0</span></div>
+            </div>
+
+            <!-- Game controls -->
+            <div class="controls">
+                <button id="start-btn">Restart</button>
+                <button id="pause-btn">Pause</button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- External Tetris script (you need to provide this file) -->
+<script src="tetris.js"></script>
+
+<!-- -------------- Eye rotation logic ----------------- -->
+<script>
+const eyeIn = document.querySelector('.eye-inner');
+
+function triggerEyeRotation() {
+    if (!eyeIn.classList.contains('eye-rotating')) {
+        eyeIn.classList.add('eye-rotating');
+    } else {
+        eyeIn.classList.remove('eye-rotating'); // reset
+        void eyeIn.offsetWidth;                 // force re‑flow
+        eyeIn.classList.add('eye-rotating');
+    }
+}
+
+eyeIn.addEventListener('animationend', e => {
+    if (e.animationName === 'rotateEye') {
+        eyeIn.classList.remove('eye-rotating');
+    }
+});
+</script>
+</body>
+</html>
