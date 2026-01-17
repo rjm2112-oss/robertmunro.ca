@@ -147,12 +147,24 @@ function drawNextPiece() {
 
     if (!nextPiece) return;
 
+    // Detect whether the preview is the O‑piece.
+    const isSquare = nextPiece.shape.length === 2 &&
+    nextPiece.shape[0].length === 2 &&
+    nextPiece.shape[0][0] === 4;
+
+    // Centering offsets (unchanged)
     const offsetX = Math.floor((nextCanvas.width - BLOCK_SIZE * nextPiece.shape[0].length) / 2);
-    const offsetY = Math.floor((nextCanvas.height - BLOCK_SIZE * nextPiece.shape.length) / 2);
+    let offsetY   = Math.floor((nextCanvas.height - BLOCK_SIZE * nextPiece.shape.length) / 2);
+
+    // Shift everything down by one block, except the square
+    if (!isSquare) {
+        offsetY += BLOCK_SIZE;
+    }
 
     for (let y = 0; y < nextPiece.shape.length; y++) {
         for (let x = 0; x < nextPiece.shape[y].length; x++) {
             if (!nextPiece.shape[y][x]) continue;
+
             nextCtx.fillStyle = COLORS[nextPiece.shape[y][x]];
             nextCtx.fillRect(
                 offsetX + x * BLOCK_SIZE,
