@@ -72,13 +72,20 @@
 <!--  TETRIS POST -->
 <article class="post"><h3>Tetris</h3>
   <div class="preview"><br></div>
+
   <div class="full-body">
-    <!-- Embedding the standalone tetris.html page -->
-    <iframe src="tetris.html"
+    <!-- Tetris game – will be hidden on small screens -->
+    <iframe id="tetris-iframe"
+            src="tetris.html"
             width="100%"
             height="750rem"
             style="border:none;">
     </iframe>
+
+    <!-- Message that appears when the screen is too small -->
+    <p id="tetris-message" role="status">
+      This game requires a larger screen.
+    </p>
   </div>
 </article>
         <!-- Recent project showcase -->
