@@ -409,6 +409,15 @@ function setupInput() {
             case 'ArrowDown':  movePiece(0, 1); break;
             case 'ArrowUp':    rotate();        break;
             case ' ':          hardDrop(); lockPiece(); break;
+
+             case 'i': 
+                rotate();  break;
+          case 'j': 
+    movePiece(-1, 0);  break;
+          case 'k': 
+    hardDrop(); lockPiece();  break;
+          case 'l': 
+    movePiece(1, 0); break;
         }
     });
 }
