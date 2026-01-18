@@ -83,6 +83,70 @@ function getSpeedForLevel(lvl) {
     return Math.max(200, 1000 * Math.pow(speedFactor, lvl - 1));
 }
 /* ------------------------------------------------------------------------ */
+/* ---------- Ghost Piece Logic ------------------------------------------- */
+let ghostPiece = null;
+
+/**
+ * Draw the ghost piece (a translucent shadow of where the current
+ * piece would land if dropped).
+ */
+function drawGhostPiece() {
+    if (!currentPiece || !ghostPiece) return;
+
+    // Use a semi‑transparent color for the ghost piece (50% opacity)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
+
+    for (let y = 0; y < ghostPiece.shape.length; y++) {
+        for (let x = 0; x < ghostPiece.shape[y].length; x++) {
+            if (!ghostPiece.shape[y][x]) continue;
+
+            ctx.fillRect(
+                (ghostPiece.position.x + x) * BLOCK_SIZE,
+                         (ghostPiece.position.y + y) * BLOCK_SIZE,
+                         BLOCK_SIZE - 1, BLOCK_SIZE - 1
+            );
+        }
+    }
+}
+
+/**
+ * Test collision for an arbitrary piece (does NOT modify the real piece).
+ */
+function collides(piece) {
+    for (let y = 0; y < piece.shape.length; y++) {
+        for (let x = 0; x < piece.shape[y].length; x++) {
+            if (!piece.shape[y][x]) continue;
+
+            const newX = piece.position.x + x;
+            const newY = piece.position.y + y;
+
+            if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
+            if (newY < 0) continue; // above the board is fine
+
+            if (board[newY][newX]) return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Update the ghost piece to reflect where the current piece would land.
+ */
+function updateGhostPiece() {
+    if (!currentPiece) { ghostPiece = null; return; }
+
+    // Create a copy of the current piece
+    ghostPiece = JSON.parse(JSON.stringify(currentPiece));
+
+    // Move it down until it collides
+    while (!collides(ghostPiece)) {
+        ghostPiece.position.y++;
+    }
+    // Step back one row to land just above the collision
+    ghostPiece.position.y--;
+}
+
+/* ------------------------------------------------------------------------ */
 /* ---------- Initialization ------------------------------------------------ */
 function init() {
     tetrisCanvas = document.getElementById('tetris-board');
@@ -103,6 +167,7 @@ function init() {
 function drawBoard() {
     ctx.clearRect(0, 0, tetrisCanvas.width, tetrisCanvas.height);
 
+    /* --- Draw the fixed blocks on the board --- */
     for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
             if (board[y][x]) {
@@ -113,7 +178,10 @@ function drawBoard() {
         }
     }
 
-    // Draw the moving piece
+    /* --- Draw the ghost piece first so it appears behind the moving piece --- */
+    drawGhostPiece();
+
+    /* --- Draw the currently falling piece --- */
     if (currentPiece) {
         for (let y = 0; y < currentPiece.shape.length; y++) {
             for (let x = 0; x < currentPiece.shape[y].length; x++) {
@@ -128,7 +196,7 @@ function drawBoard() {
         }
     }
 
-    // If we are flashing a clear, overlay white on the rows while "on"
+    /* --- Flash‑clear overlay (if active) --- */
     if (isFlashing && flashCount % 2 === 1 && clearingRows) {
         ctx.fillStyle = 'rgba(255,255,255,0.8)';
         for (let row of clearingRows) {
@@ -147,16 +215,16 @@ function drawNextPiece() {
 
     if (!nextPiece) return;
 
-    // Detect whether the preview is the O‑piece.
+    /* Detect whether the preview is the O‑piece. */
     const isSquare = nextPiece.shape.length === 2 &&
     nextPiece.shape[0].length === 2 &&
     nextPiece.shape[0][0] === 4;
 
-    // Centering offsets (unchanged)
+    /* Centering offsets (unchanged) */
     const offsetX = Math.floor((nextCanvas.width - BLOCK_SIZE * nextPiece.shape[0].length) / 2);
     let offsetY   = Math.floor((nextCanvas.height - BLOCK_SIZE * nextPiece.shape.length) / 2);
 
-    // Shift everything down by one block, except the square
+    /* Shift everything down by one block, except the square */
     if (!isSquare) {
         offsetY += BLOCK_SIZE;
     }
@@ -299,7 +367,6 @@ function finalizeClearing() {
     }
     board = newBoard;   // replace old board
 
-
     /* ----- Apply score / level updates ----------------------------- */
     if (pendingScoreData) {
         const { points, lines: cleared } = pendingScoreData;
@@ -355,6 +422,8 @@ function resetGame() {
     if (collision()) {
         gameOver = true;
     }
+
+    ghostPiece = null;   // Reset ghost piece
 }
 
 function restartGame() {
@@ -412,6 +481,9 @@ function gameLoop(timestamp) {
         }
         dropStart = timestamp;
     }
+
+    /* ----- Update ghost piece position ----- */
+    updateGhostPiece();
 
     drawBoard();
     drawNextPiece();
