@@ -1,5 +1,5 @@
 /* --------------------------------------------------
- *   coin-flip.js – handles the “Flip!” button & UI
+ *   coin-flip.js
  * -------------------------------------------------- */
 (() => {
     /* ---- helper: build a single coin element --------------------------------- */
@@ -29,7 +29,7 @@
         coin.style.animation = 'none';          // reset
         void coin.offsetWidth;                  // force re‑flow
         coin.style.animation = 'fly 1.5s ease-out forwards';
-        setTimeout(() => setResult(coin), 1500); // 1.5 s later, decide heads/tails
+        setTimeout(() => setResult(coin), 1300); // 1.3 s later, decide heads/tails
     }
 
     /* ---- pick a random side & apply the final class --------------------------- */

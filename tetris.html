@@ -29,7 +29,8 @@
         gap:20px;
     }
     #next-piece{
-        width:150px;height:150px;border:2px solid #444;background:#111;
+        width:150px;
+        height:150px;border:2px solid #444;background:#111;
         position:relative;overflow:hidden;
     }
     .stats{display:flex;flex-direction:column;gap:10px;}
@@ -43,18 +44,18 @@
     .bottom-section{
         margin-top:auto;
         align-self:flex-start; width:150px;
-        transform: translateY(-8px);
+        transform: translateY(-2px);
     }
 
-    /* ---------- Eye component styles (example) ----------- */
-    /* If you have eye.css, copy its contents here or keep the link below. */
-    .eye-wrapper {margin-top: 20px;}
+    .eye-wrapper {margin-top: 0px;}
     .eye-container {
         width: 150px; height: 150px;
         position: relative;
         background: #eee;
         border-radius: 50%;
         overflow: hidden;
+        margin-top: -25px;
+
     }
     .sclera, .moving-eye, .eye-inner, .cornea, .iris-texture, .iris, .pupil {
         /* Add your eye component styles here or reference eye.css */
@@ -65,9 +66,30 @@
         to{transform:rotate(360deg);}
     }
     .eye-rotating{animation:rotateEye 2s linear;}
+
+    .stow-box {
+        width: 150px;
+        height: 150px;
+        border: 2px solid #444;
+        background: #111;
+        position: relative;
+        overflow: hidden;
+        margin-top: -179px;
+    }
+    #stow-label {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        color: #aaa;
+        font-size: 12px;
+        background: rgba(0, 0, 0, .5);
+        padding: 2px 5px;
+    }
+
+
 </style>
 
-<!-- If you have a separate eye.css, keep the link below. -->
+<!-- I have a separate stylesheet -->
 <link rel="stylesheet" href="eye.css">
 </head>
 
@@ -100,6 +122,12 @@
             </div>
         </div>
 
+        <!-- stow box -->
+<div class="stow-box">
+    <canvas id="stow-canvas" width="150" height="150"></canvas>
+</div>
+
+
         <!-- Bottom block: stats + controls -->
         <div class="bottom-section">
 
@@ -121,7 +149,7 @@
     </div>
 </div>
 
-<!-- External Tetris script (you need to provide this file) -->
+<!-- External Tetris script -->
 <script src="tetris.js"></script>
 
 <!-- -------------- Eye rotation logic ----------------- -->

@@ -1,10 +1,8 @@
-/* tetris.js --------------------------------------------------------------*/
-
+/* ────────────────────── CONSTANTS ────────────────────── */
 const COLS = 10;
 const ROWS = 20;
 const BLOCK_SIZE = 30;
 
-/* ---------- Colors & Shapes ------------------------------------------- */
 const COLORS = [
     null,
 '#FF0D72',
@@ -17,509 +15,400 @@ const COLORS = [
 ];
 
 const SHAPES = [
-    null,
+    null,                         // 0 – unused
 [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
-[[2, 0, 0], [2, 2, 2], [0, 0, 0]],
-[[0, 0, 3], [3, 3, 3], [0, 0, 0]],
-[[4, 4], [4, 4]],   // <-- updated O‑piece (true 2×2 block)
-[[0, 5, 5], [5, 5, 0], [0, 0, 0]],
-[[0, 6, 0], [6, 6, 6], [0, 0, 0]],
-[[7, 7, 0], [0, 7, 7], [0, 0, 0]]
+[[2, 0, 0],          [2, 2, 2],          [0, 0, 0]],
+[[0, 0, 3],          [3, 3, 3],          [0, 0, 0]],
+[[4, 4],             [4, 4]],
+[[0, 5, 5],          [5, 5, 0],          [0, 0, 0]],
+[[0, 6, 0],          [6, 6, 6],          [0, 0, 0]],
+[[7, 7, 0],          [0, 7, 7],          [0, 0, 0]]
 ];
 
-/* ---------- Game state ----------------------------------------------- */
+/* ────────────────────── HOLD‑LOCK STATE ────────────────────── */
+const HOLD_LOCK_DURATION_MS = 12_000;
+let holdLockActive = false;
+let holdLockEndTime = 0;
+
+/* ────────────────────── OTHER STATE VARIABLES ────────────────────── */
 let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
 let currentPiece = null;
 let nextPiece = null;
-let score = 0;
-let level = 1;
-let lines = 0;
-let gameOver = false;
-let isPaused = false;
-let dropStart = 0;
-let lastTime = 0;
-let gameSpeed = 1000;   // ms per automatic row drop
+let stowedPiece = null;
+let score = 0, level = 1, lines = 0;
+let gameOver = false, isPaused = false;
+let dropStart = 0, lastTime = 0, gameSpeed = 1000;
 
 let ctx, nextCtx, tetrisCanvas, nextCanvas;
-
-/* ---------- Flashing / Clearing --------------------------------------- */
-let clearingRows = null;
-let flashCount = 0;
-let lastFlashTime = 0;
-let isFlashing = false;
+let clearingRows = null, flashCount = 0, lastFlashTime = 0, isFlashing = false;
 let pendingScoreData = null;
-
 const FLASH_INTERVAL_MS = 120;
 
-/* ---------- Counter for colour changes ------------------------------- */
-let rowsClearedSinceLastChange = 0;   // <-- NEW
+let nextFlashing = false, nextFlashCount = 0, lastNextFlashTime = 0;
+let rowsClearedSinceLastChange = 0;
+let bag = [];
+const MAX_HUE = 360;
+let currentHue = 0;
 
-/* ------------------------------------------------------------------------ */
-/* ----------  Eye‑colour helpers --------------------------------------- */
-const MAX_HUE = 360;          // degrees in a colour wheel
-let currentHue = 0;           // start with the original hue
+let isLooking = false, ambientAnimationPaused = false;
 
-/**
- * Pick a new hue and apply it to the iris.
- * The change is random but stays within natural‑eye ranges (≈30–120°).
- */
+let lastStowTime = 0;
+const STOW_COOLDOWN_MS = 0;
+
+/* ────────────────────── UTILS ─────────────────────── */
 function changeEyeColor() {
-    const step = Math.floor(Math.random() * 90) + 30;   // 30 – 119°
+    const step = Math.floor(Math.random() * 90) + 30;
     currentHue = (currentHue + step) % MAX_HUE;
-
     const iris = document.querySelector('.iris');
-    if (iris) {
-        iris.style.filter = `hue-rotate(${currentHue}deg)`;
-    }
+    if (iris) iris.style.filter = `hue-rotate(${currentHue}deg)`;
 }
 
-/* ------------------------------------------------------------------------ */
-/* ---------- New helper: map level → drop speed -------------------------- */
 function getSpeedForLevel(lvl) {
-    // Base speed at level 1 is 1000 ms.
-    // Each subsequent level multiplies the base by `speedFactor`.
-    const speedFactor = 0.9;          // < 1 → faster each level
-
-    return Math.max(200, 1000 * Math.pow(speedFactor, lvl - 1));
+    const factor = 0.9;
+    return Math.max(200, 1000 * Math.pow(factor, lvl - 1));
 }
-/* ------------------------------------------------------------------------ */
-/* ---------- Ghost Piece Logic ------------------------------------------- */
+
 let ghostPiece = null;
 
-/**
- * Draw the ghost piece (a translucent shadow of where the current
- * piece would land if dropped).
- */
+function hexToRgba(hex, alpha = 1) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function drawGhostPiece() {
     if (!currentPiece || !ghostPiece) return;
-
-    // Use a semi‑transparent color for the ghost piece (50% opacity)
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
-
+    ctx.lineWidth = 1.5;
     for (let y = 0; y < ghostPiece.shape.length; y++) {
         for (let x = 0; x < ghostPiece.shape[y].length; x++) {
             if (!ghostPiece.shape[y][x]) continue;
-
-            ctx.fillRect(
-                (ghostPiece.position.x + x) * BLOCK_SIZE,
-                         (ghostPiece.position.y + y) * BLOCK_SIZE,
-                         BLOCK_SIZE - 1, BLOCK_SIZE - 1
-            );
+            const px = (ghostPiece.position.x + x) * BLOCK_SIZE;
+            const py = (ghostPiece.position.y + y) * BLOCK_SIZE;
+            ctx.strokeStyle = hexToRgba(COLORS[ghostPiece.shape[y][x]], 0.5);
+            ctx.strokeRect(px + 1, py + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
         }
     }
 }
 
-/**
- * Test collision for an arbitrary piece (does NOT modify the real piece).
- */
 function collides(piece) {
     for (let y = 0; y < piece.shape.length; y++) {
         for (let x = 0; x < piece.shape[y].length; x++) {
             if (!piece.shape[y][x]) continue;
-
-            const newX = piece.position.x + x;
-            const newY = piece.position.y + y;
-
-            if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
-            if (newY < 0) continue; // above the board is fine
-
-            if (board[newY][newX]) return true;
+            const nx = piece.position.x + x, ny = piece.position.y + y;
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+            if (ny < 0) continue;
+            if (board[ny][nx]) return true;
         }
     }
     return false;
 }
 
-/**
- * Update the ghost piece to reflect where the current piece would land.
- */
 function updateGhostPiece() {
     if (!currentPiece) { ghostPiece = null; return; }
-
-    // Create a copy of the current piece
     ghostPiece = JSON.parse(JSON.stringify(currentPiece));
-
-    // Move it down until it collides
-    while (!collides(ghostPiece)) {
-        ghostPiece.position.y++;
-    }
-    // Step back one row to land just above the collision
+    while (!collides(ghostPiece)) ghostPiece.position.y++;
     ghostPiece.position.y--;
 }
 
-/* ------------------------------------------------------------------------ */
-/* ---------- Initialization ------------------------------------------------ */
-function init() {
-    tetrisCanvas = document.getElementById('tetris-board');
-    nextCanvas   = document.getElementById('next-canvas');
-
-    if (!tetrisCanvas || !nextCanvas) return;
-
-    ctx = tetrisCanvas.getContext('2d');
-    nextCtx = nextCanvas.getContext('2d');
-
-    document.getElementById('start-btn').addEventListener('click', restartGame);
-    document.getElementById('pause-btn').addEventListener('click', togglePause);
-
+/* ────────────────────── SHUFFLE & NEXT PIECE ─────────── */
+function shuffle(a){for(let i=a.length-1;i>0;--i){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}}
+function getNextType(){if(!bag.length){bag=[1,2,3,4,5,6,7];shuffle(bag)}return bag.pop()}
+function init(){
+    tetrisCanvas=document.getElementById('tetris-board');
+    nextCanvas=document.getElementById('next-canvas');
+    if(!tetrisCanvas||!nextCanvas)return;
+    ctx=tetrisCanvas.getContext('2d');nextCtx=nextCanvas.getContext('2d');
+    document.getElementById('start-btn').addEventListener('click',restartGame);
+    document.getElementById('pause-btn').addEventListener('click',togglePause);
     resetGame();
 }
+function generateRandomPiece(){
+    const type=getNextType();
+    return {
+        shape:JSON.parse(JSON.stringify(SHAPES[type])),
+        position:{x:Math.floor(COLS/2)-Math.floor(SHAPES[type][0].length/2),y:0},
+        type
+    };
+}
+function resetGame(){
+    board=Array(ROWS).fill().map(()=>Array(COLS).fill(0));
+    bag=[];currentPiece=generateRandomPiece();nextPiece=generateRandomPiece();
+    stowedPiece=null;score=0;level=1;lines=0;
+    rowsClearedSinceLastChange=0;gameOver=false;isPaused=false;gameSpeed=1000;
+    updateStats();
+    if(collision()) gameOver=true;
+    ghostPiece=null;lastStowTime=0;
+}
+function restartGame(){resetGame();isPaused=false;dropStart=performance.now();}
+function togglePause(){
+    isPaused=!isPaused;
+    if(!isPaused){dropStart=performance.now();lastTime=performance.now();}
+}
+function updateStats(){
+    document.getElementById('score').textContent=score;
+    document.getElementById('level').textContent=level;
+    document.getElementById('lines').textContent=lines;
+}
 
-/* ---------- Rendering ---------------------------------------------------- */
-function drawBoard() {
-    ctx.clearRect(0, 0, tetrisCanvas.width, tetrisCanvas.height);
-
-    /* --- Draw the fixed blocks on the board --- */
-    for (let y = 0; y < ROWS; y++) {
-        for (let x = 0; x < COLS; x++) {
-            if (board[y][x]) {
-                ctx.fillStyle = COLORS[board[y][x]];
-                ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE,
-                             BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+/* ────────────────────── DRAWING FUNCTIONS ─────────────── */
+function drawBoard(){
+    ctx.clearRect(0,0,tetrisCanvas.width,tetrisCanvas.height);
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)
+        if(board[y][x]){
+            ctx.fillStyle=COLORS[board[y][x]];
+            ctx.fillRect(x*BLOCK_SIZE,y*BLOCK_SIZE,BLOCK_SIZE-1,BLOCK_SIZE-1);
+        }
+        drawGhostPiece();
+    if(currentPiece)
+        for(let y=0;y<currentPiece.shape.length;y++)
+            for(let x=0;x<currentPiece.shape[y].length;x++)
+                if(currentPiece.shape[y][x]){
+                    ctx.fillStyle=COLORS[currentPiece.shape[y][x]];
+                    ctx.fillRect((currentPiece.position.x+x)*BLOCK_SIZE,
+                                 (currentPiece.position.y+y)*BLOCK_SIZE,
+                                 BLOCK_SIZE-1,BLOCK_SIZE-1);
+                }
+                if(isFlashing&&flashCount%2===1&&clearingRows){
+                    ctx.fillStyle='rgba(255,255,255,0.8)';
+                    for(const row of clearingRows)
+                        ctx.fillRect(0,row*BLOCK_SIZE,tetrisCanvas.width,BLOCK_SIZE);
+                }
+}
+function drawNextPiece(){
+    nextCtx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
+    if(!nextPiece)return;
+    const shape = nextPiece.shape;
+    const shapeWidth = shape[0].length;
+    const shapeHeight = shape.length;
+    const offsetX=Math.floor((nextCanvas.width - BLOCK_SIZE*shapeWidth)/2);
+    const offsetY=Math.floor((nextCanvas.height - BLOCK_SIZE*shapeHeight)/2);
+    for(let y=0;y<shape.length;y++){
+        for(let x=0;x<shape[y].length;x++){
+            if(shape[y][x]){
+                nextCtx.fillStyle=COLORS[shape[y][x]];
+                nextCtx.fillRect(offsetX+x*BLOCK_SIZE,offsetY+y*BLOCK_SIZE,BLOCK_SIZE-1,BLOCK_SIZE-1);
             }
         }
     }
-
-    /* --- Draw the ghost piece first so it appears behind the moving piece --- */
-    drawGhostPiece();
-
-    /* --- Draw the currently falling piece --- */
-    if (currentPiece) {
-        for (let y = 0; y < currentPiece.shape.length; y++) {
-            for (let x = 0; x < currentPiece.shape[y].length; x++) {
-                if (!currentPiece.shape[y][x]) continue;
-                ctx.fillStyle = COLORS[currentPiece.shape[y][x]];
-                ctx.fillRect(
-                    (currentPiece.position.x + x) * BLOCK_SIZE,
-                             (currentPiece.position.y + y) * BLOCK_SIZE,
-                             BLOCK_SIZE - 1, BLOCK_SIZE - 1
-                );
+    if(nextFlashing&&nextFlashCount%2===1){
+        nextCtx.fillStyle='rgba(255,255,255,0.4)';
+        nextCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+    }
+}
+function drawStowPiece(){
+    const stowCanvas=document.getElementById('stow-canvas');
+    if(!stowCanvas)return;
+    const ctx=stowCanvas.getContext('2d');
+    ctx.clearRect(0,0,stowCanvas.width,stowCanvas.height);
+    if(stowedPiece){
+        const shape = stowedPiece.shape;
+        const shapeWidth = shape[0].length;
+        const shapeHeight = shape.length;
+        const offsetX=Math.floor((stowCanvas.width - BLOCK_SIZE*shapeWidth)/2);
+        const offsetY=Math.floor((stowCanvas.height - BLOCK_SIZE*shapeHeight)/2);
+        for(let y=0;y<shape.length;y++){
+            for(let x=0;x<shape[y].length;x++){
+                if(shape[y][x]){
+                    ctx.fillStyle=COLORS[shape[y][x]];
+                    ctx.fillRect(offsetX+x*BLOCK_SIZE,offsetY+y*BLOCK_SIZE,BLOCK_SIZE-1,BLOCK_SIZE-1);
+                }
             }
         }
     }
-
-    /* --- Flash‑clear overlay (if active) --- */
-    if (isFlashing && flashCount % 2 === 1 && clearingRows) {
-        ctx.fillStyle = 'rgba(255,255,255,0.8)';
-        for (let row of clearingRows) {
-            ctx.fillRect(
-                0,
-                row * BLOCK_SIZE,
-                tetrisCanvas.width,
-                BLOCK_SIZE
-            );
-        }
+    if(!stowedPiece&&holdLockActive){
+        const remaining=Math.max(0,Math.ceil((holdLockEndTime-performance.now())/1000));
+        ctx.font='bold 24px Arial';
+        ctx.fillStyle='red';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(remaining.toString(),stowCanvas.width/2,stowCanvas.height/2);
     }
 }
+// ────────────────────── EYE LOOKING HELPERS ─────────────────────
+function resetAmbientAnimation(eyeInner) {
+    // If your ambient animation is defined by a CSS rule (e.g. .eye-inner {animation: pulse 5s infinite;})
+    // we simply toggle the `animation-play-state` back to running.
 
-function drawNextPiece() {
-    nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+        eyeInner.style.animation = '';
+          void eyeInner.offsetWidth;      // force re‑flow
+           eyeInner.style.animation = '';  // re‑apply default animation from CSS
 
-    if (!nextPiece) return;
-
-    /* Detect whether the preview is the O‑piece. */
-    const isSquare = nextPiece.shape.length === 2 &&
-    nextPiece.shape[0].length === 2 &&
-    nextPiece.shape[0][0] === 4;
-
-    /* Centering offsets (unchanged) */
-    const offsetX = Math.floor((nextCanvas.width - BLOCK_SIZE * nextPiece.shape[0].length) / 2);
-    let offsetY   = Math.floor((nextCanvas.height - BLOCK_SIZE * nextPiece.shape.length) / 2);
-
-    /* Shift everything down by one block, except the square */
-    if (!isSquare) {
-        offsetY += BLOCK_SIZE;
-    }
-
-    for (let y = 0; y < nextPiece.shape.length; y++) {
-        for (let x = 0; x < nextPiece.shape[y].length; x++) {
-            if (!nextPiece.shape[y][x]) continue;
-
-            nextCtx.fillStyle = COLORS[nextPiece.shape[y][x]];
-            nextCtx.fillRect(
-                offsetX + x * BLOCK_SIZE,
-                offsetY + y * BLOCK_SIZE,
-                BLOCK_SIZE - 1, BLOCK_SIZE - 1
-            );
-        }
-    }
 }
 
-/* ---------- Game logic --------------------------------------------------- */
-function collision() {
-    if (!currentPiece) return true;
+function triggerEyeDown() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
 
-    for (let y = 0; y < currentPiece.shape.length; y++) {
-        for (let x = 0; x < currentPiece.shape[y].length; x++) {
-            if (!currentPiece.shape[y][x]) continue;
+    // 1. Start the look‑down effect
+    eyeInner.classList.add('eye-looking-down');
 
-            const newX = currentPiece.position.x + x;
-            const newY = currentPiece.position.y + y;
-
-            if (newX < 0 || newX >= COLS || newY >= ROWS) return true;
-            if (newY < 0) continue; // above the board is fine
-
-            if (board[newY][newX]) return true;
-        }
-    }
-    return false;
+    // 2. After the animation finishes …
+    setTimeout(() => {
+        // … remove the temporary class ...
+        eyeInner.classList.remove('eye-looking-down');
+        // … and resume / restart the ambient animation.
+        resetAmbientAnimation(eyeInner);
+    }, 1300);   // same duration as in the original code
 }
 
-function rotate() {
-    const originalShape = JSON.parse(JSON.stringify(currentPiece.shape));
+function triggerEyeUp() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
 
-    for (let y = 0; y < currentPiece.shape.length; y++) {
-        for (let x = 0; x < y; x++) {
-            [currentPiece.shape[x][y], currentPiece.shape[y][x]] =
-            [currentPiece.shape[y][x], currentPiece.shape[x][y]];
-        }
-    }
+    eyeInner.classList.add('eye-looking-up');
 
-    for (let i = 0; i < currentPiece.shape.length; i++) {
-        currentPiece.shape[i] = currentPiece.shape[i].reverse();
-    }
-
-    if (collision()) currentPiece.shape = originalShape;
+    setTimeout(() => {
+        eyeInner.classList.remove('eye-looking-up');
+        resetAmbientAnimation(eyeInner);
+    }, 1300);
 }
 
-function movePiece(dx, dy) {
-    if (!currentPiece) return false;
-
-    currentPiece.position.x += dx;
-    currentPiece.position.y += dy;
-
-    if (collision()) {
-        currentPiece.position.x -= dx;
-        currentPiece.position.y -= dy;
-        return false;
-    }
+/* ────────────────────── GAME LOGIC ───────────────── */
+function collision(){
+    if(!currentPiece)return true;
+    for(let y=0;y<currentPiece.shape.length;y++)
+        for(let x=0;x<currentPiece.shape[y].length;x++)
+            if(currentPiece.shape[y][x]){
+                const nx=currentPiece.position.x+x,ny=currentPiece.position.y+y;
+                if(nx<0||nx>=COLS||ny>=ROWS)return true;
+                if(ny<0)continue;
+                if(board[ny][nx])return true;
+            }
+            return false;
+}
+function rotate(){
+    const orig=JSON.parse(JSON.stringify(currentPiece.shape));
+    for(let y=0;y<currentPiece.shape.length;y++)
+        for(let x=0;x<y;x++){
+            [currentPiece.shape[x][y],currentPiece.shape[y][x]]=[currentPiece.shape[y][x],currentPiece.shape[x][y]];
+        }
+        currentPiece.shape=currentPiece.shape.map(r=>r.reverse());
+    if(collision())currentPiece.shape=orig;
+}
+function movePiece(dx,dy){
+    if(!currentPiece)return false;
+    currentPiece.position.x+=dx;currentPiece.position.y+=dy;
+    if(collision()){currentPiece.position.x-=dx;currentPiece.position.y-=dy;return false;}
     return true;
 }
-
-function hardDrop() { while (movePiece(0, 1)) {} }
-
-function lockPiece() {
-    if (!currentPiece) return;
-
-    for (let y = 0; y < currentPiece.shape.length; y++) {
-        for (let x = 0; x < currentPiece.shape[y].length; x++) {
-            if (!currentPiece.shape[y][x]) continue;
-            const boardY = currentPiece.position.y + y;
-            const boardX = currentPiece.position.x + x;
-
-            if (boardY >= 0) {
-                board[boardY][boardX] = currentPiece.shape[y][x];
+function hardDrop(){while(movePiece(0,1)){}}
+function lockPiece(){
+    if(!currentPiece)return;
+    for(let y=0;y<currentPiece.shape.length;y++)
+        for(let x=0;x<currentPiece.shape[y].length;x++)
+            if(currentPiece.shape[y][x]){
+                const by=currentPiece.position.y+y,bx=currentPiece.position.x+x;
+                if(by>=0)board[by][bx]=currentPiece.shape[y][x];
             }
-        }
+            checkLines();
+        currentPiece=nextPiece;
+    const w=currentPiece.shape[0].length,h=currentPiece.shape.length;
+    currentPiece.position.x=Math.floor(COLS/2-w/2);
+    currentPiece.position.y=0;
+    nextPiece=generateRandomPiece();
+    lastStowTime=0;
+}
+function stowOrUnstowPiece(){
+    if(!currentPiece)return;
+    const now=performance.now();
+    if(!stowedPiece&&holdLockActive)return;
+    if(!stowedPiece){
+        // Move current piece into hold
+        stowedPiece={
+            shape:JSON.parse(JSON.stringify(SHAPES[currentPiece.type])),
+            position:{x:0,y:0},
+            type:currentPiece.type
+        };
+        currentPiece=nextPiece;
+        nextPiece=generateRandomPiece();
+        ghostPiece=null;updateGhostPiece();drawStowPiece();lastStowTime=now;
+        triggerEyeDown();return;
     }
-
-    checkLines();
-
-    currentPiece = nextPiece;
-    nextPiece   = generateRandomPiece();
+    if(now-lastStowTime<STOW_COOLDOWN_MS)return;
+    const tempNext=nextPiece;
+    nextPiece=JSON.parse(JSON.stringify(stowedPiece));
+    stowedPiece=null;
+    holdLockActive=true;holdLockEndTime=performance.now()+HOLD_LOCK_DURATION_MS;
+    drawStowPiece();triggerEyeUp();
 }
 
+/* ────────────────────── LINE CHECK & CLEARING ─────────── */
 function checkLines() {
     const rowsToClear = [];
-
     for (let y = ROWS - 1; y >= 0; y--) {
         if (board[y].every(cell => cell !== 0)) {
             rowsToClear.push(y);
         }
     }
-
     if (rowsToClear.length > 0) {
-        /* ----- Scoring logic ------------------------------------------- */
         const points = [0, 100, 300, 500, 800][rowsToClear.length] * level;
         pendingScoreData = { points, lines: rowsToClear.length };
-
-        /* ----- Flash‑clear state --------------------------------------- */
         clearingRows = rowsToClear;
         isFlashing   = true;
-        flashCount   = 0;          // start with “off”
+        flashCount   = 0;
         lastFlashTime= performance.now();
-
-        /* ---------- NEW: Colour change logic --------------------------- */
         rowsClearedSinceLastChange += rowsToClear.length;
         while (rowsClearedSinceLastChange >= 5) {
             rowsClearedSinceLastChange -= 5;
-            changeEyeColor();           // <-- call each time two lines are cleared
+            changeEyeColor();
         }
-
-        /* ----- Existing eye‑rotation trigger ------------------------ */
         if (rowsToClear.length > 0) {
-            triggerEyeRotation();
+            triggerEyeRotation();   // defined elsewhere in eye.css
         }
     }
 }
 
-function finalizeClearing() {
-    if (!clearingRows) return;
-
-    // 1️⃣ Build a new board that contains only the non‑cleared rows
-    const keep = Array.from({ length: ROWS }, (_, i) => !clearingRows.includes(i));
-    const newBoard = [];
-    for (let y = 0; y < ROWS; ++y) {
-        if (keep[y]) newBoard.push(board[y]);          // copy existing row
-    }
-
-    // 2️⃣ Prepend empty rows equal to the number of cleared lines
-    while (newBoard.length < ROWS) {
-        newBoard.unshift(Array(COLS).fill(0));
-    }
-    board = newBoard;   // replace old board
-
-    /* ----- Apply score / level updates ----------------------------- */
-    if (pendingScoreData) {
-        const { points, lines: cleared } = pendingScoreData;
-        score += points;
-
-        // Update the cumulative line count first
-        lines += cleared;
-
-        // Calculate new level based on total lines cleared
-        const newLevel = Math.floor(lines / 10) + 1;   // levels start at 1
-
-        if (newLevel > level) {
-            level = newLevel;
-            gameSpeed = getSpeedForLevel(level);      // <-- NEW line
-        }
-
+function finalizeClearing(){
+    if(!clearingRows)return;
+    const keep=Array.from({length:ROWS},(_,i)=>!clearingRows.includes(i));
+    const newB=[];
+    for(let y=0;y<ROWS;++y)if(keep[y])newB.push(board[y]);
+    while(newB.length<ROWS)newB.unshift(Array(COLS).fill(0));
+    board=newB;
+    if(pendingScoreData){
+        score+=pendingScoreData.points;lines+=pendingScoreData.lines;
+        const nl=Math.floor(lines/10)+1;if(nl>level){level=nl;gameSpeed=getSpeedForLevel(level);}
         updateStats();
     }
-
-    /* ----- Reset flash state --------------------------------------- */
-    clearingRows = null;
-    isFlashing = false;
-    flashCount = 0;
-    lastFlashTime = 0;
-    pendingScoreData = null;
+    clearingRows=null;isFlashing=false;flashCount=0;lastFlashTime=0;pendingScoreData=null;
 }
 
-function generateRandomPiece() {
-    const type = Math.floor(Math.random() * 7) + 1;
-    return {
-        shape: JSON.parse(JSON.stringify(SHAPES[type])),
-        position: { x: Math.floor(COLS / 2) - Math.floor(SHAPES[type][0].length / 2), y: 0 }
-    };
-}
-
-function resetGame() {
-    board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
-    currentPiece = generateRandomPiece();
-    nextPiece   = generateRandomPiece();
-
-    score = 0;
-    level = 1;
-    lines = 0;
-
-    rowsClearedSinceLastChange = 0;          // <-- reset counter
-
-    gameOver = false;
-    isPaused = false;
-    gameSpeed = 1000;
-
-    updateStats();
-
-    if (collision()) {
-        gameOver = true;
-    }
-
-    ghostPiece = null;   // Reset ghost piece
-}
-
-function restartGame() {
-    resetGame();
-    isPaused = false;
-    dropStart = performance.now();
-}
-
-function togglePause() {
-    isPaused = !isPaused;
-    if (!isPaused) {
-        dropStart = performance.now();
-        lastTime  = performance.now();
-    }
-}
-
-function updateStats() {
-    document.getElementById('score').textContent = score;
-    document.getElementById('level').textContent = level;
-    document.getElementById('lines').textContent = lines;
-}
-
-/* ------------------------------------------------------------------------ */
-/* ---------- Game loop --------------------------------------------------- */
-function gameLoop(timestamp) {
+/* ────────────────────── GAME LOOP ───────────────────── */
+function gameLoop(ts){
     requestAnimationFrame(gameLoop);
-
-    if (isPaused || gameOver) return;
-
-    /* ----- Flash‑clear handling --------------------------------------- */
-    if (isFlashing) {
-        drawBoard();
-        drawNextPiece();
-
-        if (timestamp - lastFlashTime > FLASH_INTERVAL_MS) {      // 120 ms per on/off cycle
-            flashCount++;
-            lastFlashTime = timestamp;
-
-            if (flashCount >= 4) {         // two full white flashes
-                finalizeClearing();
-                return;
-            }
-        }
-        return;   // nothing else happens while flashing
+    if(isPaused||gameOver)return;
+    if(holdLockActive&&performance.now()>=holdLockEndTime)holdLockActive=false;
+    if(nextFlashing&&ts-lastNextFlashTime>FLASH_INTERVAL_MS){
+        nextFlashCount++;lastNextFlashTime=ts;
+        if(nextFlashCount>=4)nextFlashing=false;
     }
-
-    const deltaTime = timestamp - lastTime;
-    lastTime = timestamp;
-
-    if (timestamp - dropStart > gameSpeed) {
-        if (!movePiece(0, 1)) {
-            lockPiece();
-
-            if (collision()) gameOver = true;
+    if(isFlashing){drawBoard();drawNextPiece();drawStowPiece();
+        if(ts-lastFlashTime>FLASH_INTERVAL_MS){flashCount++;lastFlashTime=ts; if(flashCount>=4)finalizeClearing();}
+        return;}
+        const dt=ts-lastTime;lastTime=ts;
+        if(!currentPiece&&stowedPiece){
+            currentPiece=JSON.parse(JSON.stringify(stowedPiece));
+            stowedPiece=null;drawStowPiece();updateGhostPiece();
         }
-        dropStart = timestamp;
-    }
-
-    /* ----- Update ghost piece position ----- */
-    updateGhostPiece();
-
-    drawBoard();
-    drawNextPiece();
+        if(ts-dropStart>gameSpeed){if(!movePiece(0,1)){lockPiece();if(collision())gameOver=true;}dropStart=ts;}
+        updateGhostPiece();drawBoard();drawNextPiece();drawStowPiece();
 }
 
-/* ------------------------------------------------------------------------ */
-/* ---------- Input handling --------------------------------------------- */
-function setupInput() {
-    document.addEventListener('keydown', e => {
-        if (isPaused || gameOver) return;
-
-        switch (e.key) {
-            case '8':  rotate();  break;
-            case '4':  movePiece(-1, 0);  break;
-            case '5':  movePiece(0, 1); break;
-            case '6':  movePiece(1, 0); break;
-
-            case ' ':          hardDrop(); lockPiece(); break;
-
-            case 'i':  rotate();  break;
-            case 'j':  movePiece(-1, 0);  break;
-            case 'k':  movePiece(0, 1); break;
-            case 'l':  movePiece(1, 0); break;
-
-            case 'w':  rotate();  break;
-            case 'a':  movePiece(-1, 0);  break;
-            case 's':  movePiece(0, 1); break;
-            case 'd':  movePiece(1, 0); break;
+/* ────────────────────── INPUT HANDLING ───────────────── */
+function setupInput(){
+    document.addEventListener('keydown',e=>{
+        if(isPaused||gameOver)return;
+        switch(e.key){
+            case '8':case 'i':case 'w':rotate();break;
+            case '4':case 'j':case 'a':movePiece(-1,0);break;
+            case '6':case 'l':case 'd':movePiece(1,0);break;
+            case '5':case 'k':case 's':movePiece(0,1);break;
+            case ' ':hardDrop();lockPiece();break;
+            case 'q':case 'e':case 'u':case 'o':case '7':case '9':
+                stowOrUnstowPiece();break;
         }
     });
 }
-
-/* ------------------------------------------------------------------------ */
-/* ---------- Bootstrap --------------------------------------------------- */
-window.addEventListener('load', () => {
-    init();
-    setupInput();
-    requestAnimationFrame(gameLoop);
+window.addEventListener('load',()=>{
+    init();setupInput();requestAnimationFrame(gameLoop);resetGame();
 });
