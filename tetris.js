@@ -55,6 +55,25 @@ let isLooking = false, ambientAnimationPaused = false;
 let lastStowTime = 0;
 const STOW_COOLDOWN_MS = 0;
 
+
+// Grab the elements once (you already do this later)
+const startBtn = document.getElementById('start-btn');
+const pauseBtn = document.getElementById('pause-btn');
+
+/* --- 1️⃣ Block space‑activation on the Restart button ----------------- */
+startBtn.addEventListener('keydown', e => {
+    if (e.code === 'Space') {   // or e.key === ' '
+        e.preventDefault();       // stops the button’s default click action
+    }
+});
+
+/* --- 2️⃣ Same for Pause/Resume ------------------------------------------ */
+pauseBtn.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+        e.preventDefault();
+    }
+});
+
 /* ────────────────────── UTILS ─────────────────────── */
 function changeEyeColor() {
     const step = Math.floor(Math.random() * 90) + 30;
@@ -138,7 +157,8 @@ function resetGame(){
     rowsClearedSinceLastChange=0;gameOver=false;isPaused=false;gameSpeed=1000;
     updateStats();
     if(collision()) gameOver=true;
-    ghostPiece=null;lastStowTime=0;
+    ghostPiece=null;lastStowTime=0;  holdLockActive  = false;      // <-- clear the hold‑lock
+    holdLockEndTime = 0;          // <-- clear its end timestamp
 }
 function restartGame(){resetGame();isPaused=false;dropStart=performance.now();}
 function togglePause(){
@@ -196,34 +216,56 @@ function drawNextPiece(){
         nextCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
     }
 }
+/* ────────────────────── STOW BOX DRAWING ───────────────────── */
 function drawStowPiece(){
-    const stowCanvas=document.getElementById('stow-canvas');
-    if(!stowCanvas)return;
-    const ctx=stowCanvas.getContext('2d');
-    ctx.clearRect(0,0,stowCanvas.width,stowCanvas.height);
-    if(stowedPiece){
+    const stowCanvas = document.getElementById('stow-canvas');
+    if (!stowCanvas) return;
+    const ctx = stowCanvas.getContext('2d');
+
+    /* 1️⃣ Clear the canvas each frame */
+    ctx.clearRect(0, 0, stowCanvas.width, stowCanvas.height);
+
+    /* 2️⃣ If the game has ended → show the message and stop drawing anything else */
+    if (gameOver) {
+        ctx.font = 'bold 18px Arial';
+        ctx.fillStyle = 'red';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('GAME OVER', stowCanvas.width / 2, stowCanvas.height / 2);
+        return;   // skip the rest of the function
+    }
+
+    /* 3️⃣ Normal hold‑box behaviour (unchanged) */
+    if (stowedPiece) {
         const shape = stowedPiece.shape;
         const shapeWidth = shape[0].length;
         const shapeHeight = shape.length;
-        const offsetX=Math.floor((stowCanvas.width - BLOCK_SIZE*shapeWidth)/2);
-        const offsetY=Math.floor((stowCanvas.height - BLOCK_SIZE*shapeHeight)/2);
-        for(let y=0;y<shape.length;y++){
-            for(let x=0;x<shape[y].length;x++){
-                if(shape[y][x]){
-                    ctx.fillStyle=COLORS[shape[y][x]];
-                    ctx.fillRect(offsetX+x*BLOCK_SIZE,offsetY+y*BLOCK_SIZE,BLOCK_SIZE-1,BLOCK_SIZE-1);
+        const offsetX = Math.floor((stowCanvas.width - BLOCK_SIZE * shapeWidth) / 2);
+        const offsetY = Math.floor((stowCanvas.height - BLOCK_SIZE * shapeHeight) / 2);
+
+        for (let y = 0; y < shape.length; y++) {
+            for (let x = 0; x < shape[y].length; x++) {
+                if (shape[y][x]) {
+                    ctx.fillStyle = COLORS[shape[y][x]];
+                    ctx.fillRect(offsetX + x * BLOCK_SIZE,
+                                 offsetY + y * BLOCK_SIZE,
+                                 BLOCK_SIZE - 1, BLOCK_SIZE - 1);
                 }
             }
         }
     }
-    if(!stowedPiece&&holdLockActive){
-        const remaining=Math.max(0,Math.ceil((holdLockEndTime-performance.now())/1000));
-        ctx.font='bold 24px Arial';
-        ctx.fillStyle='red';
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(remaining.toString(),stowCanvas.width/2,stowCanvas.height/2);
+
+    /* 4️⃣ Countdown when a piece is held (unchanged) */
+    if (!stowedPiece && holdLockActive) {
+        const remaining = Math.max(0, Math.ceil((holdLockEndTime - performance.now()) / 1000));
+        ctx.font = 'bold 24px Arial';
+        ctx.fillStyle = 'red';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(remaining.toString(), stowCanvas.width / 2, stowCanvas.height / 2);
     }
 }
+
 // ────────────────────── EYE LOOKING HELPERS ─────────────────────
 function resetAmbientAnimation(eyeInner) {
     // If your ambient animation is defined by a CSS rule (e.g. .eye-inner {animation: pulse 5s infinite;})
