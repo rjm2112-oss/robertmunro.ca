@@ -56,18 +56,16 @@ let lastStowTime = 0;
 const STOW_COOLDOWN_MS = 0;
 
 
-// Grab the elements once (you already do this later)
+/* -- Block space‑activation on buttons ----------------- */
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 
-/* --- 1️⃣ Block space‑activation on the Restart button ----------------- */
 startBtn.addEventListener('keydown', e => {
     if (e.code === 'Space') {   // or e.key === ' '
         e.preventDefault();       // stops the button’s default click action
     }
 });
 
-/* --- 2️⃣ Same for Pause/Resume ------------------------------------------ */
 pauseBtn.addEventListener('keydown', e => {
     if (e.code === 'Space') {
         e.preventDefault();
@@ -419,6 +417,22 @@ function finalizeClearing(){
 function gameLoop(ts){
     requestAnimationFrame(gameLoop);
     if(isPaused||gameOver)return;
+
+    if(ts - dropStart > gameSpeed){
+        if(!movePiece(0,1)){
+            lockPiece();               // place the piece & spawn a new one
+
+            /* <-- add this check ------------------------------------------- */
+            if(collision()){
+                gameOver      = true;   // we couldn't spawn a fresh piece
+                triggerEyeDown();
+            }
+            /* ---------------------------------------------------------------- */
+
+        }
+        dropStart = ts;
+    }
+
     if(holdLockActive&&performance.now()>=holdLockEndTime)holdLockActive=false;
     if(nextFlashing&&ts-lastNextFlashTime>FLASH_INTERVAL_MS){
         nextFlashCount++;lastNextFlashTime=ts;
