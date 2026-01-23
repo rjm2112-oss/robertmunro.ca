@@ -464,7 +464,7 @@ function setupInput() {
 const SOUND_CONFIG = {
     DROP: { type: 'sine', frequency: 470, duration: .1, volume: .3 },
     ROTATE: { type: 'complex', frequencies: [560,580], durations: [.3,.28], volume:.25, decay:true },
-    PIECE_LAND: { type:'noise',frequency:800,duration:.3,volume:.6 },
+    PIECE_LAND: { type:'sine',frequency:800,duration:.3,volume:.6 },
     GAME_OVER:{type:'complex',frequencies:[200,300,400],durations:[.8,.7,.6],decay:true},
     STOW: {
         type: 'complex',
