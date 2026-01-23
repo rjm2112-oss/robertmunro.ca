@@ -266,9 +266,6 @@ function drawStowPiece(){
 
 // ────────────────────── EYE LOOKING HELPERS ─────────────────────
 function resetAmbientAnimation(eyeInner) {
-    // If your ambient animation is defined by a CSS rule (e.g. .eye-inner {animation: pulse 5s infinite;})
-    // we simply toggle the `animation-play-state` back to running.
-
         eyeInner.style.animation = '';
           void eyeInner.offsetWidth;      // force re‑flow
            eyeInner.style.animation = '';  // re‑apply default animation from CSS
@@ -301,6 +298,18 @@ function triggerEyeUp() {
         eyeInner.classList.remove('eye-looking-up');
         resetAmbientAnimation(eyeInner);
     }, 1300);
+}
+
+
+/* ────────────────────── Dizzy Eye Trigger ───────────────────── */
+function triggerDizzyEye() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
+    eyeInner.classList.add('eye-dizzy');
+
+    setTimeout(() => {
+        eyeInner.classList.remove('eye-dizzy');
+    }, 1500);
 }
 
 /* ────────────────────── GAME LOGIC ───────────────── */
@@ -392,8 +401,13 @@ function checkLines() {
             rowsClearedSinceLastChange -= 5;
             changeEyeColor();
         }
-        if (rowsToClear.length > 0) {
-            triggerEyeRotation();   // defined elsewhere in eye.css
+        /* Trigger eye animation */
+        if (rowsToClear.length === 4) {
+            // Only rotate for a perfect clear
+            triggerEyeRotation();   // defined elsewhere
+        } else {
+            // For any other line clears, play the dizzy effect
+            triggerDizzyEye();
         }
     }
 }
@@ -420,14 +434,11 @@ function gameLoop(ts){
 
     if(ts - dropStart > gameSpeed){
         if(!movePiece(0,1)){
-            lockPiece();               // place the piece & spawn a new one
-
-            /* <-- add this check ------------------------------------------- */
+            lockPiece();
             if(collision()){
                 gameOver      = true;   // we couldn't spawn a fresh piece
                 triggerEyeDown();
             }
-            /* ---------------------------------------------------------------- */
 
         }
         dropStart = ts;

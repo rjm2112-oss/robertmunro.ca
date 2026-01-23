@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Tetris</title>
 
-<!-- ------------- All styles in one block ---------------- -->
 <style>
     body {
         font-family: Arial, sans-serif;
@@ -50,25 +49,6 @@
     }
 
 
-    .eye-wrapper {margin-top: 0px;}
-    .eye-container {
-        width: 150px; height: 150px;
-        position: relative;
-        background: #eee;
-        border-radius: 50%;
-        overflow: hidden;
-        margin-top: -25px;
-
-    }
-    .sclera, .moving-eye, .eye-inner, .cornea, .iris-texture, .iris, .pupil {
-        /* Add your eye component styles here or reference eye.css */
-    }
-
-    @keyframes rotateEye{
-        from{transform:rotate(0deg);}
-        to{transform:rotate(360deg);}
-    }
-    .eye-rotating{animation:rotateEye 2s linear;}
 
     .stow-box {
         width: 150px;
@@ -111,19 +91,22 @@
         </div>
 
         <!-- Eye component (bottom‑right of side panel) -->
-        <div class="eye-wrapper">
-            <div class="eye-container">
-                <div class="sclera"></div>
-                <div class="moving-eye">
-                    <div class="eye-inner">
-                        <div class="cornea"></div>
-                        <div class="iris-texture"></div>
-                        <div class="iris"></div>
-                        <div class="pupil"></div>
-                    </div>
-                </div>
-            </div>
+<div class="eye-wrapper">
+  <div class="eye-container">
+    <div class="sclera"></div>
+    <div class="moving-eye">
+      <!-- New blink wrapper -->
+      <div class="blink-wrapper">
+        <div class="eye-inner">
+          <div class="iris"></div>
+          <div class="pupil"></div>
+          <div class="cornea"></div>
+          <div class="iris-texture"></div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- stow box -->
 <div class="stow-box">
@@ -174,6 +157,39 @@ eyeIn.addEventListener('animationend', e => {
         eyeIn.classList.remove('eye-rotating');
     }
 });
+
+/* ------------------------------------------------------------------
+ *  Random‑blink scheduler – not tied to the animation iteration
+ * ------------------------------------------------------------------ */
+const minBlinkDelay = 5000; //  (minimum)
+const maxBlinkDelay = 25000; // 20 s (maximum)
+
+const blinkWrapper = document.querySelector('.blink-wrapper');
+
+function triggerBlink() {
+    if (!blinkWrapper.classList.contains('blinking')) {
+        blinkWrapper.classList.add('blinking');
+    }
+}
+
+blinkWrapper.addEventListener('animationend', e => {
+    if (e.animationName === 'blink') {
+        blinkWrapper.classList.remove('blinking');
+    }
+});
+
+function scheduleNextBlink() {
+    const delay =
+        Math.random() * (maxBlinkDelay - minBlinkDelay) + minBlinkDelay;
+    setTimeout(() => {
+        triggerBlink();          // perform the blink
+        scheduleNextBlink();     // schedule the next one
+    }, delay);
+}
+
+// Start the random‑blink loop once the page has loaded
+scheduleNextBlink();
+
 </script>
 </body>
 </html>

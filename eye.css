@@ -55,7 +55,7 @@
     top:30px; left:22px;
     width:240px;height:240px;border-radius:50%;
     background-image:radial-gradient(circle at center,
-                                     transparent 30%,rgba(255,255,255,.1) 31%,rgba(255,255,255,.1) 40%);
+                                     transparent 30%,rgba(255,255,255,.1) 36%,rgba(255,255,255,.1) 40%);
     animation:textureMoveA 8s ease-in-out infinite;
 }
 
@@ -72,8 +72,15 @@
     animation:lookUp 1.3s ease-in forwards;
 }
 
+
+@keyframes rotateEye{
+    from{transform:rotate(0deg);}
+    to{transform:rotate(360deg);}
+}
+.eye-rotating{animation:rotateEye 2s linear;}
+
 /* ------------------------------------------------------------------
- *   New pupil keyframes – “look‑up” / “look‑down”
+ *   pupil keyframes – “look‑up” / “look‑down”
  * ------------------------------------------------------------------ */
 @keyframes pupilLookUp {
     /* Keep the original horizontal jitter, but add ~10–15 px higher */
@@ -165,4 +172,34 @@
     80%  { transform: translateY(-10px); }
     95%  { transform: translateY(-2px); }
     100% { transform: translateY(0); }
+}
+
+
+/* ----------  "dizzy" effect ------------------- */
+@keyframes dizzyEye {
+    0%, 25%, 75%, 100% { transform: rotate(0deg) scale(1); }
+    30%                { transform: rotate(0deg) scale(1.0); }
+    50%                { transform: translate(-12px,5px)  scale(1.05); }
+    66%                { transform: translate(-16px,5px) scale(1.06);}
+    80%                { transform: rotate(0deg) scale(1.05); }
+}
+
+.eye-inner.eye-dizzy {
+    animation:dizzyEye 1.8s ease-out forwards;
+}
+/* ------------------------------------------------------------------
+ *   blink keyframes & wrapper
+ * ------------------------------------------------------------------ */
+@keyframes blink {
+    0%,49%,51%,100% { transform:scaleY(1); }
+    50%            { transform:scaleY(0.01); }   /* close the eyelid */
+}
+
+/* ---------- Blink wrapper ---------------------------------------- */
+.blink-wrapper{
+    position:absolute;
+    inset:0;                      /* covers the whole eye area   */
+}
+.blink-wrapper.blinking{        /* triggers the blink animation */
+    animation:blink 0.95s ease-in-out forwards;
 }
