@@ -190,6 +190,48 @@ function scheduleNextBlink() {
 // Start the random‑blink loop once the page has loaded
 scheduleNextBlink();
 
+
+/* ────────────────────── EYE LOOKING HELPERS ───────────────────── */
+function resetAmbientAnimation(eyeInner) {
+    eyeInner.style.animation = '';
+    void eyeInner.offsetWidth;      // force re-flow
+    eyeInner.style.animation = '';  // re-apply default animation from CSS
+
+}
+
+function triggerEyeDown() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
+
+    eyeInner.classList.add('eye-looking-down');
+
+    setTimeout(() => {
+        eyeInner.classList.remove('eye-looking-down');
+        resetAmbientAnimation(eyeInner);
+    }, 1300);   // same duration as in the original code
+}
+
+function triggerEyeUp() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
+
+    eyeInner.classList.add('eye-looking-up');
+
+    setTimeout(() => {
+        eyeInner.classList.remove('eye-looking-up');
+        resetAmbientAnimation(eyeInner);
+    }, 1300);
+}
+
+function triggerDizzyEye() {
+    const eyeInner = document.querySelector('.eye-inner');
+    if (!eyeInner) return;
+    eyeInner.classList.add('eye-dizzy');
+
+    setTimeout(() => {
+        eyeInner.classList.remove('eye-dizzy');
+    }, 1500);
+}
 </script>
 </body>
 </html>

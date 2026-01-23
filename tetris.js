@@ -1,4 +1,4 @@
-/* ────────────────────── CONSTANTS ────────────────────── */
+/* ────────────────────── CONSTANTS ─────────────────────── */
 const COLS = 10;
 const ROWS = 20;
 const BLOCK_SIZE = 30;
@@ -25,12 +25,30 @@ const SHAPES = [
 [[7, 7, 0],          [0, 7, 7],          [0, 0, 0]]
 ];
 
-/* ────────────────────── HOLD‑LOCK STATE ────────────────────── */
+/* ────────────────────── KEY → ACTION MAP ─────────────────────── */
+const KEY_MAP = {
+    /* rotate */
+    '8': rotate, 'i': rotate, 'w': rotate,
+    /* left/right/down */
+    '4': () => movePiece(-1,0), 'a': () => movePiece(-1,0), 'j': () => movePiece(-1,0),
+    '6': () => movePiece( 1,0), 'l': () => movePiece( 1,0), 'd': () => movePiece( 1,0),
+    '5': () => movePiece(0,1),  'k': () => movePiece(0,1),  's': () => movePiece(0,1),
+
+    /* hard‑drop */
+    ' ': () => { hardDrop(); dropStart = performance.now(); },
+
+    /* hold/unstow */
+    'q': stowOrUnstowPiece, 'e': stowOrUnstowPiece,
+    'u': stowOrUnstowPiece, 'o': stowOrUnstowPiece,
+    '7': stowOrUnstowPiece, '9': stowOrUnstowPiece
+};
+
+/* ────────────────────── HOLD‑LOCK STATE ─────────────────────── */
 const HOLD_LOCK_DURATION_MS = 12_000;
 let holdLockActive = false;
 let holdLockEndTime = 0;
 
-/* ────────────────────── OTHER STATE VARIABLES ────────────────────── */
+/* ────────────────────── GAME STATE ─────────────────────────── */
 let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
 let currentPiece = null;
 let nextPiece = null;
@@ -55,24 +73,19 @@ let isLooking = false, ambientAnimationPaused = false;
 let lastStowTime = 0;
 const STOW_COOLDOWN_MS = 0;
 
-
-/* -- Block space‑activation on buttons ----------------- */
+/* ────────────────────── BUTTON HELPERS ─────────────────────── */
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 
 startBtn.addEventListener('keydown', e => {
-    if (e.code === 'Space') {   // or e.key === ' '
-        e.preventDefault();       // stops the button’s default click action
-    }
+    if (e.code === 'Space') e.preventDefault();
 });
 
 pauseBtn.addEventListener('keydown', e => {
-    if (e.code === 'Space') {
-        e.preventDefault();
-    }
+    if (e.code === 'Space') e.preventDefault();
 });
 
-/* ────────────────────── UTILS ─────────────────────── */
+/* ────────────────────── UTILS ─────────────────────────────── */
 function changeEyeColor() {
     const step = Math.floor(Math.random() * 90) + 30;
     currentHue = (currentHue + step) % MAX_HUE;
@@ -83,6 +96,26 @@ function changeEyeColor() {
 function getSpeedForLevel(lvl) {
     const factor = 0.9;
     return Math.max(200, 1000 * Math.pow(factor, lvl - 1));
+}
+
+function isColliding(piece = currentPiece) {
+    if (!piece) return true;          // game‑over scenario
+
+    const { shape, position } = piece;
+
+    for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < shape[y].length; x++) {
+            if (!shape[y][x]) continue;
+
+            const nx = position.x + x;
+            const ny = position.y + y;
+
+            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
+            if (ny < 0) continue;
+            if (board[ny][nx]) return true;
+        }
+    }
+    return false;
 }
 
 let ghostPiece = null;
@@ -108,23 +141,10 @@ function drawGhostPiece() {
     }
 }
 
-function collides(piece) {
-    for (let y = 0; y < piece.shape.length; y++) {
-        for (let x = 0; x < piece.shape[y].length; x++) {
-            if (!piece.shape[y][x]) continue;
-            const nx = piece.position.x + x, ny = piece.position.y + y;
-            if (nx < 0 || nx >= COLS || ny >= ROWS) return true;
-            if (ny < 0) continue;
-            if (board[ny][nx]) return true;
-        }
-    }
-    return false;
-}
-
 function updateGhostPiece() {
     if (!currentPiece) { ghostPiece = null; return; }
     ghostPiece = JSON.parse(JSON.stringify(currentPiece));
-    while (!collides(ghostPiece)) ghostPiece.position.y++;
+    while (!isColliding(ghostPiece)) ghostPiece.position.y++;
     ghostPiece.position.y--;
 }
 
@@ -136,6 +156,10 @@ function init(){
     nextCanvas=document.getElementById('next-canvas');
     if(!tetrisCanvas||!nextCanvas)return;
     ctx=tetrisCanvas.getContext('2d');nextCtx=nextCanvas.getContext('2d');
+
+    // Initialize audio system
+    initAudio();
+
     document.getElementById('start-btn').addEventListener('click',restartGame);
     document.getElementById('pause-btn').addEventListener('click',togglePause);
     resetGame();
@@ -154,9 +178,9 @@ function resetGame(){
     stowedPiece=null;score=0;level=1;lines=0;
     rowsClearedSinceLastChange=0;gameOver=false;isPaused=false;gameSpeed=1000;
     updateStats();
-    if(collision()) gameOver=true;
-    ghostPiece=null;lastStowTime=0;  holdLockActive  = false;      // <-- clear the hold‑lock
-    holdLockEndTime = 0;          // <-- clear its end timestamp
+    if(isColliding()) gameOver=true;
+    ghostPiece=null;lastStowTime=0;  holdLockActive  = false;
+    holdLockEndTime = 0;
 }
 function restartGame(){resetGame();isPaused=false;dropStart=performance.now();}
 function togglePause(){
@@ -220,10 +244,8 @@ function drawStowPiece(){
     if (!stowCanvas) return;
     const ctx = stowCanvas.getContext('2d');
 
-    /* 1️⃣ Clear the canvas each frame */
     ctx.clearRect(0, 0, stowCanvas.width, stowCanvas.height);
 
-    /* 2️⃣ If the game has ended → show the message and stop drawing anything else */
     if (gameOver) {
         ctx.font = 'bold 18px Arial';
         ctx.fillStyle = 'red';
@@ -233,7 +255,6 @@ function drawStowPiece(){
         return;   // skip the rest of the function
     }
 
-    /* 3️⃣ Normal hold‑box behaviour (unchanged) */
     if (stowedPiece) {
         const shape = stowedPiece.shape;
         const shapeWidth = shape[0].length;
@@ -253,7 +274,7 @@ function drawStowPiece(){
         }
     }
 
-    /* 4️⃣ Countdown when a piece is held (unchanged) */
+    /* Countdown when a piece is held  */
     if (!stowedPiece && holdLockActive) {
         const remaining = Math.max(0, Math.ceil((holdLockEndTime - performance.now()) / 1000));
         ctx.font = 'bold 24px Arial';
@@ -264,67 +285,7 @@ function drawStowPiece(){
     }
 }
 
-// ────────────────────── EYE LOOKING HELPERS ─────────────────────
-function resetAmbientAnimation(eyeInner) {
-        eyeInner.style.animation = '';
-          void eyeInner.offsetWidth;      // force re‑flow
-           eyeInner.style.animation = '';  // re‑apply default animation from CSS
-
-}
-
-function triggerEyeDown() {
-    const eyeInner = document.querySelector('.eye-inner');
-    if (!eyeInner) return;
-
-    // 1. Start the look‑down effect
-    eyeInner.classList.add('eye-looking-down');
-
-    // 2. After the animation finishes …
-    setTimeout(() => {
-        // … remove the temporary class ...
-        eyeInner.classList.remove('eye-looking-down');
-        // … and resume / restart the ambient animation.
-        resetAmbientAnimation(eyeInner);
-    }, 1300);   // same duration as in the original code
-}
-
-function triggerEyeUp() {
-    const eyeInner = document.querySelector('.eye-inner');
-    if (!eyeInner) return;
-
-    eyeInner.classList.add('eye-looking-up');
-
-    setTimeout(() => {
-        eyeInner.classList.remove('eye-looking-up');
-        resetAmbientAnimation(eyeInner);
-    }, 1300);
-}
-
-
-/* ────────────────────── Dizzy Eye Trigger ───────────────────── */
-function triggerDizzyEye() {
-    const eyeInner = document.querySelector('.eye-inner');
-    if (!eyeInner) return;
-    eyeInner.classList.add('eye-dizzy');
-
-    setTimeout(() => {
-        eyeInner.classList.remove('eye-dizzy');
-    }, 1500);
-}
-
-/* ────────────────────── GAME LOGIC ───────────────── */
-function collision(){
-    if(!currentPiece)return true;
-    for(let y=0;y<currentPiece.shape.length;y++)
-        for(let x=0;x<currentPiece.shape[y].length;x++)
-            if(currentPiece.shape[y][x]){
-                const nx=currentPiece.position.x+x,ny=currentPiece.position.y+y;
-                if(nx<0||nx>=COLS||ny>=ROWS)return true;
-                if(ny<0)continue;
-                if(board[ny][nx])return true;
-            }
-            return false;
-}
+/* ────────────────────── GAME LOGIC ───────────────────── */
 function rotate(){
     const orig=JSON.parse(JSON.stringify(currentPiece.shape));
     for(let y=0;y<currentPiece.shape.length;y++)
@@ -332,15 +293,38 @@ function rotate(){
             [currentPiece.shape[x][y],currentPiece.shape[y][x]]=[currentPiece.shape[y][x],currentPiece.shape[x][y]];
         }
         currentPiece.shape=currentPiece.shape.map(r=>r.reverse());
-    if(collision())currentPiece.shape=orig;
+    if(isColliding()) currentPiece.shape = orig;
+    else playSound('ROTATE');
 }
-function movePiece(dx,dy){
+
+/**
+ * Move the current piece.
+ *
+ * @param {number} dx  horizontal delta (positive = right)
+ * @param {number} dy  vertical   delta (positive = down)
+ * @param {boolean} [suppressDropSound=false] – do not play DROP tone while moving
+ */
+function movePiece(dx,dy,suppressDropSound = false){
     if(!currentPiece)return false;
-    currentPiece.position.x+=dx;currentPiece.position.y+=dy;
-    if(collision()){currentPiece.position.x-=dx;currentPiece.position.y-=dy;return false;}
+
+    currentPiece.position.x+=dx;
+    currentPiece.position.y+=dy;
+
+    if(isColliding()){
+        currentPiece.position.x-=dx;
+        currentPiece.position.y-=dy;
+        return false;
+    }
+
+    if (!suppressDropSound) playSound('DROP');
     return true;
 }
-function hardDrop(){while(movePiece(0,1)){}}
+
+function hardDrop(){
+    // mute DROP while the piece is falling rapidly
+    while(movePiece(0,1,true)){}
+    lockPiece();               // finally drop the piece into place
+}
 function lockPiece(){
     if(!currentPiece)return;
     for(let y=0;y<currentPiece.shape.length;y++)
@@ -361,6 +345,9 @@ function stowOrUnstowPiece(){
     if(!currentPiece)return;
     const now=performance.now();
     if(!stowedPiece&&holdLockActive)return;
+
+    playSound(stowedPiece ? 'UNSTOW' : 'STOW');
+
     if(!stowedPiece){
         // Move current piece into hold
         stowedPiece={
@@ -389,6 +376,9 @@ function checkLines() {
             rowsToClear.push(y);
         }
     }
+
+    playSound('PIECE_LAND');
+
     if (rowsToClear.length > 0) {
         const points = [0, 100, 300, 500, 800][rowsToClear.length] * level;
         pendingScoreData = { points, lines: rowsToClear.length };
@@ -397,16 +387,13 @@ function checkLines() {
         flashCount   = 0;
         lastFlashTime= performance.now();
         rowsClearedSinceLastChange += rowsToClear.length;
-        while (rowsClearedSinceLastChange >= 5) {
-            rowsClearedSinceLastChange -= 5;
+        while (rowsClearedSinceLastChange >= 4) {
+            rowsClearedSinceLastChange -= 4;
             changeEyeColor();
         }
-        /* Trigger eye animation */
         if (rowsToClear.length === 4) {
-            // Only rotate for a perfect clear
-            triggerEyeRotation();   // defined elsewhere
+            triggerEyeRotation();   // eye animations are defined elsewhere
         } else {
-            // For any other line clears, play the dizzy effect
             triggerDizzyEye();
         }
     }
@@ -435,11 +422,11 @@ function gameLoop(ts){
     if(ts - dropStart > gameSpeed){
         if(!movePiece(0,1)){
             lockPiece();
-            if(collision()){
+            if(isColliding()){
                 gameOver      = true;   // we couldn't spawn a fresh piece
                 triggerEyeDown();
+                playSound('GAME_OVER');
             }
-
         }
         dropStart = ts;
     }
@@ -457,25 +444,96 @@ function gameLoop(ts){
             currentPiece=JSON.parse(JSON.stringify(stowedPiece));
             stowedPiece=null;drawStowPiece();updateGhostPiece();
         }
-        if(ts-dropStart>gameSpeed){if(!movePiece(0,1)){lockPiece();if(collision())gameOver=true;}dropStart=ts;}
+        if(ts-dropStart>gameSpeed){if(!movePiece(0,1)){lockPiece();if(isColliding())gameOver=true;}dropStart=ts;}
         updateGhostPiece();drawBoard();drawNextPiece();drawStowPiece();
 }
 
 /* ────────────────────── INPUT HANDLING ───────────────── */
-function setupInput(){
-    document.addEventListener('keydown',e=>{
-        if(isPaused||gameOver)return;
-        switch(e.key){
-            case '8':case 'i':case 'w':rotate();break;
-            case '4':case 'j':case 'a':movePiece(-1,0);break;
-            case '6':case 'l':case 'd':movePiece(1,0);break;
-            case '5':case 'k':case 's':movePiece(0,1);break;
-            case ' ':hardDrop();lockPiece();break;
-            case 'q':case 'e':case 'u':case 'o':case '7':case '9':
-                stowOrUnstowPiece();break;
+function setupInput() {
+    document.addEventListener('keydown', e => {
+        if (isPaused || gameOver) return;
+
+        const action = KEY_MAP[e.key];
+        if (!action) return;
+
+        action();
+    });
+}
+
+/* ────────────────────── SOUND SYSTEM ───────────────────── */
+const SOUND_CONFIG = {
+    DROP: { type: 'sine', frequency: 470, duration: .1, volume: .3 },
+    ROTATE: { type: 'complex', frequencies: [560,580], durations: [.3,.28], volume:.25, decay:true },
+    PIECE_LAND: { type:'noise',frequency:800,duration:.3,volume:.6 },
+    GAME_OVER:{type:'complex',frequencies:[200,300,400],durations:[.8,.7,.6],decay:true},
+    STOW: {
+        type: 'complex',
+        frequencies: [400, 450, 600], // Added harmonics for richness
+        durations: [0.15, 0.13, 0.11], // Slightly different durations for each frequency
+        volume: 0.3,
+        decay: true, // Use exponential decay for smoother sound
+        detune: [-2, -1, 0], // Different detunes for each frequency
+        waveShapes: ['square', 'sine', 'triangle'], // Different waveforms for complexity
+    },
+
+    UNSTOW: {
+        type: 'complex',
+        frequencies: [550, 600, 700], // Higher frequencies with more spread
+        durations: [0.18, 0.16, 0.14],
+        volume: 0.35,
+        decay: true,
+        detune: [5, 3, 1], // Positive detunes for a brighter sound
+        waveShapes: ['square', 'sawtooth', 'triangle'],
+    }
+
+};
+
+let audioCtx, masterGain;
+
+function initAudio(){
+    try{
+        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+        masterGain=audioCtx.createGain();masterGain.gain.value=.5;
+        masterGain.connect(audioCtx.destination);
+    }catch(e){console.log("Web Audio API not supported");}
+}
+
+function playSound(name, opts={}) {
+    if(!audioCtx||isPaused)return;
+    const cfg=SOUND_CONFIG[name]||{}, vol=opts.volume!==undefined?opts.volume:cfg.volume||.5;
+    masterGain.gain.value=vol*.5;
+
+    if(cfg.type==='complex') return playComplex(cfg);
+
+    const osc=audioCtx.createOscillator(), g=audioCtx.createGain();
+    g.gain.value=vol;g.connect(masterGain);
+    osc.type=cfg.type||'sine';
+
+    if(cfg.detune) {
+        osc.detune.value = cfg.detune;
+    }
+    osc.frequency.value=(cfg.frequency||440)+(Math.random()*20-10);
+    osc.connect(g);osc.start();osc.stop(audioCtx.currentTime+(cfg.duration||.2));
+    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+(cfg.duration||.2));
+}
+
+function playComplex({frequencies,durations,decay}) {
+    const t=audioCtx.currentTime;
+    frequencies.forEach((f,i)=>{
+        const osc=audioCtx.createOscillator(), g=audioCtx.createGain();
+        g.gain.value=.5;g.connect(masterGain);
+        osc.type='sine';osc.frequency.value=f;
+        osc.connect(g);osc.start(t);
+        if(decay){
+            const d=durations[i]||.5;
+            g.gain.exponentialRampToValueAtTime(.001,t+d);
+        }else{
+            osc.stop(t+(durations[i]||.3));
         }
     });
 }
+
+
 window.addEventListener('load',()=>{
     init();setupInput();requestAnimationFrame(gameLoop);resetGame();
 });
