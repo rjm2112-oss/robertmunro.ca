@@ -164,6 +164,12 @@ function init(){
     document.getElementById('pause-btn').addEventListener('click',togglePause);
     resetGame();
 }
+/* ────────────────────── INITIALIZATION GUARD ─────────────────────── */
+if (!window.tetrisInitialized) {
+    window.tetrisInitialized = true;   // remember we’ve run once
+
+    init();           // create canvas, audioCtx, listeners…
+}
 function generateRandomPiece(){
     const type=getNextType();
     return {
