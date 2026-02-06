@@ -63,7 +63,7 @@
   align-items:flex-end;
   position:relative;
   height:40vh;          /* 650 px → 81.25 vh (650 ÷ 8) */
-  padding-bottom:10vh;     /* 120 px → 15 vh */
+  padding-top:4vh;
   perspective:1000px;
   pointer-events:none;
 }
@@ -145,12 +145,9 @@
 ------------------------------------------------------------------ */
 .result{
   position:absolute;
-  /* top calc(50%‑190 px) → subtract 23.75 vh (190 ÷ 8) */
   top:calc(50% - 23.75vh);
-  /* left calc(50%‑1 px) → subtract 0.125 vw (1 ÷ 8) */
   left:calc(50% - 0.125vw);
   transform:translate(-50%,-50%);
-  /* font-size 2.5rem ≈ 40 px → 5 vw (40 ÷ 8) */
   font-size:5vw;
   color:white;
   text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
@@ -313,7 +310,6 @@
     isAnimating = true;
     flipBtn.disabled = true;           // visual feedback
 
-    /* ---- NEW: clear all previous H/T labels before the spin ---- */
     const wrapper = document.getElementById('wrapper');
     wrapper.querySelectorAll('.result').forEach(r => r.textContent = '');
 
@@ -326,9 +322,7 @@
       delay += staggerMs;
     });
 
-    /* Total time until the last coin lands:
-       (n-1)*stagger + 2500ms (animation duration)
-    */
+
     const totalTime = (selectedNum - 1) * staggerMs + 2500;
     setTimeout(() => {
       isAnimating = false;
