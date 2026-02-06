@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Coin Flip Demo – Circles</title>
+
+<style>
+/* ------------------------------------------------------------------
+   0️⃣ Root variable – the “size” of a coin (square)
+------------------------------------------------------------------ */
+:root{
+  /* pick the smaller of 15 vw or 15 vh so that coins never overflow the viewport */
+  --coin-base: min(15vw, 15vh);
+}
+
+/* ------------------------------------------------------------------
+   Layout & controls – all px → vw/vh
+------------------------------------------------------------------ */
+#coin-demo{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  /* 600 px → 75 vw (600 ÷ 8) */
+  max-width:90vw;
+  margin:auto;
+  height:72vh;
+}
+#coin-demo #controls{position:relative;top:2.5vh;z-index:1;}
+/* ---- BIGGER BUTTONS ------------------------------------------- */
+#coin-demo button,#coin-demo select{
+  /* increased padding, font‑size and border‑radius for a larger hit area */
+  padding:.25vw .4vw;
+  font-size:3vw;
+  margin-right:.4vw;
+  border:none;background:#444;color:white;cursor:pointer;
+  border-radius:1.2vw;
+}
+#coin-demo button:hover{background:#555;}
+.coin-btn.selected{background-color:#777;color:white;}
+
+#numCoinsContainer{
+  display:flex;
+  justify-content:center;
+  margin-bottom:2vh;
+}
+
+/* ------------------------------------------------------------------
+   Coin wrapper – all px → vw/vh
+------------------------------------------------------------------ */
+.coins-wrapper{
+  display:flex;
+  gap:1.25vw;
+  justify-content:center;
+  align-items:flex-end;
+  position:relative;
+  height:40vh;          /* 650 px → 81.25 vh (650 ÷ 8) */
+  padding-bottom:10vh;     /* 120 px → 15 vh */
+  perspective:1000px;
+  pointer-events:none;
+}
+
+/* ------------------------------------------------------------------
+   Coin – square & circle
+------------------------------------------------------------------ */
+.coin-container{
+  position:relative;
+  width:var(--coin-base);
+  aspect-ratio:1/1;       /* height = width ⇒ square */
+}
+#coin-demo .coin-flip{
+  width:100%;            /* fill the container (square) */
+  height:100%;
+  transform-style:preserve-3d;
+  position:relative;
+  top:calc(100% - 0vh);
+  border-radius:50%;     /* makes it a circle */
+}
+
+/* ------------------------------------------------------------------
+   Faces
+------------------------------------------------------------------ */
+.face{
+  position:absolute;
+  top:0;left:0;width:100%;height:100%;
+  backface-visibility:hidden;
+}
+.front{z-index:2;}
+.back{transform:rotateX(180deg);}
+
+/* ------------------------------------------------------------------
+   Stained‑glass texture – px → vw/vh
+------------------------------------------------------------------ */
+.stained-glass{
+  width:100%; height:100%; position:relative;
+  border-radius:50%;
+  background-color:var(--stained-glass-color,#555);
+  mix-blend-mode:multiply;
+
+  /* blur radii 10 px → 1.25 vw, 20 px → 2.5 vw */
+  box-shadow:
+    inset 0 0 1.25vw rgba(0,0,0,.3),
+    0 0 2.5vw rgba(255,255,255,.4);
+
+  animation: stainedGlassGlow 8s infinite alternate;
+  transform:translateZ(.625vw); /* 5 px → .625 vw */
+}
+
+@keyframes stainedGlassGlow{
+  from{box-shadow:
+      inset 0 0 1.25vw rgba(0,0,0,.2),
+      0 0 1.875vw rgba(255,255,255,.3);}
+  to{box-shadow:
+      inset 0 0 1.875vw rgba(0,0,0,.3),
+      0 0 2.5vw rgba(255,255,255,.4);}
+}
+
+/* ------------------------------------------------------------------
+   Fly & spin – px → vh
+------------------------------------------------------------------ */
+@keyframes fly-spin{
+  from{top:100%;transform:translateY(0) rotateX(0deg);}
+  /* translateY(-200 px) → -25 vh (200 ÷ 8) */
+  to{top:10%;transform:translateY(-25vh) rotateX(calc(var(--flips)*180deg + var(--final-angle)) );}
+}
+
+/* ------------------------------------------------------------------
+   Overlap styling – preserve overlap ratio
+------------------------------------------------------------------ */
+.coin-container:not(:first-child){
+  /* -35 px → -0.291666 × coin size (35/120 = 29.1666%) */
+  margin-left: calc(-0.291666 * var(--coin-base));
+}
+
+/* ------------------------------------------------------------------
+   Heads/Tails label – px → vh/vw
+------------------------------------------------------------------ */
+.result{
+  position:absolute;
+  /* top calc(50%‑190 px) → subtract 23.75 vh (190 ÷ 8) */
+  top:calc(50% - 23.75vh);
+  /* left calc(50%‑1 px) → subtract 0.125 vw (1 ÷ 8) */
+  left:calc(50% - 0.125vw);
+  transform:translate(-50%,-50%);
+  /* font-size 2.5rem ≈ 40 px → 5 vw (40 ÷ 8) */
+  font-size:5vw;
+  color:white;
+  text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
+  pointer-events:none;
+  z-index:10;
+}
+</style>
+</head>
+
+<body>
+<div id="coin-demo">
+  <div id="controls"><label>Number of coins:</label>
+    <div id="numCoinsContainer">
+      <button class="coin-btn selected" data-num="1">1</button>
+      <button class="coin-btn" data-num="2">2</button>
+      <button class="coin-btn" data-num="3">3</button>
+      <button class="coin-btn" data-num="4">4</button>
+    </div>
+  </div>
+
+  <div id="flipContainer" style="margin-top:12px;">
+    <button id="flipBtn">Flip!</button>
+  </div>
+
+  <div class="coins-wrapper" id="wrapper"></div>
+</div>
+
+<script>
+(() => {
+  /* ------------------------------------------------------------------
+     Translucent colours – alpha = 0.5
+  ------------------------------------------------------------------ */
+  const stainedGlassColors = [
+       'rgba(139, 0, 139, 0.5)',    // magenta
+   'rgba(0, 128, 0, 0.5)',      // green
+           'rgba(70, 130, 180, 0.5)',    // steel blue
+  'rgba(255, 200, 0, 0.5)',    // bright yellow (your “yellow” coin)
+  'rgba(139, 69, 19, 0.5)',     // dark goldenrod – a darker yellow
+   'rgba(255, 0, 0, 0.5)',      // red
+        'rgba(0, 191, 255, 0.5)',    // deep sky blue
+    'rgba(0, 0, 139, 0.5)',      // navy
+          'rgba(128, 0, 128, 0.5)',    // purple
+    'rgba(255, 165, 0, 0.5)',    // orange
+  ];
+
+  /* ------------------------------------------------------------------
+     Create a single coin element
+  ------------------------------------------------------------------ */
+  function createCoin(colorIndex) {
+    const container = document.createElement('div');
+    container.className = 'coin-container';
+
+    const c = document.createElement('div');
+    c.className = 'coin-flip';
+    c.style.setProperty('--stained-glass-color', stainedGlassColors[colorIndex]);
+
+    // Front face
+    const front = document.createElement('div');
+    front.className = 'face front';
+    const frontGlass = document.createElement('div');
+    frontGlass.className = 'stained-glass';
+    front.appendChild(frontGlass);
+
+    // Back face
+    const back = document.createElement('div');
+    back.className = 'face back';
+    const backGlass = document.createElement('div');
+    backGlass.className = 'stained-glass';
+    back.appendChild(backGlass);
+
+    c.appendChild(front);
+    c.appendChild(back);
+    container.appendChild(c);
+
+    /* Heads/Tails label (empty for now) */
+    const result = document.createElement('div');
+    result.className = 'result';
+    container.appendChild(result);
+
+    return container;
+  }
+
+  /* ------------------------------------------------------------------
+     Start the fly‑spin animation for one coin
+  ------------------------------------------------------------------ */
+  function startAnimation(coin) {
+    const heads = Math.random() < 0.5;
+    const flips = Math.floor(Math.random() * 4) + 4;   // 4‑7 flips
+
+    let finalAngleDeg;
+    if (heads) {
+      finalAngleDeg = (flips % 2 === 0) ? 0 : 180;
+    } else {
+      finalAngleDeg = (flips % 2 === 0) ? 180 : 0;
+    }
+
+    coin.style.setProperty('--flips', flips);
+    coin.style.setProperty('--final-angle', `${finalAngleDeg}deg`);
+
+    /* Restart animation */
+    coin.style.animation = 'none';
+    void coin.offsetWidth;   // force reflow
+
+    coin.style.animation =
+      `fly-spin 2.5s cubic-bezier(0.175,0.885,0.32,1.29) forwards`;
+
+    /* Show H/T label only after the animation ends */
+    const resultText = heads ? 'H' : 'T';
+    const handler = function () {
+      const resultEl = coin.parentElement.querySelector('.result');
+      if (resultEl) resultEl.textContent = resultText;
+      coin.removeEventListener('animationend', handler);
+    };
+    coin.addEventListener('animationend', handler);
+  }
+
+  /* ------------------------------------------------------------------
+     Show exactly n coins (in their “initial” bottom position)
+  ------------------------------------------------------------------ */
+  function displayCoins(n) {
+    const wrapper = document.getElementById('wrapper');
+    wrapper.innerHTML = '';          // clear any old coins
+
+    for (let i = 0; i < n; i++) {
+      const colorIndex = i % stainedGlassColors.length;
+      const coinContainer = createCoin(colorIndex);
+      wrapper.appendChild(coinContainer);
+    }
+  }
+
+  /* ------------------------------------------------------------------
+     Initial state – one coin visible
+  ------------------------------------------------------------------ */
+  let selectedNum = 1;
+  displayCoins(selectedNum);
+
+  /* ------------------------------------------------------------------
+     Number‑button handling
+  ------------------------------------------------------------------ */
+  const btns = document.querySelectorAll('#numCoinsContainer .coin-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedNum = parseInt(btn.dataset.num, 10);
+      btns.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+
+      /* Update the displayed coins immediately */
+      displayCoins(selectedNum);
+    });
+  });
+
+  /* ------------------------------------------------------------------
+     Flip button – animate all existing coins
+  ------------------------------------------------------------------ */
+  const flipBtn = document.getElementById('flipBtn');
+  let isAnimating = false;
+
+  flipBtn.addEventListener('click', () => {
+    if (isAnimating) return;          // ignore clicks while animating
+    isAnimating = true;
+    flipBtn.disabled = true;           // visual feedback
+
+    /* ---- NEW: clear all previous H/T labels before the spin ---- */
+    const wrapper = document.getElementById('wrapper');
+    wrapper.querySelectorAll('.result').forEach(r => r.textContent = '');
+
+    const coins = Array.from(wrapper.querySelectorAll('.coin-flip'));
+    let delay = 0;
+    const staggerMs = 300;
+
+    coins.forEach(coin => {
+      setTimeout(() => startAnimation(coin), delay);
+      delay += staggerMs;
+    });
+
+    /* Total time until the last coin lands:
+       (n-1)*stagger + 2500ms (animation duration)
+    */
+    const totalTime = (selectedNum - 1) * staggerMs + 2500;
+    setTimeout(() => {
+      isAnimating = false;
+      flipBtn.disabled = false;
+    }, totalTime);
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,6 +69,7 @@
                     ></iframe>
           </div>
         </article>
+
 <!--  TETRIS POST -->
   <article class="post"><h3 data-no-title="true">Tetris</h3>
   <div class="preview"><br></div>
@@ -87,6 +87,7 @@
 <br> stow/exchange: (one of): Q,E,U,O,7,9
   </div>
 </article>
+
         <!-- Recent project showcase -->
         <article class="post"><h3>Recent Project Showcase</h3>
           <p class="meta">20 Sep 2025</p>
@@ -144,21 +145,13 @@
     </div>
   </section>
 
+  <!-- Section 3 – Coin Demo (now external) -->
   <section id="section3">
-    <div id="coin-demo">
-      <div class="coins-wrapper" id="wrapper"></div>
-
-      <div id="controls">
-        <label>&nbsp;</label>
-        <div id="numCoinsContainer">
-          <button class="coin-btn selected" data-num="1">1</button>
-          <button class="coin-btn" data-num="2">2</button>
-          <button class="coin-btn" data-num="3">3</button>
-          <button class="coin-btn" data-num="4">4</button>
-        </div>
-        <button id="flipBtn">Flip!</button>
-      </div>
-    </div>
+    <iframe src="coin.html"
+            width="100%"
+            height="600px"
+            style="border:none;"
+            title="Coin Flip Demo"></iframe>
   </section>
 
 </main>
@@ -168,9 +161,6 @@
   <img src="" alt="">
   <div class="modal-caption"></div>
 </div>
-
-<!-- 1️⃣ Load the navigation logic from nav.js (replace the inline script) -->
-<script src="nav.js" defer></script>
 
 <script>
 /* ────────────────────────────────────────
@@ -219,7 +209,7 @@ modal.addEventListener('click', () => {
 });
 </script>
 
-<!-- External coin‑flip script -->
-<script src="coin-flip.js" defer></script>
+<!-- 1️⃣ Load the navigation logic from nav.js (replace the inline script) -->
+<script src="nav.js" defer></script>
 </body>
 </html>

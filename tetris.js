@@ -474,21 +474,21 @@ const SOUND_CONFIG = {
     GAME_OVER:{type:'complex',frequencies:[200,300,400],durations:[.8,.7,.6],decay:true},
     STOW: {
         type: 'complex',
-        frequencies: [400, 450, 600], // Added harmonics for richness
-        durations: [0.15, 0.13, 0.11], // Slightly different durations for each frequency
+        frequencies: [400, 450, 600],
+        durations: [0.15, 0.13, 0.11],
         volume: 0.3,
-        decay: true, // Use exponential decay for smoother sound
-        detune: [-2, -1, 0], // Different detunes for each frequency
-        waveShapes: ['square', 'sine', 'triangle'], // Different waveforms for complexity
+        decay: true,
+        detune: [-2, -1, 0],
+        waveShapes: ['square', 'sine', 'triangle'],
     },
 
     UNSTOW: {
         type: 'complex',
-        frequencies: [550, 600, 700], // Higher frequencies with more spread
+        frequencies: [550, 600, 700],
         durations: [0.18, 0.16, 0.14],
         volume: 0.35,
         decay: true,
-        detune: [5, 3, 1], // Positive detunes for a brighter sound
+        detune: [5, 3, 1],
         waveShapes: ['square', 'sawtooth', 'triangle'],
     }
 
