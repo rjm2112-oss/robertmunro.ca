@@ -9,8 +9,9 @@
    0️⃣ Root variable – the “size” of a coin (square)
 ------------------------------------------------------------------ */
 :root{
-  /* pick the smaller of 15 vw or 15 vh so that coins never overflow the viewport */
-  --coin-base: min(15vw, 15vh);
+  /* pick the smaller of 18 vw or 18 vh so that coins never overflow the viewport
+     (≈20 % larger than before) */
+  --coin-base: min(18vw, 18vh);
 }
 
 /* ------------------------------------------------------------------
@@ -23,16 +24,16 @@
   justify-content:center;
   width:100%;
   /* 600 px → 75 vw (600 ÷ 8) */
-  max-width:90vw;
+  max-width:100vw;
   margin:auto;
   height:72vh;
 }
-#coin-demo #controls{position:relative;top:2.5vh;z-index:1;}
-/* ---- BIGGER BUTTONS ------------------------------------------- */
+#coin-demo #controls{position:relative;top:2.75vh;z-index:1;}
+/* Default button style – used by Flip! and number buttons */
 #coin-demo button,#coin-demo select{
   /* increased padding, font‑size and border‑radius for a larger hit area */
-  padding:.25vw .4vw;
-  font-size:3vw;
+  padding:.25vw .6vw;
+  font-size:3.6vw;
   margin-right:.4vw;
   border:none;background:#444;color:white;cursor:pointer;
   border-radius:1.2vw;
@@ -44,6 +45,12 @@
   display:flex;
   justify-content:center;
   margin-bottom:2vh;
+}
+
+/* Extra horizontal padding just for the number buttons */
+#numCoinsContainer .coin-btn{
+  /* keep vertical padding the same, bump horizontal padding up a bit */
+  padding:.25vw .8vw;
 }
 
 /* ------------------------------------------------------------------
@@ -149,28 +156,6 @@
   text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
   pointer-events:none;
   z-index:10;
-}
-
-/* ------------------------------------------------------------------
-   Media query for narrow (portrait‑mobile) screens
------------------------------------------------------------------- */
-@media (max-width:600px){
-  /* Make coins 50 % bigger */
-  :root{
-    --coin-base: min(22.5vw, 22.5vh); /* 15 × 1.5 = 22.5 */
-  }
-
-  /* Double the size of the control buttons */
-  #coin-demo button,#coin-demo select{
-    padding:.5vw .8vw;
-    font-size:6vw;   /* double 3 vw */
-  }
-
-  /* Ensure the wrapper still fits the larger coins */
-  .coins-wrapper{
-    height:60vh;          /* 40 × 1.5 = 60 */
-    padding-bottom:15vh;  /* 10 × 1.5 = 15 */
-  }
 }
 </style>
 </head>
