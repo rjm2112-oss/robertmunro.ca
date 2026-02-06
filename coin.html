@@ -150,6 +150,28 @@
   pointer-events:none;
   z-index:10;
 }
+
+/* ------------------------------------------------------------------
+   Media query for narrow (portrait‑mobile) screens
+------------------------------------------------------------------ */
+@media (max-width:600px){
+  /* Make coins 50 % bigger */
+  :root{
+    --coin-base: min(22.5vw, 22.5vh); /* 15 × 1.5 = 22.5 */
+  }
+
+  /* Double the size of the control buttons */
+  #coin-demo button,#coin-demo select{
+    padding:.5vw .8vw;
+    font-size:6vw;   /* double 3 vw */
+  }
+
+  /* Ensure the wrapper still fits the larger coins */
+  .coins-wrapper{
+    height:60vh;          /* 40 × 1.5 = 60 */
+    padding-bottom:15vh;  /* 10 × 1.5 = 15 */
+  }
+}
 </style>
 </head>
 
