@@ -9,9 +9,9 @@
    0️⃣ Root variable – the “size” of a coin (square)
 ------------------------------------------------------------------ */
 :root{
-  /* pick the smaller of 18 vw or 18 vh so that coins never overflow the viewport
+  /* pick the smaller of 27 vw or 27 vh so that coins never overflow the viewport
      (≈20 % larger than before) */
-  --coin-base: min(18vw, 18vh);
+  --coin-base: min(27vw, 27vh);
 }
 
 /* ------------------------------------------------------------------
@@ -23,28 +23,40 @@
   align-items:center;
   justify-content:center;
   width:100%;
-  /* 600 px → 75 vw (600 ÷ 8) */
   max-width:100vw;
   margin:auto;
-  height:72vh;
+  height:70vh;
 }
-#coin-demo #controls{position:relative;top:2.75vh;z-index:1;}
+#coin-demo #controls{z-index:auto;margin-bottom:-1vh;}
 /* Default button style – used by Flip! and number buttons */
 #coin-demo button,#coin-demo select{
-  /* increased padding, font‑size and border‑radius for a larger hit area */
   padding:.25vw .6vw;
-  font-size:3.6vw;
+  font-size:4vh;
   margin-right:.4vw;
   border:none;background:#444;color:white;cursor:pointer;
   border-radius:1.2vw;
+
+  /* Ensure buttons stay readable across screen sizes */
+  min-width:6vw;
+  max-width:16vw;
+  max-height:8vh;
 }
+@media (max-width: 650px) {
+#coin-demo button,#coin-demo select{
+  min-width:10vw;
+  min-height:10vw;
+
+   font-size:6vh;
+    max-width:26vw
+}
+}
+
 #coin-demo button:hover{background:#555;}
 .coin-btn.selected{background-color:#777;color:white;}
 
 #numCoinsContainer{
   display:flex;
   justify-content:center;
-  margin-bottom:2vh;
 }
 
 /* Extra horizontal padding just for the number buttons */
@@ -62,7 +74,7 @@
   justify-content:center;
   align-items:flex-end;
   position:relative;
-  height:40vh;          /* 650 px → 81.25 vh (650 ÷ 8) */
+  height:60vh;          /* 650 px → 81.25 vh (650 ÷ 8) */
   padding-top:4vh;
   perspective:1000px;
   pointer-events:none;
@@ -83,6 +95,9 @@
   position:relative;
   top:calc(100% - 0vh);
   border-radius:50%;     /* makes it a circle */
+
+  /* IMPORTANT – rotate around the centre so that letters stay centred */
+  transform-origin:50% 50%;
 }
 
 /* ------------------------------------------------------------------
@@ -141,19 +156,38 @@
 }
 
 /* ------------------------------------------------------------------
-   Heads/Tails label – px → vh/vw
+   Letter styles on the faces
 ------------------------------------------------------------------ */
-.result{
+.letter{
   position:absolute;
-  top:calc(50% - 23.75vh);
-  left:calc(50% - 0.125vw);
+  top:50%;left:50%;
   transform:translate(-50%,-50%);
-  font-size:5vw;
-  color:white;
-  text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
+  font-size: clamp(24px, 6vw, 48px);
+  color:#f0e8d6;
+  text-shadow:
+    -1px -1px 0 rgba(255,255,255,.7),
+     1px  1px 0 rgba(0,0,0,.5),
+     2px  2px 4px rgba(0,0,0,.3);
+
   pointer-events:none;
   z-index:10;
 }
+
+
+/* ------------------------------------------------------------------
+   Result overlay – unused but kept for reference
+------------------------------------------------------------------ */
+.result{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:5vw;color:white;text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
+  pointer-events:none;
+  z-index:10;
+}
+
+
+
 </style>
 </head>
 
@@ -169,7 +203,7 @@
   </div>
 
   <div id="flipContainer" style="margin-top:12px;">
-    <button id="flipBtn">Flip!</button>
+<button id="flipBtn">&nbsp;&nbsp;Flip!&nbsp;&nbsp;</button>
   </div>
 
   <div class="coins-wrapper" id="wrapper"></div>
@@ -211,6 +245,13 @@
     frontGlass.className = 'stained-glass';
     front.appendChild(frontGlass);
 
+    // Letter H on the front
+    const frontLabel = document.createElement('div');
+    frontLabel.className = 'letter';
+    frontLabel.textContent = 'H';
+    frontLabel.style.visibility = 'hidden'; // hide until animation ends
+    front.appendChild(frontLabel);
+
     // Back face
     const back = document.createElement('div');
     back.className = 'face back';
@@ -218,14 +259,16 @@
     backGlass.className = 'stained-glass';
     back.appendChild(backGlass);
 
+    // Letter T on the back
+    const backLabel = document.createElement('div');
+    backLabel.className = 'letter';
+    backLabel.textContent = 'T';
+    backLabel.style.visibility = 'hidden';
+    back.appendChild(backLabel);
+
     c.appendChild(front);
     c.appendChild(back);
     container.appendChild(c);
-
-    /* Heads/Tails label (empty for now) */
-    const result = document.createElement('div');
-    result.className = 'result';
-    container.appendChild(result);
 
     return container;
   }
@@ -234,7 +277,7 @@
      Start the fly‑spin animation for one coin
   ------------------------------------------------------------------ */
   function startAnimation(coin) {
-    const heads = Math.random() < 0.5;
+    const heads = Math.random() < 0.5;   // random outcome
     const flips = Math.floor(Math.random() * 4) + 4;   // 4‑7 flips
 
     let finalAngleDeg;
@@ -247,25 +290,34 @@
     coin.style.setProperty('--flips', flips);
     coin.style.setProperty('--final-angle', `${finalAngleDeg}deg`);
 
-    /* Restart animation */
+    // Ensure labels are hidden before new animation starts
+    const container = coin.parentElement;
+    const frontLabel = container.querySelector('.face.front .letter');
+    const backLabel  = container.querySelector('.face.back .letter');
+    if (frontLabel) frontLabel.style.visibility = 'hidden';
+    if (backLabel ) backLabel.style.visibility  = 'hidden';
+
+    // Restart animation
     coin.style.animation = 'none';
     void coin.offsetWidth;   // force reflow
 
     coin.style.animation =
       `fly-spin 2.5s cubic-bezier(0.175,0.885,0.32,1.29) forwards`;
 
-    /* Show H/T label only after the animation ends */
-    const resultText = heads ? 'H' : 'T';
+    // Show correct letter after animation ends
     const handler = function () {
-      const resultEl = coin.parentElement.querySelector('.result');
-      if (resultEl) resultEl.textContent = resultText;
+      if (heads) {
+        frontLabel && (frontLabel.style.visibility = 'visible');
+      } else {
+        backLabel  && (backLabel.style.visibility  = 'visible');
+      }
       coin.removeEventListener('animationend', handler);
     };
     coin.addEventListener('animationend', handler);
   }
 
   /* ------------------------------------------------------------------
-     Show exactly n coins (in their “initial” bottom position)
+     Show exactly n coins
   ------------------------------------------------------------------ */
   function displayCoins(n) {
     const wrapper = document.getElementById('wrapper');
@@ -294,7 +346,6 @@
       btns.forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
 
-      /* Update the displayed coins immediately */
       displayCoins(selectedNum);
     });
   });
@@ -311,8 +362,6 @@
     flipBtn.disabled = true;           // visual feedback
 
     const wrapper = document.getElementById('wrapper');
-    wrapper.querySelectorAll('.result').forEach(r => r.textContent = '');
-
     const coins = Array.from(wrapper.querySelectorAll('.coin-flip'));
     let delay = 0;
     const staggerMs = 300;
@@ -321,7 +370,6 @@
       setTimeout(() => startAnimation(coin), delay);
       delay += staggerMs;
     });
-
 
     const totalTime = (selectedNum - 1) * staggerMs + 2500;
     setTimeout(() => {
