@@ -83,6 +83,7 @@
 /* ------------------------------------------------------------------
    Coin – square & circle
 ------------------------------------------------------------------ */
+
 .coin-container{
   position:relative;
   width:var(--coin-base);
@@ -119,24 +120,10 @@
   border-radius:50%;
   background-color:var(--stained-glass-color,#555);
   mix-blend-mode:multiply;
-
-  /* blur radii 10 px → 1.25 vw, 20 px → 2.5 vw */
-  box-shadow:
-    inset 0 0 1.25vw rgba(0,0,0,.3),
-    0 0 2.5vw rgba(255,255,255,.4);
-
-  animation: stainedGlassGlow 8s infinite alternate;
-  transform:translateZ(.625vw); /* 5 px → .625 vw */
+  background-image: radial-gradient(circle at center, transparent 98%, rgba(255, 255, 255, 0.1) 100%);
 }
 
-@keyframes stainedGlassGlow{
-  from{box-shadow:
-      inset 0 0 1.25vw rgba(0,0,0,.2),
-      0 0 1.875vw rgba(255,255,255,.3);}
-  to{box-shadow:
-      inset 0 0 1.875vw rgba(0,0,0,.3),
-      0 0 2.5vw rgba(255,255,255,.4);}
-}
+
 
 /* ------------------------------------------------------------------
    Fly & spin – px → vh
@@ -326,6 +313,8 @@
     for (let i = 0; i < n; i++) {
       const colorIndex = i % stainedGlassColors.length;
       const coinContainer = createCoin(colorIndex);
+          coinContainer.style.zIndex = n - i;
+
       wrapper.appendChild(coinContainer);
     }
   }
