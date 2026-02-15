@@ -151,8 +151,12 @@
 }
 
 @keyframes rotateEye{
-    from{transform:none}to{transform:rotate(360deg)}
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-15px); }
+    50% { transform: translateX(15px); }
+    75% { transform: translateX(-15px); }
 }
+
 
 @keyframes lookDown {
     0%   { transform: translateY(0); }

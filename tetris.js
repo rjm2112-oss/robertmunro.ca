@@ -87,10 +87,19 @@ pauseBtn.addEventListener('keydown', e => {
 
 /* ────────────────────── UTILS ─────────────────────────────── */
 function changeEyeColor() {
-    const step = Math.floor(Math.random() * 90) + 30;
+    // Random step:  for smoother, more subtle changes
+    const step = Math.floor(Math.random() * 50) + 30;
     currentHue = (currentHue + step) % MAX_HUE;
+
+    // Random saturation (80–120%) & brightness (70–100%)
+    const sat   = Math.round(60 + Math.random() * 60);   // 60% → 120%
+    const bright= Math.round(90 + Math.random() * 10);   // 90% → 100%
+
     const iris = document.querySelector('.iris');
-    if (iris) iris.style.filter = `hue-rotate(${currentHue}deg)`;
+    if (iris) {
+        iris.style.filter =
+        `hue-rotate(${currentHue}deg) saturate(${sat}%) brightness(${bright}%)`;
+    }
 }
 
 function getSpeedForLevel(lvl) {
@@ -393,8 +402,8 @@ function checkLines() {
         flashCount   = 0;
         lastFlashTime= performance.now();
         rowsClearedSinceLastChange += rowsToClear.length;
-        while (rowsClearedSinceLastChange >= 4) {
-            rowsClearedSinceLastChange -= 4;
+        while (rowsClearedSinceLastChange >= 1) {
+            rowsClearedSinceLastChange -= 1;
             changeEyeColor();
         }
         if (rowsToClear.length === 4) {
@@ -474,21 +483,21 @@ const SOUND_CONFIG = {
     GAME_OVER:{type:'complex',frequencies:[200,300,400],durations:[.8,.7,.6],decay:true},
     STOW: {
         type: 'complex',
-        frequencies: [400, 450, 600],
-        durations: [0.15, 0.13, 0.11],
+        frequencies: [400, 450, 600], // Added harmonics for richness
+        durations: [0.15, 0.13, 0.11], // Slightly different durations for each frequency
         volume: 0.3,
-        decay: true,
-        detune: [-2, -1, 0],
-        waveShapes: ['square', 'sine', 'triangle'],
+        decay: true, // Use exponential decay for smoother sound
+        detune: [-2, -1, 0], // Different detunes for each frequency
+        waveShapes: ['square', 'sine', 'triangle'], // Different waveforms for complexity
     },
 
     UNSTOW: {
         type: 'complex',
-        frequencies: [550, 600, 700],
+        frequencies: [550, 600, 700], // Higher frequencies with more spread
         durations: [0.18, 0.16, 0.14],
         volume: 0.35,
         decay: true,
-        detune: [5, 3, 1],
+        detune: [5, 3, 1], // Positive detunes for a brighter sound
         waveShapes: ['square', 'sawtooth', 'triangle'],
     }
 
