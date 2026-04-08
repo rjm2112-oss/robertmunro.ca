@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solitaire</title>
+<style>
+    :root {
+        --card-width: min(92px, 11vw);
+        --card-height: calc(var(--card-width) * 1.4);
+        --pile-gap: clamp(10px, 1.8vw, 18px);
+        --tableau-offset-face-down: 18px;
+        --tableau-offset-face-up: 30px;
+        --felt-dark: #0f5b2b;
+        --felt-mid: #187338;
+        --felt-light: #228847;
+        --frame-shadow: rgba(0, 0, 0, 0.35);
+        --card-border: #d6ccb5;
+        --card-shadow: rgba(0, 0, 0, 0.25);
+        --win-blue-top: #0b4eb4;
+        --win-blue-bottom: #0a2f7b;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+        background:
+            radial-gradient(circle at top, rgba(255, 255, 255, 0.18), transparent 34%),
+            linear-gradient(180deg, #0b5e2c 0%, #0a4d24 100%);
+        color: #f4efd5;
+    }
+
+    .solitaire-shell {
+        width: min(1080px, 100%);
+        margin: 0 auto;
+        padding: 24px 18px 28px;
+    }
+
+    .window-frame {
+        border: 3px solid #d6d4ce;
+        border-top-color: #fbfbf9;
+        border-left-color: #fbfbf9;
+        border-right-color: #6f6d69;
+        border-bottom-color: #6f6d69;
+        background: #c0c0c0;
+        box-shadow: 0 20px 42px var(--frame-shadow);
+    }
+
+    .window-body {
+        padding: 14px;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 22%),
+            linear-gradient(180deg, var(--felt-light) 0%, var(--felt-mid) 42%, var(--felt-dark) 100%);
+    }
+
+    .hud {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
+
+    .hud-left,
+    .hud-right {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .hud-pill {
+        min-width: 92px;
+        padding: 7px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        background: rgba(8, 45, 20, 0.33);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .win-btn {
+        min-width: 122px;
+        padding: 9px 14px;
+        border: 2px solid #f7f5ef;
+        border-right-color: #555;
+        border-bottom-color: #555;
+        border-left-color: #f7f5ef;
+        border-top-color: #f7f5ef;
+        background: #d4d0c8;
+        color: #111;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .win-btn:active {
+        border-top-color: #555;
+        border-left-color: #555;
+        border-right-color: #f7f5ef;
+        border-bottom-color: #f7f5ef;
+        background: #c6c2bb;
+    }
+
+    .status-line {
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(0, 0, 0, 0.12);
+        font-size: 0.92rem;
+        color: #f7f4dc;
+    }
+
+    .board {
+        position: relative;
+        border: 1px solid rgba(0, 0, 0, 0.35);
+        border-radius: 12px;
+        padding: 18px;
+        background:
+            radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 28%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 35%),
+            linear-gradient(180deg, #1d803c 0%, #15672f 100%);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .stock-area,
+    .foundation-area {
+        display: flex;
+        gap: var(--pile-gap);
+    }
+
+    .tableau-row {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: var(--pile-gap);
+        margin-top: 20px;
+    }
+
+    .pile {
+        position: relative;
+        width: var(--card-width);
+        min-width: var(--card-width);
+        border-radius: 11px;
+        user-select: none;
+    }
+
+    .top-row .pile {
+        height: var(--card-height);
+    }
+
+    .tableau-pile {
+        min-height: 540px;
+    }
+
+    #waste-pile {
+        width: calc(var(--card-width) + 32px);
+        min-width: calc(var(--card-width) + 32px);
+    }
+
+    .slot {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed rgba(255, 255, 255, 0.22);
+        border-radius: 11px;
+        background: rgba(0, 0, 0, 0.08);
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+
+    .card {
+        position: absolute;
+        left: 0;
+        width: var(--card-width);
+        height: var(--card-height);
+        border-radius: 11px;
+        border: 1px solid var(--card-border);
+        background: linear-gradient(180deg, #fffef8 0%, #f3ecdd 100%);
+        box-shadow: 0 8px 12px var(--card-shadow);
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .card.red {
+        color: #b20f1c;
+    }
+
+    .card.black {
+        color: #171717;
+    }
+
+    .card.back {
+        border-color: #92a0c3;
+        background:
+            radial-gradient(circle at center, rgba(255, 255, 255, 0.22), transparent 55%),
+            repeating-linear-gradient(
+                45deg,
+                #244f9d 0,
+                #244f9d 8px,
+                #123d88 8px,
+                #123d88 16px
+            );
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        cursor: default;
+    }
+
+    .card.back::before {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border: 2px solid rgba(255, 255, 255, 0.68);
+        border-radius: 7px;
+    }
+
+    .card-back-mark {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+    }
+
+    .card-corner {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .card-corner.top-left {
+        top: 7px;
+        left: 7px;
+    }
+
+    .card-corner.bottom-right {
+        right: 7px;
+        bottom: 7px;
+        transform: rotate(180deg);
+    }
+
+    .card-rank {
+        font-size: 1.02rem;
+    }
+
+    .card-suit {
+        font-size: 0.92rem;
+        margin-top: 2px;
+    }
+
+    .card-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(2rem, 4vw, 3rem);
+        opacity: 0.85;
+    }
+
+    .card.selected {
+        outline: 3px solid rgba(255, 213, 70, 0.95);
+        outline-offset: 2px;
+        transform: translateY(-8px);
+        z-index: 200;
+    }
+
+    .card.available-target {
+        box-shadow: 0 0 0 3px rgba(255, 213, 70, 0.35), 0 8px 12px var(--card-shadow);
+    }
+
+    .pile.selected-slot .slot {
+        border-color: rgba(255, 213, 70, 0.95);
+        box-shadow: inset 0 0 0 1px rgba(255, 213, 70, 0.45);
+    }
+
+    .victory-banner {
+        position: absolute;
+        inset: 18px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 400;
+        background: rgba(0, 0, 0, 0.45);
+        border-radius: 12px;
+    }
+
+    .victory-banner.show {
+        display: flex;
+    }
+
+    .victory-card {
+        width: min(420px, 92%);
+        padding: 22px 24px;
+        border: 3px solid #f6f1df;
+        background: linear-gradient(180deg, #f8f1dd 0%, #e7ddb9 100%);
+        color: #19311b;
+        text-align: center;
+        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+    }
+
+    .victory-card h2 {
+        margin: 0 0 12px;
+        font-size: 1.7rem;
+    }
+
+    .victory-card p {
+        margin: 0 0 18px;
+        font-size: 1rem;
+    }
+
+    @media (max-width: 900px) {
+        :root {
+            --card-width: min(80px, 12vw);
+            --tableau-offset-face-down: 15px;
+            --tableau-offset-face-up: 25px;
+        }
+
+        .top-row {
+            flex-direction: column;
+        }
+
+        .foundation-area {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .tableau-row {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .tableau-pile {
+            min-height: 500px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .solitaire-shell {
+            padding: 14px 8px 20px;
+        }
+
+        .window-body {
+            padding: 10px;
+        }
+
+        .hud {
+            gap: 10px;
+        }
+
+        .hud-pill {
+            min-width: 80px;
+            font-size: 0.82rem;
+        }
+
+        .win-btn {
+            min-width: 110px;
+        }
+
+        .board {
+            padding: 12px;
+            overflow-x: auto;
+        }
+
+        .stock-area,
+        .foundation-area,
+        .tableau-row {
+            min-width: 690px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="solitaire-shell">
+    <div class="window-frame">
+        <div class="window-body">
+            <div class="hud">
+                <div class="hud-left">
+                    <div class="hud-pill">Score: <strong id="score">0</strong></div>
+                    <div class="hud-pill">Moves: <strong id="moves">0</strong></div>
+                    <div class="hud-pill">Time: <strong id="timer">00:00</strong></div>
+                </div>
+                <div class="hud-right">
+                    <div class="hud-pill">Draw Three</div>
+                    <button type="button" id="new-game-btn" class="win-btn">New Game</button>
+                </div>
+            </div>
+
+            <div id="status-line" class="status-line">
+                Click a card to select it, then click its destination. Double-click a top card to send it to the foundation.
+            </div>
+
+            <div class="board" id="board">
+                <div class="top-row">
+                    <div class="stock-area">
+                        <div class="pile" id="stock-pile" data-role="stock"></div>
+                        <div class="pile" id="waste-pile" data-role="waste"></div>
+                    </div>
+                    <div class="foundation-area" id="foundation-area"></div>
+                </div>
+
+                <div class="tableau-row" id="tableau-row"></div>
+
+                <div id="victory-banner" class="victory-banner" aria-live="polite">
+                    <div class="victory-card">
+                        <h2>You Won</h2>
+                        <p>The whole deck is home. Start another round whenever you want.</p>
+                        <button type="button" id="victory-new-game-btn" class="win-btn">Deal Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="solitaire.js"></script>
+</body>
+</html>

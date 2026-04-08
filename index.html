@@ -10,6 +10,34 @@
 </head>
 
 <body>
+<svg
+  class="glass-filter-defs"
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <filter id="glass-distortion" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence
+        id="glass-turbulence"
+        type="fractalNoise"
+        baseFrequency="0.008 0.06"
+        numOctaves="1"
+        seed="11"
+        stitchTiles="stitch"
+        result="noise"
+      />
+      <feDisplacementMap
+        id="glass-displacement"
+        in="SourceGraphic"
+        in2="noise"
+        scale="0"
+        xChannelSelector="R"
+        yChannelSelector="G"
+      />
+    </filter>
+  </defs>
+</svg>
 <nav class="glass-nav">
     <a href="#" data-target="section1" aria-current="page"><span>Home</span></a>
     <a href="#" data-target="section2">Photos</a>
@@ -45,6 +73,24 @@
 <br> move/rotate: I,J,K,L or W,A,S,D or 8,4,5,6
 <br> fastfall: SPACE
 <br> stow/exchange: (one of): Q,E,U,O,7,9
+  </div>
+</article>
+
+  <article class="post"><h3 data-no-title="true">Solitaire</h3>
+  <div class="preview"><br></div>
+  <div class="full-body">
+    <iframe id="solitaire-iframe"
+            src="solitaire.html"
+            width="100%"
+            height="980"
+            style="border:none;"
+            loading="lazy"
+            title="Solitaire">
+    </iframe>
+           <br>
+<br> click a card to select it, then click its destination
+<br> double-click a top card to send it to the foundation
+<br> click the stock to draw three cards or recycle the waste
   </div>
 </article>
 

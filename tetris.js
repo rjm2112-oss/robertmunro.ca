@@ -54,7 +54,7 @@ let currentPiece = null;
 let nextPiece = null;
 let stowedPiece = null;
 let score = 0, level = 1, lines = 0;
-let gameOver = false, isPaused = false;
+let gameOver = false, isPaused = true;
 let dropStart = 0, lastTime = 0, gameSpeed = 1000;
 
 let ctx, nextCtx, tetrisCanvas, nextCanvas;
@@ -191,16 +191,21 @@ function resetGame(){
     board=Array(ROWS).fill().map(()=>Array(COLS).fill(0));
     bag=[];currentPiece=generateRandomPiece();nextPiece=generateRandomPiece();
     stowedPiece=null;score=0;level=1;lines=0;
-    rowsClearedSinceLastChange=0;gameOver=false;isPaused=false;gameSpeed=1000;
+    rowsClearedSinceLastChange=0;gameOver=false;isPaused=true;gameSpeed=1000;
     updateStats();
     if(isColliding()) gameOver=true;
     ghostPiece=null;lastStowTime=0;  holdLockActive  = false;
     holdLockEndTime = 0;
+    updatePauseButton();
 }
-function restartGame(){resetGame();isPaused=false;dropStart=performance.now();}
+function restartGame(){resetGame();dropStart=performance.now();lastTime=performance.now();}
+function updatePauseButton(){
+    pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
+}
 function togglePause(){
     isPaused=!isPaused;
     if(!isPaused){dropStart=performance.now();lastTime=performance.now();}
+    updatePauseButton();
 }
 function updateStats(){
     document.getElementById('score').textContent=score;

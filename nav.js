@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sections = Array.from(document.querySelectorAll('section'));
     const nav      = document.querySelector('.glass-nav');
     const panel    = nav.querySelector('.panel');
+    const displacementMap = document.getElementById('glass-displacement');
+    const turbulence = document.getElementById('glass-turbulence');
 
     let currentNavIndex = null;   // index of the link that is currently active
     let currentSectionId = null;  // id of the section that is currently shown
@@ -89,7 +91,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetLeft =
           linkRect.left + linkRect.width / 2 - navRect.left - panel.clientWidth / 2;
 
-        panel.style.transform = `translateX(${targetLeft}px)`;
+        const distance = targetLeft - currentLeft;
+        const dur = durationForDistance(distance);
+        panel.style.transitionDuration = `${dur}s`;
+        updatePanelMotion(distance, dur);
+        panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
+        currentLeft = targetLeft;
     };
 
     /* ----------------------------------------------------------------- */
@@ -114,12 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
     };
-
-    /* ----------------------------------------------------------------- */
-    /* 7️⃣ Initialise – show the very first section on page load       */
-    /* ----------------------------------------------------------------- */
-    const initialIdx = 0; // index of navLinks[0]
-    showSection(navLinks[initialIdx].dataset.target, initialIdx);
 
     /* ----------------------------------------------------------------- */
     /* 8️⃣ Link click handler                                           */
@@ -170,6 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentLeft = 0;
     let activeIdx   = -1; // index of the link that is currently “active”
+    let settleTimer = null;
+    let warpFrame   = null;
+    let warpLevel   = 0;
 
     /* Distance → duration (px per second) */
     const msPerPixel = 1000 / 550;   // milliseconds per pixel
@@ -179,6 +183,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const durationForDistance = dist => {
         const raw = Math.abs(dist) * msPerPixel / 1000;
         return Math.min(Math.max(raw, minDur), maxDur);
+    };
+
+    const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+    const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
+
+    const setWarpStrength = strength => {
+        const clamped = Math.max(0, Math.min(56, strength));
+        const normalized = clamped / 56;
+
+        warpLevel = clamped;
+        panel.style.setProperty('--panel-warp', normalized.toFixed(3));
+
+        if (displacementMap) {
+            displacementMap.setAttribute('scale', clamped.toFixed(2));
+        }
+
+        if (turbulence) {
+            const freqX = 0.008 + normalized * 0.003;
+            const freqY = 0.06 + normalized * 0.012;
+            turbulence.setAttribute(
+                'baseFrequency',
+                `${freqX.toFixed(4)} ${freqY.toFixed(4)}`
+            );
+        }
+    };
+
+    const animateWarpTo = (target, durationMs, easing = easeOutCubic) => {
+        const start = warpLevel;
+        const change = target - start;
+        const startedAt = performance.now();
+
+        if (warpFrame !== null) {
+            window.cancelAnimationFrame(warpFrame);
+        }
+
+        if (durationMs <= 0 || change === 0) {
+            setWarpStrength(target);
+            warpFrame = null;
+            return;
+        }
+
+        const step = now => {
+            const elapsed = now - startedAt;
+            const progress = Math.min(elapsed / durationMs, 1);
+            const eased = easing(progress);
+
+            setWarpStrength(start + change * eased);
+
+            if (progress < 1) {
+                warpFrame = window.requestAnimationFrame(step);
+                return;
+            }
+
+            warpFrame = null;
+        };
+
+        warpFrame = window.requestAnimationFrame(step);
+    };
+
+    const updatePanelMotion = (distance, durationSeconds) => {
+        const direction = distance === 0 ? 0 : Math.sign(distance);
+        const travel = Math.min(Math.abs(distance) / Math.max(nav.clientWidth, 1), 1);
+        const shiftPx = Math.max(-14, Math.min(14, distance * 0.055));
+        const tiltDeg = Math.max(-0.18, Math.min(0.18, direction * travel * 0.18));
+        const peakWarp = distance === 0
+            ? 0
+            : Math.min(56, 8 + Math.abs(distance) * 0.036 + travel * 18);
+        const travelMs = Math.max(durationSeconds * 1000, 320);
+        const rampUpMs = Math.max(140, Math.min(travelMs * 0.42, 280));
+        const rampDownMs = Math.max(420, Math.min(travelMs * 0.9, 700));
+
+        panel.style.setProperty('--panel-shift-x', `${shiftPx}px`);
+        panel.style.setProperty('--panel-tilt', `${tiltDeg}deg`);
+        panel.style.setProperty('--panel-travel', travel.toFixed(3));
+        animateWarpTo(peakWarp, rampUpMs, easeOutCubic);
+
+        window.clearTimeout(settleTimer);
+        settleTimer = window.setTimeout(() => {
+            panel.style.setProperty('--panel-shift-x', '0px');
+            panel.style.setProperty('--panel-tilt', '0deg');
+            panel.style.setProperty('--panel-travel', '0');
+            animateWarpTo(0, rampDownMs, easeInOutSine);
+        }, travelMs);
     };
 
     /* Move the selector to the link at position `idx` */
@@ -195,9 +282,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const dur = durationForDistance(targetLeft - currentLeft);
         panel.style.transitionDuration = `${dur}s`;
 
-        panel.style.transform = `translateX(${targetLeft}px)`;
+        updatePanelMotion(targetLeft - currentLeft, dur);
+        panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
         currentLeft = targetLeft;
     };
+
+    /* ----------------------------------------------------------------- */
+    /* 7️⃣ Initialise – show the very first section on page load       */
+    /* ----------------------------------------------------------------- */
+    const initialIdx = 0; // index of navLinks[0]
+    showSection(navLinks[initialIdx].dataset.target, initialIdx);
 
     /* ---------- INITIAL POSITION ---------- */
     activeIdx = links.findIndex(a => a.hasAttribute('aria-current'));
