@@ -98,6 +98,7 @@
         font: inherit;
         font-weight: 700;
         cursor: pointer;
+        white-space: nowrap;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
     }
@@ -411,17 +412,48 @@
             gap: 10px;
         }
 
+        .hud-right {
+            gap: 8px;
+        }
+
         .hud-pill {
             min-width: 80px;
             font-size: 0.82rem;
         }
 
         .win-btn {
-            min-width: 110px;
+            min-width: 96px;
+            padding: 8px 10px;
+            font-size: 0.84rem;
         }
 
         .board {
             padding: 12px;
+        }
+
+        body.is-website-fullscreen .hud-pill {
+            min-width: 72px;
+            padding: 6px 8px;
+            font-size: 0.76rem;
+        }
+
+        body.is-website-fullscreen {
+            --card-width: min(72px, 10.5vw);
+            --pile-gap: clamp(5px, 1vw, 8px);
+        }
+
+        body.is-website-fullscreen .win-btn {
+            min-width: 82px;
+            padding: 7px 8px;
+            font-size: 0.76rem;
+        }
+
+        body.is-website-fullscreen .board {
+            padding: 12px 18px 12px 12px;
+        }
+
+        body.is-website-fullscreen .board-stage {
+            padding-right: 8px;
         }
     }
 </style>
@@ -438,8 +470,8 @@
                 </div>
                 <div class="hud-right">
                     <div class="hud-pill">Draw Three</div>
-                    <button type="button" id="fullscreen-btn" class="win-btn">Full Screen</button>
-                    <button type="button" id="new-game-btn" class="win-btn">New Game</button>
+                    <button type="button" id="fullscreen-btn" class="win-btn">Fullscreen</button>
+                    <button type="button" id="new-game-btn" class="win-btn">New</button>
                 </div>
             </div>
 

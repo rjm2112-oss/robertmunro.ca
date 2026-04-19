@@ -70,9 +70,9 @@ document.addEventListener("DOMContentLoaded", () => {
     boardEl.addEventListener("click", handleBoardClick);
     boardEl.addEventListener("dblclick", handleBoardDoubleClick);
     window.addEventListener("message", handleParentMessage);
-    window.addEventListener("resize", scheduleBoardScale);
+    window.addEventListener("resize", handleViewportResize);
     if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", scheduleBoardScale);
+        window.visualViewport.addEventListener("resize", handleViewportResize);
         window.visualViewport.addEventListener("scroll", scheduleBoardScale);
     }
 
@@ -803,6 +803,11 @@ function handleFullscreenButtonTouch(event) {
     toggleWebsiteFullscreen();
 }
 
+function handleViewportResize() {
+    updateFullscreenButtonLabel();
+    scheduleBoardScale();
+}
+
 function handleParentMessage(event) {
     if (!event.data) {
         return;
@@ -898,10 +903,21 @@ function initParentFullscreenObserver() {
 function applyWebsiteFullscreenState(expanded) {
     websiteFullscreenActive = expanded;
     document.body.classList.toggle("is-website-fullscreen", expanded);
-    if (fullscreenBtn) {
-        fullscreenBtn.textContent = expanded ? "Exit Full Screen" : "Full Screen";
-    }
+    updateFullscreenButtonLabel();
     scheduleBoardScale();
+}
+
+function updateFullscreenButtonLabel() {
+    if (!fullscreenBtn) {
+        return;
+    }
+
+    if (websiteFullscreenActive) {
+        fullscreenBtn.textContent = "Exit Fullscreen";
+        return;
+    }
+
+    fullscreenBtn.textContent = "Fullscreen";
 }
 
 function scheduleBoardScale() {
@@ -927,14 +943,35 @@ function updateBoardScale() {
     const boardStyles = window.getComputedStyle(boardEl);
     const paddingX = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
     const paddingY = parseFloat(boardStyles.paddingTop) + parseFloat(boardStyles.paddingBottom);
-    const availableWidth = Math.max(0, boardEl.clientWidth - paddingX);
-    const availableHeight = Math.max(0, boardEl.clientHeight - paddingY);
     const naturalWidth = Math.ceil(boardStageEl.scrollWidth);
     const naturalHeight = Math.ceil(boardStageEl.scrollHeight);
+    const boardRect = boardEl.getBoundingClientRect();
+    let availableWidth = Math.max(0, boardEl.clientWidth - paddingX);
     let scale = naturalWidth > 0 ? Math.min(1, availableWidth / naturalWidth) : 1;
 
-    if (websiteFullscreenActive && naturalHeight > 0 && availableHeight > 0) {
-        scale = Math.min(scale, availableHeight / naturalHeight);
+    if (websiteFullscreenActive) {
+        const viewport = window.visualViewport;
+        const viewportWidth = viewport ? viewport.width : window.innerWidth;
+        const viewportHeight = viewport ? viewport.height : window.innerHeight;
+        const fitSlackX = viewportWidth <= 768 ? Math.max(32, Math.ceil(viewportWidth * 0.08)) : 10;
+        const fitSlackY = viewportWidth <= 768 ? 12 : 10;
+        const availableViewportWidth = Math.max(
+            0,
+            viewportWidth - boardRect.left - paddingX - fitSlackX
+        );
+        const availableViewportHeight = Math.max(
+            0,
+            viewportHeight - boardRect.top - paddingY - fitSlackY
+        );
+
+        if (naturalWidth > 0 && availableViewportWidth > 0) {
+            availableWidth = Math.min(availableWidth, availableViewportWidth);
+            scale = Math.min(scale, availableWidth / naturalWidth);
+        }
+
+        if (availableViewportHeight > 0) {
+            scale = Math.min(scale, availableViewportHeight / naturalHeight);
+        }
     }
 
     scale = Math.max(scale, 0.01);
