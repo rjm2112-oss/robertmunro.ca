@@ -179,6 +179,8 @@ const DRONE_SHOW_BIRD_TIERS = [
         ]
     }
 ];
+let droneShowBirdPool = [];
+let lastDroneShowBirdIds = [];
 const victoryFx = {
     canvas: null,
     ctx: null,
@@ -1235,18 +1237,41 @@ function getDroneShowBirdById(id) {
     return DRONE_SHOW_BIRD_TIERS.find((bird) => bird.id === id) ?? DRONE_SHOW_BIRD_TIERS[0];
 }
 
-function getDroneShowBirdSequenceForScore(score) {
-    const spiritBear = getDroneShowBirdById("spirit-bear");
-    const nonBearBirds = DRONE_SHOW_BIRD_TIERS.filter((bird) => bird.id !== "spirit-bear");
-    const randomBirds = shuffle(nonBearBirds).slice(0, Math.max(0, DRONE_SHOW_FIGURES_PER_DISPLAY - 1));
-    const finaleBird =
-        score >= spiritBear.minScore
-            ? spiritBear
-            : shuffle(nonBearBirds.filter((bird) => !randomBirds.some((picked) => picked.id === bird.id)))[0]
-                ?? randomBirds[randomBirds.length - 1]
-                ?? nonBearBirds[0];
+function refillDroneShowBirdPool(excludeIds = []) {
+    const excluded = new Set(excludeIds);
+    const leadingCount = Math.min(DRONE_SHOW_FIGURES_PER_DISPLAY, DRONE_SHOW_BIRD_TIERS.length);
 
-    return [...randomBirds, finaleBird].slice(0, DRONE_SHOW_FIGURES_PER_DISPLAY);
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const nextPool = shuffle(DRONE_SHOW_BIRD_TIERS);
+        if (!excludeIds.length || !nextPool.slice(0, leadingCount).some((bird) => excluded.has(bird.id))) {
+            droneShowBirdPool = nextPool;
+            return;
+        }
+    }
+
+    droneShowBirdPool = shuffle(DRONE_SHOW_BIRD_TIERS);
+}
+
+function getDroneShowBirdSequenceForScore(score) {
+    void score;
+    const selection = [];
+    const targetCount = Math.min(DRONE_SHOW_FIGURES_PER_DISPLAY, DRONE_SHOW_BIRD_TIERS.length);
+
+    while (selection.length < targetCount) {
+        if (!droneShowBirdPool.length) {
+            refillDroneShowBirdPool(selection.length === 0 ? lastDroneShowBirdIds : []);
+        }
+
+        const nextBird = droneShowBirdPool.shift();
+        if (!nextBird || selection.some((bird) => bird.id === nextBird.id)) {
+            continue;
+        }
+
+        selection.push(nextBird);
+    }
+
+    lastDroneShowBirdIds = selection.map((bird) => bird.id);
+    return selection;
 }
 
 function seedDroneShowScene() {
