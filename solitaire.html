@@ -457,6 +457,8 @@
     @media (max-width: 640px) {
         :root {
             --pile-gap: clamp(6px, 1.4vw, 10px);
+            --mobile-card-suit-size: clamp(1.35rem, 4.6vw, 1.9rem);
+            --mobile-card-watermark-scale: 1.42;
         }
 
         .solitaire-shell {
@@ -514,7 +516,7 @@
 
         .card-suit {
             display: block;
-            font-size: clamp(1.35rem, 4.6vw, 1.9rem);
+            font-size: var(--mobile-card-suit-size);
             margin-top: 0;
         }
 
@@ -527,12 +529,12 @@
             inset: auto;
             right: 2px;
             bottom: 0;
-            font-size: clamp(2.2rem, 7.2vw, 3.05rem);
+            font-size: calc(var(--mobile-card-suit-size) * var(--mobile-card-watermark-scale));
             color: currentColor;
             -webkit-text-stroke-width: 0;
-            opacity: 0.18;
+            opacity: 0.15;
             line-height: 1;
-            transform: scale(1.1);
+            transform: scale(1.03);
             text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.06);
         }
 
@@ -563,6 +565,12 @@
         .card-back-mark {
             font-size: 0.82rem;
             letter-spacing: 0.08em;
+        }
+    }
+
+    @media (max-width: 420px) {
+        :root {
+            --mobile-card-watermark-scale: 1.22;
         }
     }
 </style>
