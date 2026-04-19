@@ -301,6 +301,16 @@
         opacity: 0.85;
     }
 
+    .card-center-symbol {
+        display: inline-block;
+        line-height: 1;
+    }
+
+    .card.diamonds .card-suit,
+    .card.diamonds .card-center-symbol {
+        transform: scale(0.9, 1.12);
+    }
+
     .card.selected {
         outline: 3px solid rgba(255, 213, 70, 0.95);
         outline-offset: 2px;
@@ -486,11 +496,12 @@
 
         .card-corner {
             font-size: 0.84rem;
+            align-items: flex-start;
         }
 
         .card-corner.top-left {
-            top: 6px;
-            left: 6px;
+            top: 4px;
+            left: 4px;
         }
 
         .card-corner.bottom-right {
@@ -502,13 +513,47 @@
         }
 
         .card-suit {
-            font-size: 0.74rem;
-            margin-top: 1px;
+            display: block;
+            font-size: clamp(1.35rem, 4.6vw, 1.9rem);
+            margin-top: 0;
+        }
+
+        .card.diamonds .card-suit {
+            transform: scale(0.88, 1.16);
+            transform-origin: center;
         }
 
         .card-center {
-            font-size: clamp(1.35rem, 4.6vw, 1.9rem);
-            opacity: 0.85;
+            inset: auto;
+            right: 2px;
+            bottom: 0;
+            font-size: clamp(2.2rem, 7.2vw, 3.05rem);
+            color: currentColor;
+            -webkit-text-stroke-width: 0;
+            opacity: 0.18;
+            line-height: 1;
+            transform: scale(1.1);
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .card-center-symbol {
+            transform-origin: center;
+        }
+
+        .card.clubs .card-center-symbol {
+            transform: scale(1.12, 1.18);
+        }
+
+        .card.hearts .card-center-symbol {
+            transform: scale(1.06, 1.14);
+        }
+
+        .card.spades .card-center-symbol {
+            transform: scale(0.96, 1.22);
+        }
+
+        .card.diamonds .card-center-symbol {
+            transform: scale(0.82, 1.28);
         }
 
         .card.back::before {

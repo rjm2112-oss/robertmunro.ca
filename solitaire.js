@@ -786,14 +786,14 @@ function isTableauEmptyTarget(pileIndex) {
 
 function createFaceCard(card) {
     const cardEl = document.createElement("div");
-    cardEl.className = `card ${COLORS[card.suit]}`;
+    cardEl.className = `card ${COLORS[card.suit]} ${card.suit}`;
     cardEl.setAttribute("aria-label", cardName(card));
     cardEl.innerHTML = `
         <div class="card-corner top-left">
             <span class="card-rank">${RANK_LABELS[card.rank]}</span>
             <span class="card-suit">${SUIT_SYMBOLS[card.suit]}</span>
         </div>
-        <div class="card-center">${SUIT_SYMBOLS[card.suit]}</div>
+        <div class="card-center"><span class="card-center-symbol">${SUIT_SYMBOLS[card.suit]}</span></div>
         <div class="card-corner bottom-right">
             <span class="card-rank">${RANK_LABELS[card.rank]}</span>
             <span class="card-suit">${SUIT_SYMBOLS[card.suit]}</span>
