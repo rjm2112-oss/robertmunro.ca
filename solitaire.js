@@ -613,13 +613,13 @@ function renderStock() {
     const slot = document.createElement("div");
     slot.className = "slot";
     if (state.stock.length) {
-        slot.textContent = "Stock";
+        slot.textContent = "";
     } else if (state.waste.length && state.redealsUsed < mode.redeals) {
         slot.textContent = "Redeal";
     } else if (state.waste.length) {
         slot.textContent = "No Redeal";
     } else {
-        slot.textContent = "Stock";
+        slot.textContent = "";
     }
     stockPile.appendChild(slot);
 
