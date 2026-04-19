@@ -1036,8 +1036,8 @@ function updateBoardScale() {
         const viewport = window.visualViewport;
         const viewportWidth = viewport ? viewport.width : window.innerWidth;
         const viewportHeight = viewport ? viewport.height : window.innerHeight;
-        const fitSlackX = viewportWidth <= 768 ? Math.max(32, Math.ceil(viewportWidth * 0.08)) : 10;
-        const fitSlackY = viewportWidth <= 768 ? 12 : 10;
+        const fitSlackX = viewportWidth <= 768 ? Math.max(18, Math.ceil(viewportWidth * 0.05)) : 10;
+        const fitSlackY = viewportWidth <= 768 ? 8 : 10;
         const availableViewportWidth = Math.max(
             0,
             viewportWidth - boardRect.left - paddingX - fitSlackX
