@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solitaire</title>
 <style>
     :root {
@@ -98,6 +98,8 @@
         font: inherit;
         font-weight: 700;
         cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
     }
 
     .win-btn:active {
@@ -344,15 +346,24 @@
     body.is-website-fullscreen .solitaire-shell {
         width: 100%;
         min-height: 100vh;
-        padding: 12px;
+        min-height: 100dvh;
+        padding:
+            calc(12px + env(safe-area-inset-top))
+            calc(12px + env(safe-area-inset-right))
+            calc(12px + env(safe-area-inset-bottom))
+            calc(12px + env(safe-area-inset-left));
+        display: flex;
     }
 
     body.is-website-fullscreen .window-frame {
         min-height: calc(100vh - 24px);
+        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px);
+        flex: 1 1 auto;
     }
 
     body.is-website-fullscreen .window-body {
         min-height: calc(100vh - 30px);
+        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 30px);
         display: flex;
         flex-direction: column;
     }

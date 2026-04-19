@@ -227,6 +227,8 @@ body.solitaire-website-fullscreen #section1,
 body.solitaire-website-fullscreen #section1 .blog-container{
     min-height:100vh;
     height:100vh;
+    min-height:100dvh;
+    height:100dvh;
 }
 
 body.solitaire-website-fullscreen #section1 .post-detail{

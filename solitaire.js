@@ -43,6 +43,7 @@ let boardScaleFrame = null;
 let boardResizeObserver = null;
 let websiteFullscreenActive = false;
 let parentFullscreenObserver = null;
+let lastFullscreenTouchTime = 0;
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
 const WEBSITE_FULLSCREEN_CLASS = "solitaire-website-fullscreen";
@@ -64,7 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("new-game-btn").addEventListener("click", newGame);
     document.getElementById("victory-new-game-btn").addEventListener("click", newGame);
-    fullscreenBtn.addEventListener("click", toggleWebsiteFullscreen);
+    fullscreenBtn.addEventListener("click", handleFullscreenButtonClick);
+    fullscreenBtn.addEventListener("touchend", handleFullscreenButtonTouch, { passive: false });
     boardEl.addEventListener("click", handleBoardClick);
     boardEl.addEventListener("dblclick", handleBoardDoubleClick);
     window.addEventListener("message", handleParentMessage);
@@ -780,6 +782,21 @@ function toggleWebsiteFullscreen() {
         },
         MESSAGE_TARGET_ORIGIN
     );
+}
+
+function handleFullscreenButtonClick(event) {
+    if (Date.now() - lastFullscreenTouchTime < 700) {
+        event.preventDefault();
+        return;
+    }
+
+    toggleWebsiteFullscreen();
+}
+
+function handleFullscreenButtonTouch(event) {
+    event.preventDefault();
+    lastFullscreenTouchTime = Date.now();
+    toggleWebsiteFullscreen();
 }
 
 function handleParentMessage(event) {
