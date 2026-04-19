@@ -646,10 +646,11 @@ function renderWaste() {
     }
 
     const visibleCards = state.waste.slice(-Math.min(mode.drawCount, 3));
+    const wasteFanOffset = getWasteFanOffset();
     visibleCards.forEach((card, index) => {
         const cardEl = createFaceCard(card);
         cardEl.dataset.cardRole = "waste";
-        cardEl.style.left = `${index * 16}px`;
+        cardEl.style.left = `${index * wasteFanOffset}px`;
         cardEl.style.top = "0";
         cardEl.style.zIndex = String(40 + index);
         if (index !== visibleCards.length - 1) {
@@ -786,16 +787,17 @@ function isTableauEmptyTarget(pileIndex) {
 
 function createFaceCard(card) {
     const cardEl = document.createElement("div");
+    const rankClass = card.rank === 10 ? " is-ten" : "";
     cardEl.className = `card ${COLORS[card.suit]} ${card.suit}`;
     cardEl.setAttribute("aria-label", cardName(card));
     cardEl.innerHTML = `
         <div class="card-corner top-left">
-            <span class="card-rank">${RANK_LABELS[card.rank]}</span>
+            <span class="card-rank${rankClass}">${RANK_LABELS[card.rank]}</span>
             <span class="card-suit">${SUIT_SYMBOLS[card.suit]}</span>
         </div>
         <div class="card-center"><span class="card-center-symbol">${SUIT_SYMBOLS[card.suit]}</span></div>
         <div class="card-corner bottom-right">
-            <span class="card-rank">${RANK_LABELS[card.rank]}</span>
+            <span class="card-rank${rankClass}">${RANK_LABELS[card.rank]}</span>
             <span class="card-suit">${SUIT_SYMBOLS[card.suit]}</span>
         </div>
     `;
@@ -822,6 +824,10 @@ function cycleGameMode() {
     const mode = getCurrentGameMode();
     setStatus(`Mode switched to ${mode.label}.`);
     newGame();
+}
+
+function getWasteFanOffset() {
+    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--waste-fan-offset")) || 16;
 }
 
 function updateTimer() {

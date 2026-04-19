@@ -9,6 +9,7 @@
         --card-width: min(92px, 11vw);
         --card-height: calc(var(--card-width) * 1.4);
         --pile-gap: clamp(10px, 1.8vw, 18px);
+        --waste-fan-offset: 24px;
         --tableau-offset-face-down: 18px;
         --tableau-offset-face-up: 30px;
         --felt-dark: #0f5b2b;
@@ -185,8 +186,8 @@
     }
 
     #waste-pile {
-        width: calc(var(--card-width) + 32px);
-        min-width: calc(var(--card-width) + 32px);
+        width: calc(var(--card-width) + (var(--waste-fan-offset) * 2));
+        min-width: calc(var(--card-width) + (var(--waste-fan-offset) * 2));
     }
 
     .slot {
@@ -284,6 +285,11 @@
 
     .card-rank {
         font-size: 1.02rem;
+    }
+
+    .card-rank.is-ten {
+        font-size: 0.92rem;
+        letter-spacing: -0.08em;
     }
 
     .card-suit {
@@ -512,6 +518,11 @@
 
         .card-rank {
             font-size: 0.9rem;
+        }
+
+        .card-rank.is-ten {
+            font-size: 0.82rem;
+            letter-spacing: -0.09em;
         }
 
         .card-suit {
