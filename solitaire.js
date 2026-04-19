@@ -32,7 +32,6 @@ let wastePile;
 let scoreEl;
 let movesEl;
 let timerEl;
-let statusLine;
 let victoryBanner;
 let boardEl;
 let boardStageEl;
@@ -56,7 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
     scoreEl = document.getElementById("score");
     movesEl = document.getElementById("moves");
     timerEl = document.getElementById("timer");
-    statusLine = document.getElementById("status-line");
     victoryBanner = document.getElementById("victory-banner");
     boardEl = document.getElementById("board");
     boardStageEl = document.getElementById("board-stage");
@@ -744,7 +742,7 @@ function createBackCard() {
 }
 
 function setStatus(message) {
-    statusLine.textContent = message;
+    void message;
 }
 
 function updateTimer() {
