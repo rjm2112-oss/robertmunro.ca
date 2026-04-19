@@ -12,6 +12,29 @@ const SUIT_SYMBOLS = {
     spades: "&spades;"
 };
 const RANK_LABELS = ["", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+const GAME_MODES = [
+    {
+        id: "draw-3",
+        label: "Draw 3",
+        drawCount: 3,
+        redeals: Infinity,
+        scoring: "standard"
+    },
+    {
+        id: "draw-1",
+        label: "Draw 1",
+        drawCount: 1,
+        redeals: Infinity,
+        scoring: "standard"
+    },
+    {
+        id: "vegas",
+        label: "Vegas",
+        drawCount: 3,
+        redeals: 0,
+        scoring: "vegas"
+    }
+];
 
 const state = {
     stock: [],
@@ -22,7 +45,9 @@ const state = {
     score: 0,
     moves: 0,
     startTime: 0,
-    won: false
+    won: false,
+    gameModeIndex: 0,
+    redealsUsed: 0
 };
 
 let foundationArea;
@@ -36,6 +61,7 @@ let victoryBanner;
 let boardEl;
 let boardStageEl;
 let fullscreenBtn;
+let drawModeBtn;
 let shellEl;
 let timerHandle = null;
 let boardScaleFrame = null;
@@ -59,10 +85,12 @@ document.addEventListener("DOMContentLoaded", () => {
     boardEl = document.getElementById("board");
     boardStageEl = document.getElementById("board-stage");
     fullscreenBtn = document.getElementById("fullscreen-btn");
+    drawModeBtn = document.getElementById("draw-mode-btn");
     shellEl = document.querySelector(".solitaire-shell");
 
     document.getElementById("new-game-btn").addEventListener("click", newGame);
     document.getElementById("victory-new-game-btn").addEventListener("click", newGame);
+    drawModeBtn.addEventListener("click", cycleGameMode);
     fullscreenBtn.addEventListener("click", handleFullscreenButtonClick);
     fullscreenBtn.addEventListener("touchend", handleFullscreenButtonTouch, { passive: false });
     boardEl.addEventListener("click", handleBoardClick);
@@ -89,14 +117,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function newGame() {
     const deck = shuffle(createDeck());
+    const mode = getCurrentGameMode();
     state.stock = [];
     state.waste = [];
     state.foundations = Array.from({ length: 4 }, () => []);
     state.tableau = Array.from({ length: 7 }, () => []);
     state.selected = null;
-    state.score = 0;
+    state.score = mode.scoring === "vegas" ? -52 : 0;
     state.moves = 0;
     state.won = false;
+    state.redealsUsed = 0;
     state.startTime = Date.now();
 
     for (let pileIndex = 0; pileIndex < 7; pileIndex += 1) {
@@ -118,7 +148,7 @@ function newGame() {
     }
 
     timerHandle = window.setInterval(updateTimer, 1000);
-    setStatus("Fresh deal. Build down in alternating colors and send the aces home.");
+    setStatus(`Fresh ${mode.label} deal. Build down in alternating colors and send the aces home.`);
     render();
     updateTimer();
 }
@@ -216,9 +246,10 @@ function handleBoardDoubleClick(event) {
 
 function handleStockClick() {
     clearSelection(false);
+    const mode = getCurrentGameMode();
 
     if (state.stock.length) {
-        const drawCount = Math.min(3, state.stock.length);
+        const drawCount = Math.min(mode.drawCount, state.stock.length);
 
         for (let drawIndex = 0; drawIndex < drawCount; drawIndex += 1) {
             const card = state.stock.pop();
@@ -233,12 +264,19 @@ function handleStockClick() {
     }
 
     if (state.waste.length) {
+        if (state.redealsUsed >= mode.redeals) {
+            setStatus(`${mode.label} allows only one pass through the stock.`);
+            render();
+            return;
+        }
+
         while (state.waste.length) {
             const card = state.waste.pop();
             card.faceUp = false;
             state.stock.push(card);
         }
 
+        state.redealsUsed += 1;
         state.moves += 1;
         setStatus("Turned the waste back over into the stock.");
         render();
@@ -485,6 +523,23 @@ function revealTableauCard(source) {
 }
 
 function updateScore(source, targetType, revealed) {
+    const mode = getCurrentGameMode();
+
+    if (mode.scoring === "vegas") {
+        let scoreDelta = 0;
+
+        if ((source.type === "waste" || source.type === "tableau") && targetType === "foundation") {
+            scoreDelta += 5;
+        }
+
+        if (source.type === "foundation" && targetType === "tableau") {
+            scoreDelta -= 5;
+        }
+
+        state.score += scoreDelta;
+        return;
+    }
+
     let scoreDelta = 0;
 
     if ((source.type === "waste" || source.type === "tableau") && targetType === "foundation") {
@@ -544,16 +599,28 @@ function render() {
 function renderHud() {
     scoreEl.textContent = String(state.score);
     movesEl.textContent = String(state.moves);
+    if (drawModeBtn) {
+        drawModeBtn.textContent = getCurrentGameMode().label;
+    }
 }
 
 function renderStock() {
     stockPile.innerHTML = "";
     stockPile.dataset.role = "stock";
     stockPile.classList.remove("selected-slot");
+    const mode = getCurrentGameMode();
 
     const slot = document.createElement("div");
     slot.className = "slot";
-    slot.textContent = state.stock.length ? "Stock" : "Redeal";
+    if (state.stock.length) {
+        slot.textContent = "Stock";
+    } else if (state.waste.length && state.redealsUsed < mode.redeals) {
+        slot.textContent = "Redeal";
+    } else if (state.waste.length) {
+        slot.textContent = "No Redeal";
+    } else {
+        slot.textContent = "Stock";
+    }
     stockPile.appendChild(slot);
 
     if (state.stock.length) {
@@ -567,6 +634,7 @@ function renderWaste() {
     wastePile.innerHTML = "";
     wastePile.dataset.role = "waste";
     wastePile.classList.remove("selected-slot");
+    const mode = getCurrentGameMode();
 
     const slot = document.createElement("div");
     slot.className = "slot";
@@ -577,7 +645,7 @@ function renderWaste() {
         return;
     }
 
-    const visibleCards = state.waste.slice(-3);
+    const visibleCards = state.waste.slice(-Math.min(mode.drawCount, 3));
     visibleCards.forEach((card, index) => {
         const cardEl = createFaceCard(card);
         cardEl.dataset.cardRole = "waste";
@@ -743,6 +811,17 @@ function createBackCard() {
 
 function setStatus(message) {
     void message;
+}
+
+function getCurrentGameMode() {
+    return GAME_MODES[state.gameModeIndex] || GAME_MODES[0];
+}
+
+function cycleGameMode() {
+    state.gameModeIndex = (state.gameModeIndex + 1) % GAME_MODES.length;
+    const mode = getCurrentGameMode();
+    setStatus(`Mode switched to ${mode.label}.`);
+    newGame();
 }
 
 function updateTimer() {

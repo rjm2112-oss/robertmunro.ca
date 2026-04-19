@@ -239,6 +239,7 @@ body.solitaire-website-fullscreen #section1 .post-detail{
     bottom:0;
     margin:0;
     border-radius:0;
+    background:var(--background-color);
     z-index:20;
     overflow:hidden;
 }
