@@ -1,65 +1,42 @@
-/* ────────────────────────────────────────────────────────
- *   NAVIGATION & PANEL
- *   ──────────────────────────────────────────────────────── */
-
 document.addEventListener('DOMContentLoaded', () => {
-    /* ----------------------------------------------------------------- */
-    /* 1️⃣ Elements & state                                              */
-    /* ----------------------------------------------------------------- */
-    const navLinks = Array.from(document.querySelectorAll('[data-target]'));
+    const nav = document.querySelector('.glass-nav');
+    if (!nav) return;
+
+    const panel = nav.querySelector('.panel');
+    if (!panel) return;
+
+    const navLinks = Array.from(nav.querySelectorAll('[data-target]'));
     const sections = Array.from(document.querySelectorAll('section'));
-    const nav      = document.querySelector('.glass-nav');
-    const panel    = nav.querySelector('.panel');
     const displacementMap = document.getElementById('glass-displacement');
     const turbulence = document.getElementById('glass-turbulence');
 
-    let currentNavIndex = null;   // index of the link that is currently active
-    let currentSectionId = null;  // id of the section that is currently shown
+    let currentNavIndex = null;
 
-    /* ----------------------------------------------------------------- */
-    /* 2️⃣ Helper – “scroll into view” + tiny offset (if you still want it) */
-    /* ----------------------------------------------------------------- */
-    const scrollToSection = el => {
-        el.scrollIntoView({ behavior: 'auto', block: 'start' });
-    };
-
-    /** Scroll to the absolute top of the page (used for the Home section). */
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'auto' });
     };
 
-    /* ----------------------------------------------------------------- */
-    /* 3️⃣ Show a section (called from link clicks or initial load)       */
-    /* ----------------------------------------------------------------- */
+    const renderPostDetail = (post, detailArea) => {
+        if (!post || !detailArea) return;
+
+        const title = post.querySelector('h3').outerHTML;
+        const meta = post.querySelector('.meta')?.outerHTML || '';
+        const body = post.querySelector('.full-body')?.innerHTML || '';
+
+        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+    };
+
     const showSection = (id, linkIdx = null) => {
-        // ---- hide previous sections ------------------------------------
         sections.forEach(s => s.classList.remove('active'));
 
         const targetSec = document.getElementById(id);
         if (!targetSec) return;
 
         targetSec.classList.add('active');
-        currentSectionId = id;
 
-        /* 3️⃣1. Clear any “active” preview‑list post in this section */
         clearActive(id);
-
-        /* 3️⃣2. Expand the first non‑static post so that the detail area
-         *           is populated on load (behaviour you had originally). */
         expandFirstInSection(id);
 
-        /* 3️⃣3. Scroll handling ---------------------------------------
-         *   - If this is the Home section, always jump to the absolute
-         *     top of the page.
-         */
-        if (linkIdx !== null) {
-            // Adjust 'home' to match your actual Home section id.
-            if (id === 'home') {
-                scrollToTop();
-            }
-        }
-
-        /* 3️⃣4. Move the animated panel & set active link -----------------*/
         if (linkIdx !== null) {
             movePanelTo(linkIdx);
             currentNavIndex = linkIdx;
@@ -69,28 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    /* ----------------------------------------------------------------- */
-    /* 4️⃣ Clear “active” class from preview‑list posts in a section     */
-    /* ----------------------------------------------------------------- */
     const clearActive = sectionId => {
         document
           .querySelectorAll(`#${sectionId} .post.active`)
           .forEach(p => p.classList.remove('active'));
     };
 
-    /* ----------------------------------------------------------------- */
-    /* 5️⃣ Move the animated panel under the active link                */
-    /* ----------------------------------------------------------------- */
+    const getPanelTargetLeft = idx => {
+        const linkRect = navLinks[idx].getBoundingClientRect();
+        const navRect = nav.getBoundingClientRect();
+        return linkRect.left + linkRect.width / 2 - navRect.left - panel.clientWidth / 2;
+    };
+
     const movePanelTo = idx => {
         if (idx < 0 || idx >= navLinks.length) return;
 
-        const linkRect = navLinks[idx].getBoundingClientRect();
-        const navRect  = nav.getBoundingClientRect();
-
-        // Center panel on the middle of the link text
-        const targetLeft =
-          linkRect.left + linkRect.width / 2 - navRect.left - panel.clientWidth / 2;
-
+        const targetLeft = getPanelTargetLeft(idx);
         const distance = targetLeft - currentLeft;
         const dur = durationForDistance(distance);
         panel.style.transitionDuration = `${dur}s`;
@@ -99,32 +70,20 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLeft = targetLeft;
     };
 
-    /* ----------------------------------------------------------------- */
-    /* 6️⃣ Expand the first non‑static post inside a section             */
-    /* ----------------------------------------------------------------- */
     const expandFirstInSection = sectionId => {
         const list = document.querySelector(`#${sectionId} .preview-list`);
         if (!list) return;
 
-        // Remove any existing active flag
         list.querySelectorAll('.post.active').forEach(p => p.classList.remove('active'));
 
-        // Pick the first non‑static post (your original logic)
         const firstPost = list.querySelector('.post:not(.static)');
         if (!firstPost) return;
         firstPost.classList.add('active');
 
         const detailArea = document.querySelector(`#${sectionId} .post-detail`);
-        const title   = firstPost.querySelector('h3').outerHTML;
-        const meta    = firstPost.querySelector('.meta')?.outerHTML || '';
-        const body    = firstPost.querySelector('.full-body')?.innerHTML || '';
-
-        detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+        renderPostDetail(firstPost, detailArea);
     };
 
-    /* ----------------------------------------------------------------- */
-    /* 8️⃣ Link click handler                                           */
-    /* ----------------------------------------------------------------- */
     navLinks.forEach((link, i) => {
         link.addEventListener('click', e => {
             e.preventDefault();
@@ -132,53 +91,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* ----------------------------------------------------------------- */
-    /* 9️⃣ Preview‑list click – “stay‑at‑top” guard + smooth scroll   */
-    /* ----------------------------------------------------------------- */
     document.querySelectorAll('.preview-list').forEach(list => {
         list.addEventListener('click', e => {
             const post = e.target.closest('.post');
             if (!post || post.classList.contains('static')) return;
 
-            // Toggle active flag
             list.querySelectorAll('.post.active').forEach(p => p.classList.remove('active'));
             post.classList.add('active');
 
-            // Populate detail area
-            const detailArea = list.nextElementSibling; // .post-detail
-            const title   = post.querySelector('h3').outerHTML;
-            const meta    = post.querySelector('.meta')?.outerHTML || '';
-            const body    = post.querySelector('.full-body')?.innerHTML || '';
-
-            detailArea.innerHTML =
-              `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
-
-              /* Scroll only when we’re not already at the top - not using this for now * if (window.scrollY > nav.offsetHeight) {
-                  scrollToTop();
-        }*/
-
+            const detailArea = list.nextElementSibling;
+            renderPostDetail(post, detailArea);
             scrollToTop();
-
         });
     });
 
-    /* ----------------------------------------------------------------- */
-    /* 10️⃣ PANEL ANIMATION           */
-    /* ----------------------------------------------------------------- */
-
-    const links = Array.from(nav.querySelectorAll('a'));
-    const count = links.length;
+    const count = navLinks.length;
 
     let currentLeft = 0;
-    let activeIdx   = -1; // index of the link that is currently “active”
+    let activeIdx = -1;
     let settleTimer = null;
-    let warpFrame   = null;
-    let warpLevel   = 0;
+    let warpFrame = null;
+    let warpLevel = 0;
 
-    /* Distance → duration (px per second) */
-    const msPerPixel = 1000 / 550;   // milliseconds per pixel
-    const minDur     = .85;          // seconds
-    const maxDur     = 1.25;         // seconds
+    const msPerPixel = 1000 / 550;
+    const minDur = 0.85;
+    const maxDur = 1.25;
 
     const durationForDistance = dist => {
         const raw = Math.abs(dist) * msPerPixel / 1000;
@@ -268,41 +205,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }, travelMs);
     };
 
-    /* Move the selector to the link at position `idx` */
-    const setPanel = idx => {
-        if (idx < 0 || idx >= count) return;
+    const setPanel = idx => movePanelTo(idx);
 
-        const linkRect = links[idx].getBoundingClientRect();
-        const navRect  = nav.getBoundingClientRect();
-        const panelW   = panel.clientWidth;
-
-        const targetLeft =
-          linkRect.left + linkRect.width / 2 - navRect.left - panelW / 2;
-
-        const dur = durationForDistance(targetLeft - currentLeft);
-        panel.style.transitionDuration = `${dur}s`;
-
-        updatePanelMotion(targetLeft - currentLeft, dur);
-        panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
-        currentLeft = targetLeft;
-    };
-
-    /* ----------------------------------------------------------------- */
-    /* 7️⃣ Initialise – show the very first section on page load       */
-    /* ----------------------------------------------------------------- */
-    const initialIdx = 0; // index of navLinks[0]
+    const initialIdx = 0;
     showSection(navLinks[initialIdx].dataset.target, initialIdx);
 
-    /* ---------- INITIAL POSITION ---------- */
-    activeIdx = links.findIndex(a => a.hasAttribute('aria-current'));
+    activeIdx = navLinks.findIndex(a => a.hasAttribute('aria-current'));
     if (activeIdx !== -1) {
         requestAnimationFrame(() => setPanel(activeIdx));
     } else {
         panel.style.opacity = '0';
     }
 
-    /* Hover logic – update the selector and remember the index */
-    links.forEach((link, i) => {
+    navLinks.forEach((link, i) => {
         link.addEventListener('mouseenter', () => {
             activeIdx = i;
             setPanel(i);
@@ -310,12 +225,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* Return to the active section when leaving the nav bar */
     nav.addEventListener('mouseleave', () => {
         const activeLink = nav.querySelector('a.active-link');
         if (!activeLink) return;
 
-        const idx = links.indexOf(activeLink);
+        const idx = navLinks.indexOf(activeLink);
         if (idx === -1) return;
 
         activeIdx = idx;
@@ -323,15 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.opacity = '1';
     });
 
-    /* Flick / swipe detection */
-    let startX   = null;          // X coordinate where the gesture started
-    let startT   = null;          // Timestamp when the gesture started
+    let startX = null;
+    let startT = null;
 
-    const minDistance = 30;       // px – minimal distance for a flick
-    const minSpeed    = 0.3;      // px/ms (≈300 px/s)
+    const minDistance = 30;
+    const minSpeed = 0.3;
 
     const handlePointerDown = e => {
-        if (e.pointerType === 'mouse' && e.button !== 0) return; // ignore right‑clicks
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         startX = e.clientX;
         startT = performance.now();
     };
@@ -425,8 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            startX   = null;
-            startY   = null;
+            startX = null;
+            startY = null;
             isHorizontalTouch = null;
         });
     }

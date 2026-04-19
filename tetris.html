@@ -5,45 +5,142 @@
 <title>Tetris</title>
 
 <style>
+    html {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    :root {
+        --game-width: 515px;
+        --game-height: 678px;
+        --page-padding: 10px;
+        --game-bottom-gap: 18px;
+        --game-scale: min(
+            1,
+            calc((100vw - (var(--page-padding) * 2)) / 515px),
+            calc((100vh - (var(--page-padding) * 2) - var(--game-bottom-gap)) / 678px)
+        );
+    }
+
     body {
         font-family: Arial, sans-serif;
+        box-sizing: border-box;
         display: flex;
         justify-content: center;
-        align-items: center;
-        max-height: 56vh;
+        align-items: flex-start;
+        height: 100vh;
         margin: 0;
-        margin-left: 0;
-                margin-top: 140px;
-
-        background-color: #111;
+        padding: var(--page-padding);
+        overflow-x: hidden;
+        overflow-y: hidden;
+        background-color: #05070c;
         color: white;
     }
 
-    .game-container {display:flex;gap:15px;}
+    #weather-backdrop {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .game-stage {
+        width: calc(var(--game-width) * var(--game-scale));
+        height: calc(var(--game-height) * var(--game-scale));
+        margin-bottom: var(--game-bottom-gap);
+        position: relative;
+        z-index: 1;
+    }
+
+    .game-container {
+        display:flex;
+        gap:15px;
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%) scale(var(--game-scale));
+        transform-origin: top center;
+        padding: 22px 24px 12px;
+        border: 1px solid rgba(168, 190, 255, 0.18);
+        border-radius: 24px;
+        background: rgba(3, 8, 16, 0.2);
+        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(3px);
+    }
+    .board-shell {
+        position: relative;
+        width: 300px;
+        height: 630px;
+    }
     #tetris-board{
-        width:300px;height:630px;border:2px solid #444;background:#111;
+        width:300px;height:630px;border:2px solid rgba(156, 174, 215, 0.28);
+        background:rgba(4, 9, 16, 0.34);
         position:relative;overflow:hidden;
 
     }
+    .pause-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.72);
+        color: #fff;
+        text-align: center;
+        pointer-events: none;
+        transition: opacity 120ms ease;
+    }
+    .pause-overlay[hidden] {
+        opacity: 0;
+    }
+    .pause-title {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .pause-copy {
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: rgba(255, 255, 255, 0.75);
+    }
 
-    /* side‑panel now a simple column – no space‑between */
     .side-panel{
         display:flex;
         flex-direction:column;
         gap:20px;
+        width: 150px;
+        align-items: center;
     }
     #next-piece{
         width:150px;
-        height:150px;border:2px solid #444;background:#111;
+        height:150px;
+        border:2px solid rgba(156, 174, 215, 0.28);
+        background:rgba(4, 9, 16, 0.34);
         position:relative;overflow:hidden;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
     .stats{display:flex;flex-direction:column;gap:10px;}
-    .stat-item{padding:5px;text-align:center;font-size:14px;}
-    #next-label{
-        position:absolute;top:5px;left:5px;color:#aaa;font-size:12px;
-        background:rgba(0,0,0,.5);padding:2px 5px;
+    .stat-item{
+        padding:8px 10px;
+        text-align:center;
+        font-size:14px;
+        background: rgba(4, 9, 16, 0.28);
+        border: 1px solid rgba(156, 174, 215, 0.12);
+        border-radius: 12px;
     }
-    .controls{margin-top:20px;text-align:center;}
+    .controls{
+        margin-top:20px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:10px;
+        flex-wrap:nowrap;
+    }
 
     .bottom-section{
         margin-top:auto;
@@ -56,92 +153,111 @@
     .stow-box {
         width: 150px;
         height: 150px;
-        border: 2px solid #444;
-        background: #111;
+        border: 2px solid rgba(156, 174, 215, 0.28);
+        background: rgba(4, 9, 16, 0.34);
         position: relative;
         overflow: hidden;
         margin-top: -179px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
-    #stow-label {
+
+    .eye-wrapper {
+        width: 96px;
+        height: 300px;
+        margin-left: 0;
+        transform: none;
+        position: relative;
+        overflow: visible;
+    }
+
+    .eye-stage {
+        position: relative;
+        width: 100%;
+        height: 96px;
+        margin-bottom: 6px;
+        margin-right: 36px;
+        overflow: visible;
+    }
+
+    .eye-container {
         position: absolute;
-        top: 5px;
-        left: 5px;
-        color: #aaa;
-        font-size: 12px;
-        background: rgba(0, 0, 0, .5);
-        padding: 2px 5px;
+        top: 3px;
+        left: 3px;
+        transform: scale(0.3);
+        transform-origin: top left;
     }
 
-
+    button {
+        background: rgba(12, 18, 29, 0.82);
+        border: 1px solid rgba(165, 184, 230, 0.22);
+        color: #f2f5ff;
+        padding: 8px 14px;
+        border-radius: 999px;
+    }
 </style>
 
-<!-- I have a separate stylesheet -->
 <link rel="stylesheet" href="eye.css">
 </head>
 
 <body>
-<div class="game-container">
-
-    <!-- Tetris board -->
-    <canvas id="tetris-board" width="300" height="600"></canvas>
-
-    <!-- Right‑hand side panel -->
-    <div class="side-panel">
-
-        <!-- Next piece preview -->
-        <div id="next-piece">
-            <canvas id="next-canvas" width="150" height="150"></canvas>
+<canvas id="weather-backdrop" aria-hidden="true"></canvas>
+<div class="game-stage">
+    <div class="game-container">
+        <div class="board-shell">
+            <canvas id="tetris-board" width="300" height="600"></canvas>
+            <div id="pause-overlay" class="pause-overlay" hidden>
+                <div class="pause-title">Paused</div>
+                <div class="pause-copy">Press Resume to keep playing</div>
+            </div>
         </div>
 
-        <!-- Eye component (bottom‑right of side panel) -->
+        <div class="side-panel">
+            <div id="next-piece">
+                <canvas id="next-canvas" width="150" height="150"></canvas>
+            </div>
+
 <div class="eye-wrapper">
-  <div class="eye-container">
-    <div class="sclera"></div>
-    <div class="moving-eye">
-      <!-- New blink wrapper -->
-      <div class="blink-wrapper">
-        <div class="eye-inner">
-          <div class="iris"></div>
-          <div class="pupil"></div>
-          <div class="cornea"></div>
-          <div class="iris-texture"></div>
+  <div class="eye-stage">
+    <div class="eye-container">
+      <div class="sclera"></div>
+      <div class="moving-eye">
+        <div class="blink-wrapper">
+          <div class="eye-inner">
+            <div class="iris"></div>
+            <div class="pupil"></div>
+            <div class="cornea"></div>
+            <div class="iris-texture"></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-        <!-- stow box -->
 <div class="stow-box">
     <canvas id="stow-canvas" width="150" height="150"></canvas>
 </div>
 
 
-        <!-- Bottom block: stats + controls -->
         <div class="bottom-section">
-
-            <!-- Stats -->
             <div class="stats">
                 <div class="stat-item"><strong>Score:</strong> <span id="score">0</span></div>
                 <div class="stat-item"><strong>Level:</strong> <span id="level">1</span></div>
                 <div class="stat-item"><strong>Lines:</strong> <span id="lines">0</span></div>
             </div>
 
-            <!-- Game controls -->
             <div class="controls">
                 <button id="start-btn">Restart</button>
                 <button id="pause-btn">Resume</button>
             </div>
-
         </div>
 
     </div>
 </div>
+</div>
 
-<!-- External Tetris script -->
 <script src="tetris.js"></script>
 
-<!-- -------------- Eye rotation logic ----------------- -->
 <script>
 const eyeIn = document.querySelector('.eye-inner');
 
@@ -161,11 +277,8 @@ eyeIn.addEventListener('animationend', e => {
     }
 });
 
-/* ------------------------------------------------------------------
- *  Random‑blink scheduler – not tied to the animation iteration
- * ------------------------------------------------------------------ */
-const minBlinkDelay = 5000; //  (minimum)
-const maxBlinkDelay = 25000; // 20 s (maximum)
+const minBlinkDelay = 5000;
+const maxBlinkDelay = 25000;
 
 const blinkWrapper = document.querySelector('.blink-wrapper');
 
@@ -185,21 +298,17 @@ function scheduleNextBlink() {
     const delay =
         Math.random() * (maxBlinkDelay - minBlinkDelay) + minBlinkDelay;
     setTimeout(() => {
-        triggerBlink();          // perform the blink
-        scheduleNextBlink();     // schedule the next one
+        triggerBlink();
+        scheduleNextBlink();
     }, delay);
 }
 
-// Start the random‑blink loop once the page has loaded
 scheduleNextBlink();
 
-
-/* ────────────────────── EYE LOOKING HELPERS ───────────────────── */
 function resetAmbientAnimation(eyeInner) {
     eyeInner.style.animation = '';
-    void eyeInner.offsetWidth;      // force re-flow
-    eyeInner.style.animation = '';  // re-apply default animation from CSS
-
+    void eyeInner.offsetWidth;
+    eyeInner.style.animation = '';
 }
 
 function triggerEyeDown() {
@@ -211,7 +320,7 @@ function triggerEyeDown() {
     setTimeout(() => {
         eyeInner.classList.remove('eye-looking-down');
         resetAmbientAnimation(eyeInner);
-    }, 1300);   // same duration as in the original code
+    }, 1300);
 }
 
 function triggerEyeUp() {

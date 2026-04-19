@@ -1,5 +1,3 @@
-/* ------------------------------------------------------------------
- *   Theme & spacing ----------------------------------------------------- */
 :root{
     --section-padding-vertical:2px;            /* height of nav borders   */
     --section-padding-horizontal:0;
@@ -40,8 +38,6 @@
     --yellow: #FFC42E;           /* dark gold/yellow 255, 196, 46*/
 }
 
-/* ------------------------------------------------------------------
- *   Sections ------------------------------------------------------------- */
 main section{
     min-height: calc(100vh - var(--nav-height));
     width:100%;
@@ -53,8 +49,6 @@ main section{
 *, *::before, *::after {box-sizing:border-box;}
 main section.active{display:block;opacity:1;}
 
-/* ------------------------------------------------------------------
- *   Normalisation -------------------------------------------------------- */
 body{
     font-family:'Arial',sans-serif;
     background-color: var(--background-color);

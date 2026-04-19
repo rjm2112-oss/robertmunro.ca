@@ -5,18 +5,10 @@
 <title>Coin Flip Demo – Circles</title>
 
 <style>
-/* ------------------------------------------------------------------
-   0️⃣ Root variable – the “size” of a coin (square)
------------------------------------------------------------------- */
 :root{
-  /* pick the smaller of 27 vw or 27 vh so that coins never overflow the viewport
-     (≈20 % larger than before) */
   --coin-base: min(27vw, 27vh);
 }
 
-/* ------------------------------------------------------------------
-   Layout & controls – all px → vw/vh
------------------------------------------------------------------- */
 #coin-demo{
   display:flex;
   flex-direction:column;
@@ -46,8 +38,8 @@
   min-width:10vw;
   min-height:10vw;
 
-   font-size:6vh;
-    max-width:34vw
+  font-size:6vh;
+  max-width:34vw;
 }
 }
 
@@ -65,45 +57,33 @@
   padding:.25vw .8vw;
 }
 
-/* ------------------------------------------------------------------
-   Coin wrapper – all px → vw/vh
------------------------------------------------------------------- */
 .coins-wrapper{
   display:flex;
   gap:1.25vw;
   justify-content:center;
   align-items:flex-end;
   position:relative;
-  height:60vh;          /* 650 px → 81.25 vh (650 ÷ 8) */
+  height:60vh;
   padding-top:4vh;
   perspective:1000px;
   pointer-events:none;
 }
 
-/* ------------------------------------------------------------------
-   Coin – square & circle
------------------------------------------------------------------- */
-
 .coin-container{
   position:relative;
   width:var(--coin-base);
-  aspect-ratio:1/1;       /* height = width ⇒ square */
+  aspect-ratio:1/1;
 }
 #coin-demo .coin-flip{
-  width:100%;            /* fill the container (square) */
+  width:100%;
   height:100%;
   transform-style:preserve-3d;
   position:relative;
   top:calc(100% - 0vh);
-  border-radius:50%;     /* makes it a circle */
-
-  /* IMPORTANT – rotate around the centre so that letters stay centred */
+  border-radius:50%;
   transform-origin:50% 50%;
 }
 
-/* ------------------------------------------------------------------
-   Faces
------------------------------------------------------------------- */
 .face{
   position:absolute;
   top:0;left:0;width:100%;height:100%;
@@ -112,9 +92,6 @@
 .front{z-index:2;}
 .back{transform:rotateX(180deg);}
 
-/* ------------------------------------------------------------------
-   Stained‑glass texture – px → vw/vh
------------------------------------------------------------------- */
 .stained-glass{
   width:100%; height:100%; position:relative;
   border-radius:50%;
@@ -123,28 +100,15 @@
   background-image: radial-gradient(circle at center, transparent 98%, rgba(255, 255, 255, 0.1) 100%);
 }
 
-
-
-/* ------------------------------------------------------------------
-   Fly & spin – px → vh
------------------------------------------------------------------- */
 @keyframes fly-spin{
   from{top:100%;transform:translateY(0) rotateX(0deg);}
-  /* translateY(-200 px) → -25 vh (200 ÷ 8) */
   to{top:10%;transform:translateY(-25vh) rotateX(calc(var(--flips)*180deg + var(--final-angle)) );}
 }
 
-/* ------------------------------------------------------------------
-   Overlap styling – preserve overlap ratio
------------------------------------------------------------------- */
 .coin-container:not(:first-child){
-  /* -35 px → -0.291666 × coin size (35/120 = 29.1666%) */
   margin-left: calc(-0.291666 * var(--coin-base));
 }
 
-/* ------------------------------------------------------------------
-   Letter styles on the faces
------------------------------------------------------------------- */
 .letter{
   position:absolute;
   top:50%;left:50%;
@@ -159,22 +123,6 @@
   pointer-events:none;
   z-index:10;
 }
-
-
-/* ------------------------------------------------------------------
-   Result overlay – unused but kept for reference
------------------------------------------------------------------- */
-.result{
-  position:absolute;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  font-size:5vw;color:white;text-shadow:0 .125vh .375vh rgba(0,0,0,.6);
-  pointer-events:none;
-  z-index:10;
-}
-
-
-
 </style>
 </head>
 
@@ -198,9 +146,6 @@
 
 <script>
 (() => {
-  /* ------------------------------------------------------------------
-     Translucent colours – alpha = 0.5
-  ------------------------------------------------------------------ */
   const stainedGlassColors = [
        'rgba(139, 0, 139, 0.5)',    // magenta
    'rgba(0, 128, 0, 0.5)',      // green
@@ -214,9 +159,6 @@
     'rgba(255, 165, 0, 0.5)',    // orange
   ];
 
-  /* ------------------------------------------------------------------
-     Create a single coin element
-  ------------------------------------------------------------------ */
   function createCoin(colorIndex) {
     const container = document.createElement('div');
     container.className = 'coin-container';
@@ -260,9 +202,6 @@
     return container;
   }
 
-  /* ------------------------------------------------------------------
-     Start the fly‑spin animation for one coin
-  ------------------------------------------------------------------ */
   function startAnimation(coin) {
     const heads = Math.random() < 0.5;   // random outcome
     const flips = Math.floor(Math.random() * 4) + 4;   // 4‑7 flips
@@ -303,9 +242,6 @@
     coin.addEventListener('animationend', handler);
   }
 
-  /* ------------------------------------------------------------------
-     Show exactly n coins
-  ------------------------------------------------------------------ */
   function displayCoins(n) {
     const wrapper = document.getElementById('wrapper');
     wrapper.innerHTML = '';          // clear any old coins
@@ -319,15 +255,9 @@
     }
   }
 
-  /* ------------------------------------------------------------------
-     Initial state – one coin visible
-  ------------------------------------------------------------------ */
   let selectedNum = 1;
   displayCoins(selectedNum);
 
-  /* ------------------------------------------------------------------
-     Number‑button handling
-  ------------------------------------------------------------------ */
   const btns = document.querySelectorAll('#numCoinsContainer .coin-btn');
   btns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -339,9 +269,6 @@
     });
   });
 
-  /* ------------------------------------------------------------------
-     Flip button – animate all existing coins
-  ------------------------------------------------------------------ */
   const flipBtn = document.getElementById('flipBtn');
   let isAnimating = false;
 
