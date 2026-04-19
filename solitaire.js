@@ -35,7 +35,17 @@ let timerEl;
 let statusLine;
 let victoryBanner;
 let boardEl;
+let boardStageEl;
+let fullscreenBtn;
+let shellEl;
 let timerHandle = null;
+let boardScaleFrame = null;
+let boardResizeObserver = null;
+let websiteFullscreenActive = false;
+let parentFullscreenObserver = null;
+const IS_FILE_ORIGIN = window.location.protocol === "file:";
+const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
+const WEBSITE_FULLSCREEN_CLASS = "solitaire-website-fullscreen";
 
 document.addEventListener("DOMContentLoaded", () => {
     foundationArea = document.getElementById("foundation-area");
@@ -48,13 +58,29 @@ document.addEventListener("DOMContentLoaded", () => {
     statusLine = document.getElementById("status-line");
     victoryBanner = document.getElementById("victory-banner");
     boardEl = document.getElementById("board");
+    boardStageEl = document.getElementById("board-stage");
+    fullscreenBtn = document.getElementById("fullscreen-btn");
+    shellEl = document.querySelector(".solitaire-shell");
 
     document.getElementById("new-game-btn").addEventListener("click", newGame);
     document.getElementById("victory-new-game-btn").addEventListener("click", newGame);
+    fullscreenBtn.addEventListener("click", toggleWebsiteFullscreen);
     boardEl.addEventListener("click", handleBoardClick);
     boardEl.addEventListener("dblclick", handleBoardDoubleClick);
+    window.addEventListener("message", handleParentMessage);
+    window.addEventListener("resize", scheduleBoardScale);
+
+    if ("ResizeObserver" in window) {
+        boardResizeObserver = new ResizeObserver(() => {
+            scheduleBoardScale();
+        });
+        boardResizeObserver.observe(boardEl);
+        boardResizeObserver.observe(boardStageEl);
+    }
 
     newGame();
+    initParentFullscreenObserver();
+    requestWebsiteFullscreenState();
 });
 
 function newGame() {
@@ -508,6 +534,7 @@ function render() {
     renderFoundations();
     renderTableau();
     victoryBanner.classList.toggle("show", state.won);
+    scheduleBoardScale();
 }
 
 function renderHud() {
@@ -719,4 +746,179 @@ function updateTimer() {
     const minutes = Math.floor(elapsedSeconds / 60);
     const seconds = elapsedSeconds % 60;
     timerEl.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function toggleWebsiteFullscreen() {
+    const parentDocument = getParentDocument();
+    if (parentDocument?.body) {
+        const expanded = !parentDocument.body.classList.contains(WEBSITE_FULLSCREEN_CLASS);
+        parentDocument.body.classList.toggle(WEBSITE_FULLSCREEN_CLASS, expanded);
+        applyWebsiteFullscreenState(expanded);
+        return;
+    }
+
+    const parentWindow = getParentWindow();
+    if (!parentWindow) {
+        websiteFullscreenActive = !websiteFullscreenActive;
+        applyWebsiteFullscreenState(websiteFullscreenActive);
+        return;
+    }
+
+    try {
+        if (typeof parentWindow.setSolitaireWebsiteFullscreen === "function") {
+            parentWindow.setSolitaireWebsiteFullscreen(!websiteFullscreenActive);
+            return;
+        }
+    } catch (error) {
+        // Cross-origin parents under file:// fall through to postMessage.
+    }
+
+    parentWindow.postMessage(
+        {
+            type: "solitaire:toggle-website-fullscreen",
+            expanded: !websiteFullscreenActive
+        },
+        MESSAGE_TARGET_ORIGIN
+    );
+}
+
+function handleParentMessage(event) {
+    if (!event.data) {
+        return;
+    }
+
+    if (
+        event.origin !== "null" &&
+        event.origin !== "file://" &&
+        event.origin !== window.location.origin
+    ) {
+        return;
+    }
+
+    if (event.data.type !== "solitaire:website-fullscreen-state") {
+        return;
+    }
+
+    applyWebsiteFullscreenState(Boolean(event.data.expanded));
+}
+
+function requestWebsiteFullscreenState() {
+    const parentDocument = getParentDocument();
+    if (parentDocument?.body) {
+        applyWebsiteFullscreenState(parentDocument.body.classList.contains(WEBSITE_FULLSCREEN_CLASS));
+        return;
+    }
+
+    const parentWindow = getParentWindow();
+    if (!parentWindow) {
+        applyWebsiteFullscreenState(false);
+        return;
+    }
+
+    try {
+        if (typeof parentWindow.getSolitaireWebsiteFullscreen === "function") {
+            applyWebsiteFullscreenState(Boolean(parentWindow.getSolitaireWebsiteFullscreen()));
+            return;
+        }
+    } catch (error) {
+        // Cross-origin parents under file:// fall through to postMessage.
+    }
+
+    parentWindow.postMessage(
+        {
+            type: "solitaire:request-website-fullscreen-state"
+        },
+        MESSAGE_TARGET_ORIGIN
+    );
+}
+
+function getParentWindow() {
+    if (window.parent === window) {
+        return null;
+    }
+
+    try {
+        void window.parent.location.href;
+        return window.parent;
+    } catch (error) {
+        return window.parent;
+    }
+}
+
+function getParentDocument() {
+    const parentWindow = getParentWindow();
+    if (!parentWindow) {
+        return null;
+    }
+
+    try {
+        return parentWindow.document;
+    } catch (error) {
+        return null;
+    }
+}
+
+function initParentFullscreenObserver() {
+    const parentDocument = getParentDocument();
+    if (!parentDocument?.body || !("MutationObserver" in window)) {
+        return;
+    }
+
+    parentFullscreenObserver = new MutationObserver(() => {
+        applyWebsiteFullscreenState(parentDocument.body.classList.contains(WEBSITE_FULLSCREEN_CLASS));
+    });
+
+    parentFullscreenObserver.observe(parentDocument.body, {
+        attributes: true,
+        attributeFilter: ["class"]
+    });
+}
+
+function applyWebsiteFullscreenState(expanded) {
+    websiteFullscreenActive = expanded;
+    document.body.classList.toggle("is-website-fullscreen", expanded);
+    if (fullscreenBtn) {
+        fullscreenBtn.textContent = expanded ? "Exit Full Screen" : "Full Screen";
+    }
+    scheduleBoardScale();
+}
+
+function scheduleBoardScale() {
+    if (boardScaleFrame) {
+        window.cancelAnimationFrame(boardScaleFrame);
+    }
+
+    boardScaleFrame = window.requestAnimationFrame(() => {
+        boardScaleFrame = null;
+        updateBoardScale();
+    });
+}
+
+function updateBoardScale() {
+    if (!boardEl || !boardStageEl) {
+        return;
+    }
+
+    const boardStyles = window.getComputedStyle(boardEl);
+    const paddingX = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+    const availableWidth = Math.max(0, boardEl.clientWidth - paddingX);
+    const naturalWidth = Math.ceil(boardStageEl.scrollWidth);
+    const naturalHeight = Math.ceil(boardStageEl.scrollHeight);
+    const scale = naturalWidth > 0 ? Math.min(1, availableWidth / naturalWidth) : 1;
+
+    boardStageEl.style.transform = `scale(${scale})`;
+    boardEl.style.height = `${Math.ceil(naturalHeight * scale)}px`;
+
+    syncFrameHeight();
+}
+
+function syncFrameHeight() {
+    const frameEl = window.frameElement;
+    if (!frameEl || !shellEl || websiteFullscreenActive) {
+        return;
+    }
+
+    const nextHeight = Math.ceil(shellEl.getBoundingClientRect().height);
+    frameEl.height = String(nextHeight);
+    frameEl.style.height = `${nextHeight}px`;
 }

@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const SOLITAIRE_WEBSITE_FULLSCREEN_CLASS = 'solitaire-website-fullscreen';
+    const IS_FILE_ORIGIN = window.location.protocol === 'file:';
+    const MESSAGE_TARGET_ORIGIN = window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
     const nav = document.querySelector('.glass-nav');
     if (!nav) return;
 
@@ -12,6 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentNavIndex = null;
 
+    const getDetailSolitaireFrame = () =>
+        document.querySelector('#section1 .post-detail iframe[src="solitaire.html"]');
+
+    const syncSolitaireWebsiteFullscreenState = expanded => {
+        const solitaireFrame = getDetailSolitaireFrame();
+        if (!solitaireFrame?.contentWindow) return;
+
+        solitaireFrame.contentWindow.postMessage(
+            {
+                type: 'solitaire:website-fullscreen-state',
+                expanded
+            },
+            MESSAGE_TARGET_ORIGIN
+        );
+    };
+
+    const setSolitaireWebsiteFullscreen = expanded => {
+        document.body.classList.toggle(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS, expanded);
+        syncSolitaireWebsiteFullscreenState(expanded);
+    };
+
+    const clearSolitaireWebsiteFullscreen = () => {
+        setSolitaireWebsiteFullscreen(false);
+    };
+
+    window.setSolitaireWebsiteFullscreen = expanded => {
+        setSolitaireWebsiteFullscreen(Boolean(expanded));
+    };
+
+    window.getSolitaireWebsiteFullscreen = () =>
+        document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
+
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'auto' });
     };
@@ -19,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderPostDetail = (post, detailArea) => {
         if (!post || !detailArea) return;
 
+        clearSolitaireWebsiteFullscreen();
         const title = post.querySelector('h3').outerHTML;
         const meta = post.querySelector('.meta')?.outerHTML || '';
         const body = post.querySelector('.full-body')?.innerHTML || '';
@@ -28,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const showSection = (id, linkIdx = null) => {
         sections.forEach(s => s.classList.remove('active'));
+        clearSolitaireWebsiteFullscreen();
 
         const targetSec = document.getElementById(id);
         if (!targetSec) return;
@@ -103,6 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPostDetail(post, detailArea);
             scrollToTop();
         });
+    });
+
+    window.addEventListener('message', event => {
+        if (!event.data) return;
+        if (
+            event.origin !== 'null' &&
+            event.origin !== 'file://' &&
+            event.origin !== window.location.origin
+        ) return;
+
+        const solitaireFrame = getDetailSolitaireFrame();
+        if (!solitaireFrame || event.source !== solitaireFrame.contentWindow) return;
+
+        if (event.data.type === 'solitaire:toggle-website-fullscreen') {
+            const nextState = typeof event.data.expanded === 'boolean'
+                ? event.data.expanded
+                : !document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
+            setSolitaireWebsiteFullscreen(nextState);
+            return;
+        }
+
+        if (event.data.type === 'solitaire:request-website-fullscreen-state') {
+            syncSolitaireWebsiteFullscreenState(
+                document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS)
+            );
+        }
     });
 
     const count = navLinks.length;

@@ -198,7 +198,65 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     border-radius:8px;margin-left:var(--blog-margin-left);
     margin-right:var(--blog-margin-right);font-size:1.05rem;}
     .preview-list .post .full-body{display:none;}
+    .solitaire-notes{margin-top:.5rem;}
     .meta{font-size:1rem;color:#555;margin-top:0;margin-bottom:1rem;}
+
+body.solitaire-website-fullscreen #section1 .preview-list{
+    display:none;
+}
+
+body.solitaire-website-fullscreen .glass-nav,
+body.solitaire-website-fullscreen h1{
+    display:none;
+}
+
+body.solitaire-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs){
+    margin-top:0;
+}
+
+body.solitaire-website-fullscreen{
+    overflow:hidden;
+}
+
+body.solitaire-website-fullscreen::after{
+    display:none;
+}
+
+body.solitaire-website-fullscreen main,
+body.solitaire-website-fullscreen #section1,
+body.solitaire-website-fullscreen #section1 .blog-container{
+    min-height:100vh;
+    height:100vh;
+}
+
+body.solitaire-website-fullscreen #section1 .post-detail{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    margin:0;
+    border-radius:0;
+    z-index:20;
+    overflow:hidden;
+}
+
+body.solitaire-website-fullscreen #section1 .post-detail article,
+body.solitaire-website-fullscreen #section1 .post-detail .full-body{
+    height:100%;
+}
+
+body.solitaire-website-fullscreen #section1 .post-detail iframe[src="solitaire.html"]{
+    display:block;
+    width:100%;
+    height:100%;
+    min-height:100%;
+    border:none;
+}
+
+body.solitaire-website-fullscreen #section1 .post-detail .solitaire-notes{
+    display:none;
+}
 
     /* ------------------------------------------------------------------
      *   Static post (contact card) -------------------------------------- */
