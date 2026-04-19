@@ -807,7 +807,6 @@ function createFaceCard(card) {
 function createBackCard() {
     const cardEl = document.createElement("div");
     cardEl.className = "card back";
-    cardEl.innerHTML = '<div class="card-back-mark">SOL</div>';
     return cardEl;
 }
 
