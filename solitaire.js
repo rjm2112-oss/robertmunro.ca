@@ -71,6 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
     boardEl.addEventListener("dblclick", handleBoardDoubleClick);
     window.addEventListener("message", handleParentMessage);
     window.addEventListener("resize", scheduleBoardScale);
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", scheduleBoardScale);
+        window.visualViewport.addEventListener("scroll", scheduleBoardScale);
+    }
 
     if ("ResizeObserver" in window) {
         boardResizeObserver = new ResizeObserver(() => {
@@ -916,15 +920,27 @@ function updateBoardScale() {
         return;
     }
 
+    if (websiteFullscreenActive) {
+        boardEl.style.height = "";
+    }
+
     const boardStyles = window.getComputedStyle(boardEl);
     const paddingX = parseFloat(boardStyles.paddingLeft) + parseFloat(boardStyles.paddingRight);
+    const paddingY = parseFloat(boardStyles.paddingTop) + parseFloat(boardStyles.paddingBottom);
     const availableWidth = Math.max(0, boardEl.clientWidth - paddingX);
+    const availableHeight = Math.max(0, boardEl.clientHeight - paddingY);
     const naturalWidth = Math.ceil(boardStageEl.scrollWidth);
     const naturalHeight = Math.ceil(boardStageEl.scrollHeight);
-    const scale = naturalWidth > 0 ? Math.min(1, availableWidth / naturalWidth) : 1;
+    let scale = naturalWidth > 0 ? Math.min(1, availableWidth / naturalWidth) : 1;
+
+    if (websiteFullscreenActive && naturalHeight > 0 && availableHeight > 0) {
+        scale = Math.min(scale, availableHeight / naturalHeight);
+    }
+
+    scale = Math.max(scale, 0.01);
 
     boardStageEl.style.transform = `scale(${scale})`;
-    boardEl.style.height = `${Math.ceil(naturalHeight * scale)}px`;
+    boardEl.style.height = `${Math.ceil(naturalHeight * scale + paddingY)}px`;
 
     syncFrameHeight();
 }
