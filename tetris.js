@@ -61,6 +61,12 @@ let ctx, nextCtx, tetrisCanvas, nextCanvas, weatherCanvas, weatherCtx;
 let clearingRows = null, flashCount = 0, lastFlashTime = 0, isFlashing = false;
 let pendingScoreData = null;
 const FLASH_INTERVAL_MS = 120;
+const WEBSITE_FULLSCREEN_CLASS = 'tetris-website-fullscreen';
+const IS_FILE_ORIGIN = window.location.protocol === 'file:';
+const MESSAGE_TARGET_ORIGIN =
+    window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
+let websiteFullscreenActive = false;
+let lastFullscreenTouchTime = 0;
 
 let nextFlashing = false, nextFlashCount = 0, lastNextFlashTime = 0;
 let rowsClearedSinceLastChange = 0;
@@ -658,6 +664,7 @@ let weatherLastFrameTs = 0;
 /* ────────────────────── BUTTON HELPERS ─────────────────────── */
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
+const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pauseOverlay = document.getElementById('pause-overlay');
 
 startBtn.addEventListener('keydown', e => {
@@ -667,6 +674,13 @@ startBtn.addEventListener('keydown', e => {
 pauseBtn.addEventListener('keydown', e => {
     if (e.code === 'Space') e.preventDefault();
 });
+
+if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', handleFullscreenButtonClick);
+    fullscreenBtn.addEventListener('touchend', handleFullscreenButtonTouch, { passive: false });
+}
+
+window.addEventListener('message', handleParentMessage);
 
 /* ────────────────────── UTILS ─────────────────────────────── */
 function changeEyeColor() {
@@ -725,6 +739,146 @@ function resizeWeatherCanvas() {
     weatherCanvas.style.width = `${width}px`;
     weatherCanvas.style.height = `${height}px`;
     weatherCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function getParentWindow() {
+    if (window.parent === window) {
+        return null;
+    }
+
+    try {
+        void window.parent.location.href;
+        return window.parent;
+    } catch (error) {
+        return window.parent;
+    }
+}
+
+function getParentDocument() {
+    const parentWindow = getParentWindow();
+    if (!parentWindow) {
+        return null;
+    }
+
+    try {
+        return parentWindow.document;
+    } catch (error) {
+        return null;
+    }
+}
+
+function applyWebsiteFullscreenState(expanded) {
+    websiteFullscreenActive = expanded;
+    document.body.classList.toggle('is-website-fullscreen', expanded);
+    updateFullscreenButtonLabel();
+}
+
+function updateFullscreenButtonLabel() {
+    if (!fullscreenBtn) {
+        return;
+    }
+
+    fullscreenBtn.textContent = websiteFullscreenActive ? 'Exit Fullscreen' : 'Fullscreen';
+}
+
+function toggleWebsiteFullscreen() {
+    const parentWindow = getParentWindow();
+    if (parentWindow) {
+        try {
+            if (typeof parentWindow.setTetrisWebsiteFullscreen === 'function') {
+                parentWindow.setTetrisWebsiteFullscreen(!websiteFullscreenActive);
+                return;
+            }
+        } catch (error) {
+            // Cross-origin parents under file:// fall through to postMessage.
+        }
+    }
+
+    const parentDocument = getParentDocument();
+    if (parentDocument?.body) {
+        const expanded = !parentDocument.body.classList.contains(WEBSITE_FULLSCREEN_CLASS);
+        parentDocument.body.classList.toggle(WEBSITE_FULLSCREEN_CLASS, expanded);
+        applyWebsiteFullscreenState(expanded);
+        return;
+    }
+
+    if (!parentWindow) {
+        applyWebsiteFullscreenState(!websiteFullscreenActive);
+        return;
+    }
+
+    parentWindow.postMessage(
+        {
+            type: 'tetris:toggle-website-fullscreen',
+            expanded: !websiteFullscreenActive
+        },
+        MESSAGE_TARGET_ORIGIN
+    );
+}
+
+function handleFullscreenButtonClick(event) {
+    if (Date.now() - lastFullscreenTouchTime < 700) {
+        event.preventDefault();
+        return;
+    }
+
+    toggleWebsiteFullscreen();
+}
+
+function handleFullscreenButtonTouch(event) {
+    event.preventDefault();
+    lastFullscreenTouchTime = Date.now();
+    toggleWebsiteFullscreen();
+}
+
+function handleParentMessage(event) {
+    if (!event.data) {
+        return;
+    }
+
+    if (
+        event.origin !== 'null' &&
+        event.origin !== 'file://' &&
+        event.origin !== window.location.origin
+    ) {
+        return;
+    }
+
+    if (event.data.type !== 'tetris:website-fullscreen-state') {
+        return;
+    }
+
+    applyWebsiteFullscreenState(Boolean(event.data.expanded));
+}
+
+function requestWebsiteFullscreenState() {
+    const parentDocument = getParentDocument();
+    if (parentDocument?.body) {
+        applyWebsiteFullscreenState(parentDocument.body.classList.contains(WEBSITE_FULLSCREEN_CLASS));
+        return;
+    }
+
+    const parentWindow = getParentWindow();
+    if (!parentWindow) {
+        applyWebsiteFullscreenState(false);
+        return;
+    }
+
+    try {
+        if (typeof parentWindow.getTetrisWebsiteFullscreen === 'function') {
+            applyWebsiteFullscreenState(Boolean(parentWindow.getTetrisWebsiteFullscreen()));
+            return;
+        }
+    } catch (error) {
+        // Cross-origin parents under file:// fall through to postMessage.
+    }
+
+    parentWindow.postMessage(
+        {
+            type: 'tetris:request-website-fullscreen-state'
+        },
+        MESSAGE_TARGET_ORIGIN
+    );
 }
 
 function resetWeatherSceneStates(now = performance.now()) {
@@ -1517,6 +1671,7 @@ function init() {
 
     document.getElementById('start-btn').addEventListener('click', restartGame);
     document.getElementById('pause-btn').addEventListener('click', togglePause);
+    requestWebsiteFullscreenState();
     resetGame();
 }
 /* ────────────────────── INITIALIZATION GUARD ─────────────────────── */

@@ -13,6 +13,9 @@
     :root {
         --game-width: 515px;
         --game-height: 678px;
+        --board-width: 300px;
+        --side-panel-width: 150px;
+        --panel-gap: 15px;
         --page-padding: 10px;
         --game-bottom-gap: 18px;
         --game-scale: min(
@@ -37,6 +40,26 @@
         color: white;
     }
 
+    body.is-website-fullscreen {
+        --page-padding: 0px;
+        --game-bottom-gap: 0px;
+    }
+
+    body.is-website-fullscreen .game-stage {
+        width: 100vw;
+        width: 100dvw;
+        height: 100vh;
+        height: 100dvh;
+        margin-bottom: 0;
+    }
+
+    body.is-website-fullscreen .game-container {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(var(--game-scale));
+        transform-origin: center center;
+    }
+
     #weather-backdrop {
         position: fixed;
         inset: 0;
@@ -56,7 +79,7 @@
 
     .game-container {
         display:flex;
-        gap:15px;
+        gap:var(--panel-gap);
         position: absolute;
         top: 0;
         left: 50%;
@@ -69,13 +92,20 @@
         box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
         backdrop-filter: blur(3px);
     }
+    .board-column {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: var(--board-width);
+    }
+
     .board-shell {
         position: relative;
-        width: 300px;
+        width: var(--board-width);
         height: 630px;
     }
     #tetris-board{
-        width:300px;height:630px;border:2px solid rgba(156, 174, 215, 0.28);
+        width:var(--board-width);height:630px;border:2px solid rgba(156, 174, 215, 0.28);
         background:rgba(4, 9, 16, 0.34);
         position:relative;overflow:hidden;
 
@@ -113,7 +143,7 @@
         display:flex;
         flex-direction:column;
         gap:20px;
-        width: 150px;
+        width: var(--side-panel-width);
         align-items: center;
     }
     #next-piece{
@@ -137,15 +167,22 @@
         margin-top:20px;
         display:flex;
         align-items:center;
-        justify-content:center;
+        justify-content:flex-start;
         gap:10px;
         flex-wrap:nowrap;
     }
 
+    .board-actions {
+        display: none;
+        justify-content: flex-end;
+        width: 100%;
+    }
+
     .bottom-section{
         margin-top:auto;
-        align-self:flex-start; width:150px;
-        transform: translateX(3px);
+        align-self:flex-start;
+        min-width: var(--side-panel-width);
+        width: max-content;
     }
 
 
@@ -203,11 +240,16 @@
 <canvas id="weather-backdrop" aria-hidden="true"></canvas>
 <div class="game-stage">
     <div class="game-container">
-        <div class="board-shell">
-            <canvas id="tetris-board" width="300" height="600"></canvas>
-            <div id="pause-overlay" class="pause-overlay" hidden>
-                <div class="pause-title">Paused</div>
-                <div class="pause-copy">Press Resume to keep playing</div>
+        <div class="board-column">
+            <div class="board-shell">
+                <canvas id="tetris-board" width="300" height="600"></canvas>
+                <div id="pause-overlay" class="pause-overlay" hidden>
+                    <div class="pause-title">Paused</div>
+                    <div class="pause-copy">Press Resume to keep playing</div>
+                </div>
+            </div>
+            <div class="board-actions">
+                <button id="fullscreen-btn" type="button">Fullscreen</button>
             </div>
         </div>
 

@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const TETRIS_WEBSITE_FULLSCREEN_CLASS = 'tetris-website-fullscreen';
     const SOLITAIRE_WEBSITE_FULLSCREEN_CLASS = 'solitaire-website-fullscreen';
     const IS_FILE_ORIGIN = window.location.protocol === 'file:';
     const MESSAGE_TARGET_ORIGIN = window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
@@ -14,6 +15,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const turbulence = document.getElementById('glass-turbulence');
 
     let currentNavIndex = null;
+
+    const getDetailTetrisFrame = () =>
+        document.querySelector('#section1 .post-detail iframe[src="tetris.html"]');
+
+    const getDetailTetrisFullscreenButton = () =>
+        document.querySelector('#section1 .post-detail .tetris-website-fullscreen-btn');
+
+    const updateTetrisFullscreenButtonLabel = expanded => {
+        const button = getDetailTetrisFullscreenButton();
+        if (!button) return;
+        button.textContent = expanded ? 'Exit Fullscreen' : 'Fullscreen';
+    };
+
+    const syncTetrisWebsiteFullscreenState = expanded => {
+        const tetrisFrame = getDetailTetrisFrame();
+        if (!tetrisFrame?.contentWindow) return;
+
+        tetrisFrame.contentWindow.postMessage(
+            {
+                type: 'tetris:website-fullscreen-state',
+                expanded
+            },
+            MESSAGE_TARGET_ORIGIN
+        );
+    };
+
+    const setTetrisWebsiteFullscreen = expanded => {
+        document.body.classList.toggle(TETRIS_WEBSITE_FULLSCREEN_CLASS, expanded);
+        updateTetrisFullscreenButtonLabel(expanded);
+        syncTetrisWebsiteFullscreenState(expanded);
+    };
+
+    const clearTetrisWebsiteFullscreen = () => {
+        setTetrisWebsiteFullscreen(false);
+    };
 
     const getDetailSolitaireFrame = () =>
         document.querySelector('#section1 .post-detail iframe[src="solitaire.html"]');
@@ -40,6 +76,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setSolitaireWebsiteFullscreen(false);
     };
 
+    window.setTetrisWebsiteFullscreen = expanded => {
+        setTetrisWebsiteFullscreen(Boolean(expanded));
+    };
+
+    window.getTetrisWebsiteFullscreen = () =>
+        document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS);
+
     window.setSolitaireWebsiteFullscreen = expanded => {
         setSolitaireWebsiteFullscreen(Boolean(expanded));
     };
@@ -54,16 +97,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderPostDetail = (post, detailArea) => {
         if (!post || !detailArea) return;
 
+        clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
         const title = post.querySelector('h3').outerHTML;
         const meta = post.querySelector('.meta')?.outerHTML || '';
         const body = post.querySelector('.full-body')?.innerHTML || '';
 
         detailArea.innerHTML = `<article>${title}${meta}<div class="full-body">${body}</div></article>`;
+        updateTetrisFullscreenButtonLabel(false);
     };
 
     const showSection = (id, linkIdx = null) => {
         sections.forEach(s => s.classList.remove('active'));
+        clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
 
         const targetSec = document.getElementById(id);
@@ -142,6 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    document.addEventListener('click', event => {
+        const button = event.target.closest('.tetris-website-fullscreen-btn');
+        if (!button) return;
+
+        setTetrisWebsiteFullscreen(!document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS));
+    });
+
     window.addEventListener('message', event => {
         if (!event.data) return;
         if (
@@ -149,6 +202,24 @@ document.addEventListener('DOMContentLoaded', () => {
             event.origin !== 'file://' &&
             event.origin !== window.location.origin
         ) return;
+
+        const tetrisFrame = getDetailTetrisFrame();
+        if (tetrisFrame && event.source === tetrisFrame.contentWindow) {
+            if (event.data.type === 'tetris:toggle-website-fullscreen') {
+                const nextState = typeof event.data.expanded === 'boolean'
+                    ? event.data.expanded
+                    : !document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS);
+                setTetrisWebsiteFullscreen(nextState);
+                return;
+            }
+
+            if (event.data.type === 'tetris:request-website-fullscreen-state') {
+                syncTetrisWebsiteFullscreenState(
+                    document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS)
+                );
+                return;
+            }
+        }
 
         const solitaireFrame = getDetailSolitaireFrame();
         if (!solitaireFrame || event.source !== solitaireFrame.contentWindow) return;

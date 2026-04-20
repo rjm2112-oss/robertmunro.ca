@@ -199,29 +199,48 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     margin-right:var(--blog-margin-right);font-size:1.05rem;}
     .preview-list .post .full-body{display:none;}
     .solitaire-notes{margin-top:.5rem;}
+    .tetris-controls{margin-top:.75rem;}
+    .tetris-controls .tetris-website-fullscreen-btn{
+        background: rgba(12, 18, 29, 0.82);
+        border: 1px solid rgba(165, 184, 230, 0.22);
+        color: #f2f5ff;
+        padding: 8px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+    .tetris-notes{margin-top:.5rem;}
     .meta{font-size:1rem;color:#555;margin-top:0;margin-bottom:1rem;}
 
+body.tetris-website-fullscreen #section1 .preview-list,
 body.solitaire-website-fullscreen #section1 .preview-list{
     display:none;
 }
 
+body.tetris-website-fullscreen .glass-nav,
+body.tetris-website-fullscreen h1,
 body.solitaire-website-fullscreen .glass-nav,
 body.solitaire-website-fullscreen h1{
     display:none;
 }
 
+body.tetris-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs),
 body.solitaire-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs){
     margin-top:0;
 }
 
+body.tetris-website-fullscreen,
 body.solitaire-website-fullscreen{
     overflow:hidden;
 }
 
+body.tetris-website-fullscreen::after,
 body.solitaire-website-fullscreen::after{
     display:none;
 }
 
+body.tetris-website-fullscreen main,
+body.tetris-website-fullscreen #section1,
+body.tetris-website-fullscreen #section1 .blog-container,
 body.solitaire-website-fullscreen main,
 body.solitaire-website-fullscreen #section1,
 body.solitaire-website-fullscreen #section1 .blog-container{
@@ -231,6 +250,7 @@ body.solitaire-website-fullscreen #section1 .blog-container{
     height:100dvh;
 }
 
+body.tetris-website-fullscreen #section1 .post-detail,
 body.solitaire-website-fullscreen #section1 .post-detail{
     position:fixed;
     top:0;
@@ -244,11 +264,14 @@ body.solitaire-website-fullscreen #section1 .post-detail{
     overflow:hidden;
 }
 
+body.tetris-website-fullscreen #section1 .post-detail article,
+body.tetris-website-fullscreen #section1 .post-detail .full-body,
 body.solitaire-website-fullscreen #section1 .post-detail article,
 body.solitaire-website-fullscreen #section1 .post-detail .full-body{
     height:100%;
 }
 
+body.tetris-website-fullscreen #section1 .post-detail iframe[src="tetris.html"],
 body.solitaire-website-fullscreen #section1 .post-detail iframe[src="solitaire.html"]{
     display:block;
     width:100%;
@@ -257,8 +280,20 @@ body.solitaire-website-fullscreen #section1 .post-detail iframe[src="solitaire.h
     border:none;
 }
 
+body.tetris-website-fullscreen #section1 .post-detail .tetris-notes,
 body.solitaire-website-fullscreen #section1 .post-detail .solitaire-notes{
     display:none;
+}
+
+body.tetris-website-fullscreen #section1 .post-detail .tetris-controls{
+    display:block;
+    position:fixed;
+    top:14px;
+    top:max(14px, env(safe-area-inset-top));
+    right:14px;
+    right:max(14px, env(safe-area-inset-right));
+    margin-top:0;
+    z-index:30;
 }
 
     /* ------------------------------------------------------------------
