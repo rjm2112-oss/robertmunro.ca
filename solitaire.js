@@ -894,7 +894,6 @@ function renderTableau() {
 
         const slot = document.createElement("div");
         slot.className = "slot";
-        slot.textContent = "King";
         pileEl.appendChild(slot);
 
         let topOffset = 0;
