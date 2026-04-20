@@ -62,11 +62,13 @@ let clearingRows = null, flashCount = 0, lastFlashTime = 0, isFlashing = false;
 let pendingScoreData = null;
 const FLASH_INTERVAL_MS = 120;
 const WEBSITE_FULLSCREEN_CLASS = 'tetris-website-fullscreen';
+const TOUCH_DEVICE_CLASS = 'is-touch-device';
 const IS_FILE_ORIGIN = window.location.protocol === 'file:';
 const MESSAGE_TARGET_ORIGIN =
     window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
 let websiteFullscreenActive = false;
 let lastFullscreenTouchTime = 0;
+let lastTouchControlTime = 0;
 
 let nextFlashing = false, nextFlashCount = 0, lastNextFlashTime = 0;
 let rowsClearedSinceLastChange = 0;
@@ -666,6 +668,11 @@ const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pauseOverlay = document.getElementById('pause-overlay');
+const touchControls = document.getElementById('touch-controls');
+const touchControlsShell = touchControls?.closest('.touch-controls-shell') ?? null;
+const gameContainerEl = document.querySelector('.game-container');
+let touchControlsMetricsFrame = 0;
+let touchControlsResizeObserver = null;
 
 startBtn.addEventListener('keydown', e => {
     if (e.code === 'Space') e.preventDefault();
@@ -678,6 +685,11 @@ pauseBtn.addEventListener('keydown', e => {
 if (fullscreenBtn) {
     fullscreenBtn.addEventListener('click', handleFullscreenButtonClick);
     fullscreenBtn.addEventListener('touchend', handleFullscreenButtonTouch, { passive: false });
+}
+
+if (touchControls) {
+    touchControls.addEventListener('click', handleTouchControlsClick);
+    touchControls.addEventListener('touchend', handleTouchControlsTouch, { passive: false });
 }
 
 window.addEventListener('message', handleParentMessage);
@@ -767,9 +779,100 @@ function getParentDocument() {
     }
 }
 
+function detectTouchDevice() {
+    return Boolean(
+        navigator.maxTouchPoints > 0 ||
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+    );
+}
+
+function syncTouchDeviceState() {
+    document.body.classList.toggle(TOUCH_DEVICE_CLASS, detectTouchDevice());
+}
+
+function measureTouchControlsHeight() {
+    if (!touchControlsShell) {
+        return 0;
+    }
+
+    const computedDisplay = window.getComputedStyle(touchControlsShell).display;
+    if (computedDisplay !== 'none') {
+        return touchControlsShell.offsetHeight;
+    }
+
+    const previousInlineStyles = {
+        display: touchControlsShell.style.display,
+        position: touchControlsShell.style.position,
+        visibility: touchControlsShell.style.visibility,
+        top: touchControlsShell.style.top,
+        bottom: touchControlsShell.style.bottom
+    };
+
+    touchControlsShell.style.display = 'block';
+    touchControlsShell.style.position = 'absolute';
+    touchControlsShell.style.visibility = 'hidden';
+    touchControlsShell.style.top = '0';
+    touchControlsShell.style.bottom = 'auto';
+
+    const measuredHeight = touchControlsShell.offsetHeight;
+
+    touchControlsShell.style.display = previousInlineStyles.display;
+    touchControlsShell.style.position = previousInlineStyles.position;
+    touchControlsShell.style.visibility = previousInlineStyles.visibility;
+    touchControlsShell.style.top = previousInlineStyles.top;
+    touchControlsShell.style.bottom = previousInlineStyles.bottom;
+
+    return measuredHeight;
+}
+
+function syncTouchControlsMetrics() {
+    const measuredHeight = measureTouchControlsHeight();
+    if (measuredHeight > 0) {
+        document.body.style.setProperty('--touch-controls-height', `${measuredHeight}px`);
+    }
+
+    scheduleTouchControlsPositionSync();
+}
+
+function updateTouchControlsPosition() {
+    touchControlsMetricsFrame = 0;
+
+    if (!touchControlsShell || !gameContainerEl) {
+        return;
+    }
+
+    const isTouchFullscreen =
+        document.body.classList.contains(TOUCH_DEVICE_CLASS) &&
+        document.body.classList.contains('is-website-fullscreen');
+
+    if (!isTouchFullscreen) {
+        document.body.style.removeProperty('--touch-controls-top');
+        return;
+    }
+
+    const containerRect = gameContainerEl.getBoundingClientRect();
+    const styles = window.getComputedStyle(document.body);
+    const scale = parseFloat(styles.getPropertyValue('--game-scale')) || 1;
+    const gap = (parseFloat(styles.getPropertyValue('--touch-controls-gap')) || 0) * scale;
+    const top = containerRect.bottom + gap;
+
+    document.body.style.setProperty('--touch-controls-top', `${Math.round(top)}px`);
+}
+
+function scheduleTouchControlsPositionSync() {
+    if (touchControlsMetricsFrame) {
+        cancelAnimationFrame(touchControlsMetricsFrame);
+    }
+
+    touchControlsMetricsFrame = requestAnimationFrame(() => {
+        touchControlsMetricsFrame = requestAnimationFrame(updateTouchControlsPosition);
+    });
+}
+
 function applyWebsiteFullscreenState(expanded) {
     websiteFullscreenActive = expanded;
     document.body.classList.toggle('is-website-fullscreen', expanded);
+    syncTouchControlsMetrics();
     updateFullscreenButtonLabel();
 }
 
@@ -829,6 +932,77 @@ function handleFullscreenButtonTouch(event) {
     event.preventDefault();
     lastFullscreenTouchTime = Date.now();
     toggleWebsiteFullscreen();
+}
+
+function getTouchControlAction(target) {
+    if (!(target instanceof Element)) {
+        return null;
+    }
+
+    const button = target.closest('[data-touch-action]');
+    return button?.dataset.touchAction ?? null;
+}
+
+function runTouchControl(actionName) {
+    if (isPaused || gameOver) {
+        return;
+    }
+
+    switch (actionName) {
+        case 'left':
+            movePiece(-1, 0);
+            break;
+        case 'right':
+            movePiece(1, 0);
+            break;
+        case 'down':
+            movePiece(0, 1);
+            break;
+        case 'rotate':
+            rotate();
+            break;
+        case 'drop':
+            hardDrop();
+            dropStart = performance.now();
+            break;
+        case 'hold':
+            stowOrUnstowPiece();
+            break;
+        default:
+            return;
+    }
+
+    updateGhostPiece();
+    drawBoard();
+    drawNextPiece();
+    drawStowPiece();
+    updatePauseOverlay();
+}
+
+function handleTouchControlsClick(event) {
+    if (Date.now() - lastTouchControlTime < 700) {
+        event.preventDefault();
+        return;
+    }
+
+    const actionName = getTouchControlAction(event.target);
+    if (!actionName) {
+        return;
+    }
+
+    event.preventDefault();
+    runTouchControl(actionName);
+}
+
+function handleTouchControlsTouch(event) {
+    const actionName = getTouchControlAction(event.target);
+    if (!actionName) {
+        return;
+    }
+
+    event.preventDefault();
+    lastTouchControlTime = Date.now();
+    runTouchControl(actionName);
 }
 
 function handleParentMessage(event) {
@@ -1667,7 +1841,22 @@ function init() {
 
     initAudio();
     resizeWeatherCanvas();
+    syncTouchDeviceState();
+    syncTouchControlsMetrics();
     window.addEventListener('resize', resizeWeatherCanvas);
+    window.addEventListener('resize', syncTouchDeviceState);
+    window.addEventListener('resize', syncTouchControlsMetrics);
+    window.visualViewport?.addEventListener('resize', syncTouchControlsMetrics);
+    window.visualViewport?.addEventListener('scroll', syncTouchControlsMetrics);
+
+    if (window.ResizeObserver && !touchControlsResizeObserver && gameContainerEl && touchControlsShell) {
+        touchControlsResizeObserver = new ResizeObserver(() => {
+            syncTouchControlsMetrics();
+        });
+        touchControlsResizeObserver.observe(gameContainerEl);
+        touchControlsResizeObserver.observe(touchControlsShell);
+        touchControlsResizeObserver.observe(document.body);
+    }
 
     document.getElementById('start-btn').addEventListener('click', restartGame);
     document.getElementById('pause-btn').addEventListener('click', togglePause);

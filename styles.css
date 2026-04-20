@@ -233,6 +233,10 @@ body.solitaire-website-fullscreen{
     overflow:hidden;
 }
 
+body.tetris-website-fullscreen{
+    background-color:#000;
+}
+
 body.tetris-website-fullscreen::after,
 body.solitaire-website-fullscreen::after{
     display:none;
@@ -262,6 +266,13 @@ body.solitaire-website-fullscreen #section1 .post-detail{
     background:var(--background-color);
     z-index:20;
     overflow:hidden;
+}
+
+body.tetris-website-fullscreen main,
+body.tetris-website-fullscreen #section1,
+body.tetris-website-fullscreen #section1 .blog-container,
+body.tetris-website-fullscreen #section1 .post-detail{
+    background:#000;
 }
 
 body.tetris-website-fullscreen #section1 .post-detail article,

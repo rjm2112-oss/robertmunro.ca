@@ -12,16 +12,20 @@
 
     :root {
         --game-width: 515px;
-        --game-height: 678px;
+        --base-game-height: 678px;
+        --touch-controls-gap: 8px;
+        --touch-controls-height: 214px;
+        --game-height: var(--base-game-height);
         --board-width: 300px;
         --side-panel-width: 150px;
         --panel-gap: 15px;
+        --game-shell-padding-x: 24px;
         --page-padding: 10px;
         --game-bottom-gap: 18px;
         --game-scale: min(
             1,
             calc((100vw - (var(--page-padding) * 2)) / 515px),
-            calc((100vh - (var(--page-padding) * 2) - var(--game-bottom-gap)) / 678px)
+            calc((100vh - (var(--page-padding) * 2) - var(--game-bottom-gap)) / var(--game-height))
         );
     }
 
@@ -45,6 +49,21 @@
         --game-bottom-gap: 0px;
     }
 
+    body.is-touch-device.is-website-fullscreen {
+        --touch-top-offset: max(8px, env(safe-area-inset-top));
+        --touch-bottom-offset: max(8px, env(safe-area-inset-bottom));
+        --game-height: calc(
+            var(--base-game-height) +
+            var(--touch-controls-gap) +
+            var(--touch-controls-height)
+        );
+        --game-scale: min(
+            1,
+            calc((100vw - (var(--page-padding) * 2)) / var(--game-width)),
+            calc((100vh - var(--touch-top-offset) - var(--touch-bottom-offset)) / var(--game-height))
+        );
+    }
+
     body.is-website-fullscreen .game-stage {
         width: 100vw;
         width: 100dvw;
@@ -58,6 +77,39 @@
         left: 50%;
         transform: translate(-50%, -50%) scale(var(--game-scale));
         transform-origin: center center;
+    }
+
+    body.is-touch-device.is-website-fullscreen .game-stage {
+        position: fixed;
+        top: var(--touch-top-offset);
+        left: 50%;
+        width: var(--game-width);
+        height: var(--game-height);
+        margin-bottom: 0;
+        transform: translateX(-50%) scale(var(--game-scale));
+        transform-origin: top center;
+    }
+
+    body.is-touch-device.is-website-fullscreen .touch-fullscreen-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: var(--touch-controls-gap);
+        width: var(--game-width);
+    }
+
+    body.is-touch-device.is-website-fullscreen .game-container {
+        position: relative;
+        top: auto;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        transform-origin: top center;
+    }
+
+    body.is-touch-device.is-website-fullscreen .side-panel {
+        height: var(--base-game-height);
     }
 
     #weather-backdrop {
@@ -77,6 +129,11 @@
         z-index: 1;
     }
 
+    .touch-fullscreen-stack {
+        width: 100%;
+        height: 100%;
+    }
+
     .game-container {
         display:flex;
         gap:var(--panel-gap);
@@ -85,7 +142,7 @@
         left: 50%;
         transform: translateX(-50%) scale(var(--game-scale));
         transform-origin: top center;
-        padding: 22px 24px 12px;
+        padding: 22px var(--game-shell-padding-x) 12px;
         border: 1px solid rgba(168, 190, 255, 0.18);
         border-radius: 24px;
         background: rgba(3, 8, 16, 0.2);
@@ -178,6 +235,63 @@
         width: 100%;
     }
 
+    .touch-controls-shell {
+        display: none;
+        position: absolute;
+        left: 50%;
+        width: var(--board-width);
+        padding: 12px;
+        border: 1px solid rgba(168, 190, 255, 0.18);
+        border-radius: 24px;
+        background: rgba(3, 8, 16, 0.32);
+        box-shadow: 0 24px 44px rgba(0, 0, 0, 0.34);
+        backdrop-filter: blur(3px);
+        transform: translateX(-50%) scale(var(--game-scale));
+        transform-origin: top center;
+        z-index: 2;
+    }
+
+    body.is-touch-device.is-website-fullscreen .touch-controls-shell {
+        display: block;
+        position: relative;
+        width: var(--board-width);
+        margin-left: 0;
+        align-self: center;
+        left: auto;
+        top: auto;
+        bottom: auto;
+        transform: none;
+        transform-origin: top center;
+    }
+
+    .touch-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .touch-control-btn {
+        min-height: 88px;
+        padding: 14px 8px;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .touch-control-btn.touch-control-symbol {
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
     .bottom-section{
         margin-top:auto;
         align-self:flex-start;
@@ -239,24 +353,25 @@
 <body>
 <canvas id="weather-backdrop" aria-hidden="true"></canvas>
 <div class="game-stage">
-    <div class="game-container">
-        <div class="board-column">
-            <div class="board-shell">
-                <canvas id="tetris-board" width="300" height="600"></canvas>
-                <div id="pause-overlay" class="pause-overlay" hidden>
-                    <div class="pause-title">Paused</div>
-                    <div class="pause-copy">Press Resume to keep playing</div>
+    <div class="touch-fullscreen-stack">
+        <div class="game-container">
+            <div class="board-column">
+                <div class="board-shell">
+                    <canvas id="tetris-board" width="300" height="600"></canvas>
+                    <div id="pause-overlay" class="pause-overlay" hidden>
+                        <div class="pause-title">Paused</div>
+                        <div class="pause-copy">Press Resume to keep playing</div>
+                    </div>
+                </div>
+                <div class="board-actions">
+                    <button id="fullscreen-btn" type="button">Fullscreen</button>
                 </div>
             </div>
-            <div class="board-actions">
-                <button id="fullscreen-btn" type="button">Fullscreen</button>
-            </div>
-        </div>
 
-        <div class="side-panel">
-            <div id="next-piece">
-                <canvas id="next-canvas" width="150" height="150"></canvas>
-            </div>
+            <div class="side-panel">
+                <div id="next-piece">
+                    <canvas id="next-canvas" width="150" height="150"></canvas>
+                </div>
 
 <div class="eye-wrapper">
   <div class="eye-stage">
@@ -281,19 +396,31 @@
 </div>
 
 
-        <div class="bottom-section">
-            <div class="stats">
-                <div class="stat-item"><strong>Score:</strong> <span id="score">0</span></div>
-                <div class="stat-item"><strong>Level:</strong> <span id="level">1</span></div>
-                <div class="stat-item"><strong>Lines:</strong> <span id="lines">0</span></div>
+            <div class="bottom-section">
+                <div class="stats">
+                    <div class="stat-item"><strong>Score:</strong> <span id="score">0</span></div>
+                    <div class="stat-item"><strong>Level:</strong> <span id="level">1</span></div>
+                    <div class="stat-item"><strong>Lines:</strong> <span id="lines">0</span></div>
+                </div>
+
+                <div class="controls">
+                    <button id="start-btn">Restart</button>
+                    <button id="pause-btn">Resume</button>
+                </div>
             </div>
 
-            <div class="controls">
-                <button id="start-btn">Restart</button>
-                <button id="pause-btn">Resume</button>
             </div>
         </div>
-
+        <div class="touch-controls-shell">
+            <div id="touch-controls" class="touch-controls" aria-label="Touch controls">
+                <button type="button" class="touch-control-btn" data-touch-action="hold">Hold</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="rotate" aria-label="Rotate">&#10227;</button>
+                <button type="button" class="touch-control-btn" data-touch-action="drop">Drop</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="left" aria-label="Move left">&#11013;</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="down" aria-label="Move down">&#11015;</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="right" aria-label="Move right">&#10145;</button>
+            </div>
+        </div>
     </div>
 </div>
 </div>

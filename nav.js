@@ -6,6 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const nav = document.querySelector('.glass-nav');
     if (!nav) return;
 
+    const ensureMetaTag = name => {
+        let meta = document.querySelector(`meta[name="${name}"]`);
+        if (meta) return meta;
+
+        meta = document.createElement('meta');
+        meta.name = name;
+        document.head.appendChild(meta);
+        return meta;
+    };
+
+    const themeColorMeta = ensureMetaTag('theme-color');
+    const defaultThemeColor =
+        getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim() || '#033561';
+    const TETRIS_FULLSCREEN_THEME_COLOR = '#000000';
+
     const panel = nav.querySelector('.panel');
     if (!panel) return;
 
@@ -41,8 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     };
 
+    const updateBrowserThemeColor = () => {
+        const themeColor = document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS)
+            ? TETRIS_FULLSCREEN_THEME_COLOR
+            : defaultThemeColor;
+        themeColorMeta.setAttribute('content', themeColor);
+    };
+
     const setTetrisWebsiteFullscreen = expanded => {
         document.body.classList.toggle(TETRIS_WEBSITE_FULLSCREEN_CLASS, expanded);
+        updateBrowserThemeColor();
         updateTetrisFullscreenButtonLabel(expanded);
         syncTetrisWebsiteFullscreenState(expanded);
     };
@@ -89,6 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.getSolitaireWebsiteFullscreen = () =>
         document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
+
+    updateBrowserThemeColor();
 
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'auto' });
