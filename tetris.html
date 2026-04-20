@@ -274,22 +274,50 @@
     .touch-control-btn {
         min-height: 88px;
         padding: 14px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 20px;
         font-size: 15px;
         font-weight: 700;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+        line-height: 1.1;
         touch-action: manipulation;
         user-select: none;
         -webkit-user-select: none;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.08),
+            0 10px 22px rgba(0, 0, 0, 0.22);
+        transition: transform 120ms ease, border-color 120ms ease, background-color 120ms ease;
+    }
+
+    .touch-control-btn:active {
+        transform: translateY(1px) scale(0.985);
+        border-color: rgba(202, 221, 255, 0.4);
+        background: rgba(18, 28, 44, 0.94);
     }
 
     .touch-control-btn.touch-control-symbol {
-        font-size: 32px;
-        font-weight: 800;
-        line-height: 1;
-        letter-spacing: 0;
-        text-transform: none;
+        padding: 12px;
+    }
+
+    .touch-control-icon {
+        width: 34px;
+        height: 34px;
+        display: block;
+        overflow: visible;
+        stroke: #f2f5ff;
+        stroke-width: 2.2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.22));
+    }
+
+    .touch-control-icon.is-filled {
+        fill: #f2f5ff;
+        stroke: none;
     }
 
     .bottom-section{
@@ -414,11 +442,31 @@
         <div class="touch-controls-shell">
             <div id="touch-controls" class="touch-controls" aria-label="Touch controls">
                 <button type="button" class="touch-control-btn" data-touch-action="hold">Hold</button>
-                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="rotate" aria-label="Rotate">&#10227;</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="rotate" aria-label="Rotate">
+                    <svg class="touch-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7 8a7 7 0 1 1-1.1 9.6"></path>
+                        <polyline points="7 4 7 8 11 8"></polyline>
+                    </svg>
+                </button>
                 <button type="button" class="touch-control-btn" data-touch-action="drop">Drop</button>
-                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="left" aria-label="Move left">&#11013;</button>
-                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="down" aria-label="Move down">&#11015;</button>
-                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="right" aria-label="Move right">&#10145;</button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="left" aria-label="Move left">
+                    <svg class="touch-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <line x1="20" y1="12" x2="5" y2="12"></line>
+                        <polyline points="10 7 5 12 10 17"></polyline>
+                    </svg>
+                </button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="down" aria-label="Move down">
+                    <svg class="touch-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <line x1="12" y1="4" x2="12" y2="19"></line>
+                        <polyline points="7 14 12 19 17 14"></polyline>
+                    </svg>
+                </button>
+                <button type="button" class="touch-control-btn touch-control-symbol" data-touch-action="right" aria-label="Move right">
+                    <svg class="touch-control-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <line x1="4" y1="12" x2="19" y2="12"></line>
+                        <polyline points="14 7 19 12 14 17"></polyline>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
