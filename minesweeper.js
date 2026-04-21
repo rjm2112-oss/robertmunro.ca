@@ -837,8 +837,25 @@ function getFittedCellSize(mode, viewportSize, rotated) {
     const sizeFromHeight = Math.floor(viewportSize.height / visibleRows);
     const minSize = mode.id === "extreme" ? 13 : 15;
     const maxSize = state.websiteFullscreenActive ? 33 : 30.8;
+    const widthFirstMobileFit = shouldPrioritizeBoardWidth();
 
-    return Math.max(minSize, Math.min(maxSize, sizeFromWidth, sizeFromHeight));
+    return Math.max(
+        minSize,
+        widthFirstMobileFit
+            ? Math.min(maxSize, sizeFromWidth)
+            : Math.min(maxSize, sizeFromWidth, sizeFromHeight)
+    );
+}
+
+function shouldPrioritizeBoardWidth() {
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport ? viewport.width : window.innerWidth;
+    const viewportHeight = viewport ? viewport.height : window.innerHeight;
+    const isLandscape = viewportWidth > viewportHeight;
+    const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+    const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
+
+    return isTouchCapable && isPhoneLikeViewport && !isLandscape;
 }
 
 function syncBoardViewportScroll(rotated) {
