@@ -15,6 +15,7 @@
         --base-game-height: 678px;
         --touch-controls-gap: 8px;
         --touch-controls-height: 214px;
+        --touch-control-button-width: calc((var(--board-width) - 20px) / 3);
         --game-height: var(--base-game-height);
         --board-width: 300px;
         --side-panel-width: 150px;
@@ -254,7 +255,7 @@
     body.is-touch-device.is-website-fullscreen .touch-controls-shell {
         display: block;
         position: relative;
-        width: var(--board-width);
+        width: calc(var(--game-width) - 26px);
         margin-left: 0;
         align-self: center;
         left: auto;
@@ -267,8 +268,40 @@
     .touch-controls {
         width: 100%;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(5, var(--touch-control-button-width));
+        justify-content: space-between;
+        column-gap: 0;
+        row-gap: 10px;
+    }
+
+    .touch-control-btn[data-touch-action="hold"] {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .touch-control-btn[data-touch-action="rotate"] {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .touch-control-btn[data-touch-action="drop"] {
+        grid-column: 5;
+        grid-row: 1;
+    }
+
+    .touch-control-btn[data-touch-action="left"] {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .touch-control-btn[data-touch-action="down"] {
+        grid-column: 3;
+        grid-row: 2;
+    }
+
+    .touch-control-btn[data-touch-action="right"] {
+        grid-column: 4;
+        grid-row: 2;
     }
 
     .touch-control-btn {

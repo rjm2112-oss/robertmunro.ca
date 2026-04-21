@@ -991,6 +991,7 @@ function handleTouchControlsClick(event) {
     }
 
     event.preventDefault();
+    primeAudioContext();
     runTouchControl(actionName);
 }
 
@@ -1002,6 +1003,7 @@ function handleTouchControlsTouch(event) {
 
     event.preventDefault();
     lastTouchControlTime = Date.now();
+    primeAudioContext();
     runTouchControl(actionName);
 }
 
@@ -1932,6 +1934,7 @@ function togglePause() {
     if (gameOver) return;
     isPaused = !isPaused;
     if (!isPaused) {
+        primeAudioContext();
         dropStart = performance.now();
         lastTime = performance.now();
     }
@@ -2209,6 +2212,7 @@ function setupInput() {
         const action = KEY_MAP[e.key];
         if (!action) return;
 
+        primeAudioContext();
         action();
     });
 }
@@ -2249,6 +2253,16 @@ function initAudio(){
         masterGain=audioCtx.createGain();masterGain.gain.value=.5;
         masterGain.connect(audioCtx.destination);
     }catch(e){console.log("Web Audio API not supported");}
+}
+
+function primeAudioContext() {
+    if (!audioCtx) {
+        initAudio();
+    }
+
+    if (audioCtx?.state === 'suspended') {
+        void audioCtx.resume().catch(() => {});
+    }
 }
 
 function playSound(name, opts={}) {
