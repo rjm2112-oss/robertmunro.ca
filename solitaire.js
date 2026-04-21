@@ -69,9 +69,12 @@ let boardResizeObserver = null;
 let websiteFullscreenActive = false;
 let parentFullscreenObserver = null;
 let lastFullscreenTouchTime = 0;
+let lastCardTouch = null;
+let suppressNextBoardClick = false;
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
 const WEBSITE_FULLSCREEN_CLASS = "solitaire-website-fullscreen";
+const DOUBLE_TAP_MAX_DELAY_MS = 350;
 const SHOULD_AUTOSTART_VICTORY_TEST = new URLSearchParams(window.location.search).get("celebrationTest") === "1";
 const DRONE_SHOW_INTRO_FADE_IN_MS = 2000;
 const DRONE_SHOW_OUTRO_FADE_MS = 1000;
@@ -233,6 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     fullscreenBtn.addEventListener("touchend", handleFullscreenButtonTouch, { passive: false });
     boardEl.addEventListener("click", handleBoardClick);
     boardEl.addEventListener("dblclick", handleBoardDoubleClick);
+    boardEl.addEventListener("touchend", handleBoardTouchEnd, { passive: false });
     window.addEventListener("message", handleParentMessage);
     window.addEventListener("resize", handleViewportResize);
     if (window.visualViewport) {
@@ -266,6 +270,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function newGame() {
     const deck = shuffle(createDeck());
     const mode = getCurrentGameMode();
+    lastCardTouch = null;
+    suppressNextBoardClick = false;
     state.stock = [];
     state.waste = [];
     state.foundations = Array.from({ length: 4 }, () => []);
@@ -361,6 +367,11 @@ function shuffle(deck) {
 }
 
 function handleBoardClick(event) {
+    if (suppressNextBoardClick) {
+        suppressNextBoardClick = false;
+        return;
+    }
+
     const pileEl = event.target.closest(".pile");
     const cardEl = event.target.closest(".card");
 
@@ -377,6 +388,9 @@ function handleBoardClick(event) {
     }
 
     if (cardEl) {
+        if (event.detail > 1) {
+            return;
+        }
         handleCardClick(cardEl);
         return;
     }
@@ -404,23 +418,38 @@ function handleBoardDoubleClick(event) {
         return;
     }
 
-    const cards = peekSourceCards(source);
-    if (cards.length !== 1) {
+    autoMoveToFoundation(source);
+}
+
+function handleBoardTouchEnd(event) {
+    const cardEl = event.target.closest(".card");
+    if (!cardEl) {
+        lastCardTouch = null;
         return;
     }
 
-    if (source.type === "tableau") {
-        const pile = state.tableau[source.pile];
-        if (source.index !== pile.length - 1) {
-            return;
-        }
+    const source = sourceFromCard(cardEl);
+    if (!source) {
+        lastCardTouch = null;
+        return;
     }
 
-    const moved = autoMoveToFoundation(source);
-    if (!moved) {
-        setStatus("No foundation can take that card yet.");
-        render();
+    const now = Date.now();
+    const repeatedTap = lastCardTouch && sameSource(source, lastCardTouch.source) && now - lastCardTouch.time <= DOUBLE_TAP_MAX_DELAY_MS;
+
+    if (!repeatedTap) {
+        lastCardTouch = { source, time: now };
+        return;
     }
+
+    lastCardTouch = null;
+    if (!canAutoMoveToFoundation(source)) {
+        return;
+    }
+
+    event.preventDefault();
+    suppressNextBoardClick = true;
+    autoMoveToFoundation(source);
 }
 
 function handleStockClick() {
@@ -588,20 +617,46 @@ function attemptMoveSelectedTo(targetType, targetIndex) {
 }
 
 function autoMoveToFoundation(source) {
+    const foundationIndex = getAutoMoveFoundationIndex(source);
+    if (foundationIndex === -1) {
+        return false;
+    }
+
+    state.selected = source;
+    applyMove(source, "foundation", foundationIndex, { autoMove: true });
+    return true;
+}
+
+function canAutoMoveToFoundation(source) {
+    return getAutoMoveFoundationIndex(source) !== -1;
+}
+
+function getAutoMoveFoundationIndex(source) {
+    if (source.type === "waste") {
+        if (!state.waste.length) {
+            return -1;
+        }
+    } else if (source.type === "tableau") {
+        const pile = state.tableau[source.pile];
+        if (source.index !== pile.length - 1 || !canSelectSource(source)) {
+            return -1;
+        }
+    } else {
+        return -1;
+    }
+
     const cards = peekSourceCards(source);
     if (cards.length !== 1) {
-        return false;
+        return -1;
     }
 
     for (let foundationIndex = 0; foundationIndex < state.foundations.length; foundationIndex += 1) {
         if (canMoveToFoundation(cards, foundationIndex)) {
-            state.selected = source;
-            applyMove(source, "foundation", foundationIndex, { autoMove: true });
-            return true;
+            return foundationIndex;
         }
     }
 
-    return false;
+    return -1;
 }
 
 function canMoveToFoundation(cards, foundationIndex) {
@@ -3791,6 +3846,7 @@ function syncFrameHeight() {
     }
 
     const nextHeight = Math.ceil(shellEl.getBoundingClientRect().height);
+
     frameEl.height = String(nextHeight);
     frameEl.style.height = `${nextHeight}px`;
 }

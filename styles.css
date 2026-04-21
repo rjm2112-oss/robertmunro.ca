@@ -375,6 +375,7 @@ body.tetris-website-fullscreen #section1 .post-detail .tetris-controls{
             padding-left:.75rem;padding-right:.75rem;
         }
     }
+
     .post-detail article > h3[data-no-title]{display:none;}
 
     /* ------------------------------------------------------------------
