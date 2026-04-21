@@ -835,9 +835,9 @@ function getFittedCellSize(mode, viewportSize, rotated) {
     const visibleRows = rotated ? mode.cols : mode.rows;
     const sizeFromWidth = Math.floor(viewportSize.width / visibleCols);
     const sizeFromHeight = Math.floor(viewportSize.height / visibleRows);
-    const minSize = mode.id === "extreme" ? 13 : 15;
+    const minSize = getMinimumCellSize(mode, rotated);
     const maxSize = state.websiteFullscreenActive ? 33 : 30.8;
-    const widthFirstMobileFit = shouldPrioritizeBoardWidth();
+    const widthFirstMobileFit = shouldPrioritizeBoardWidth(rotated);
 
     return Math.max(
         minSize,
@@ -847,7 +847,23 @@ function getFittedCellSize(mode, viewportSize, rotated) {
     );
 }
 
-function shouldPrioritizeBoardWidth() {
+function getMinimumCellSize(mode, rotated) {
+    if (mode.id === "extreme") {
+        return 13;
+    }
+
+    if (rotated && isPhonePortraitViewport()) {
+        return 12;
+    }
+
+    return 15;
+}
+
+function shouldPrioritizeBoardWidth(rotated) {
+    return isPhonePortraitViewport() && !rotated;
+}
+
+function isPhonePortraitViewport() {
     const viewport = window.visualViewport;
     const viewportWidth = viewport ? viewport.width : window.innerWidth;
     const viewportHeight = viewport ? viewport.height : window.innerHeight;
