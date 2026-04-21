@@ -288,6 +288,7 @@
         touch-action: manipulation;
         user-select: none;
         -webkit-user-select: none;
+        -webkit-touch-callout: none;
     }
 
     .ms-board-shell {
@@ -382,7 +383,7 @@
         padding: 6px;
     }
 
-    body.is-mobile-landscape-fullscreen .ms-titlebar {
+    body.is-compact-titlebar .ms-titlebar {
         display: none;
     }
 
@@ -437,6 +438,17 @@
         flex: 1;
     }
 
+    body.is-compact-titlebar .ms-action-row {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        align-items: stretch;
+        gap: 8px;
+        margin-left: 0;
+        padding-bottom: 2px;
+    }
+
     body.is-mobile-landscape-fullscreen .ms-mode-btn,
     body.is-mobile-landscape-fullscreen .ms-action-btn {
         width: 100%;
@@ -445,13 +457,29 @@
         font-size: 0.88rem;
     }
 
+    body.is-compact-titlebar .ms-action-btn {
+        width: auto;
+        flex: 0 1 auto;
+    }
+
     body.is-mobile-landscape-fullscreen #fullscreen-btn {
         order: 1;
+    }
+
+    body.is-compact-titlebar #fullscreen-btn {
+        padding-top: 2px;
+        padding-bottom: 2px;
     }
 
     body.is-mobile-landscape-fullscreen #flag-mode-btn {
         order: 2;
         margin-top: auto;
+    }
+
+    body.is-compact-titlebar #flag-mode-btn {
+        margin-top: 0;
+        padding-top: 2px;
+        padding-bottom: 2px;
     }
 
     body.is-mobile-landscape-fullscreen .ms-board-panel {
@@ -512,10 +540,6 @@
 
     body.is-mobile-device:not(.is-mobile-landscape-fullscreen) .ms-board-viewport {
         background: transparent;
-    }
-
-    body.is-mobile-device.is-portrait-rotated .ms-titlebar {
-        display: none;
     }
 
     body.is-mobile-device.is-portrait-rotated .ms-game-layout,

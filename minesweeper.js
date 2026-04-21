@@ -49,6 +49,8 @@ const ICONS = {
 const WEBSITE_FULLSCREEN_CLASS = "minesweeper-website-fullscreen";
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
+const TOUCH_LONG_PRESS_DELAY = 425;
+const TOUCH_LONG_PRESS_MOVE_TOLERANCE = 14;
 
 const state = {
     modeId: MODES[0].id,
@@ -63,6 +65,8 @@ const state = {
     timerId: null,
     websiteFullscreenActive: false,
     lastFullscreenTouchTime: 0,
+    activeTouchPress: null,
+    suppressBoardClickUntil: 0,
     boardFitFrame: null,
     boardScrollFrame: null,
     transientFace: null
@@ -98,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.board.addEventListener("click", handleBoardClick);
     refs.board.addEventListener("contextmenu", handleBoardContextMenu);
     refs.board.addEventListener("pointerdown", handleBoardPointerDown);
+    window.addEventListener("pointermove", handleBoardPointerMove);
     window.addEventListener("pointerup", handleBoardPointerEnd);
     window.addEventListener("pointercancel", handleBoardPointerEnd);
 
@@ -138,6 +143,7 @@ function getCurrentMode() {
 
 function resetGame() {
     stopTimer();
+    clearActiveTouchPress();
     state.started = false;
     state.finished = false;
     state.won = false;
@@ -145,6 +151,7 @@ function resetGame() {
     state.revealedSafeCells = 0;
     state.secondsElapsed = 0;
     state.flagMode = false;
+    state.suppressBoardClickUntil = 0;
     state.transientFace = null;
     state.board = createBoard(getCurrentMode());
 
@@ -250,6 +257,12 @@ function updateCellElement(cell) {
 function handleBoardClick(event) {
     clearTransientFace();
 
+    if (Date.now() < state.suppressBoardClickUntil) {
+        state.suppressBoardClickUntil = 0;
+        event.preventDefault();
+        return;
+    }
+
     const button = event.target.closest(".ms-cell");
     if (!button || state.finished) {
         return;
@@ -283,6 +296,10 @@ function handleBoardContextMenu(event) {
 
     event.preventDefault();
 
+    if (state.activeTouchPress?.triggered || Date.now() < state.suppressBoardClickUntil) {
+        return;
+    }
+
     if (state.finished) {
         return;
     }
@@ -306,9 +323,34 @@ function handleBoardPointerDown(event) {
     }
 
     setTransientFace("surprised");
+    startTouchLongPress(event, button);
 }
 
-function handleBoardPointerEnd() {
+function handleBoardPointerMove(event) {
+    const activeTouchPress = state.activeTouchPress;
+    if (!activeTouchPress || activeTouchPress.pointerId !== event.pointerId || activeTouchPress.triggered) {
+        return;
+    }
+
+    const deltaX = event.clientX - activeTouchPress.startX;
+    const deltaY = event.clientY - activeTouchPress.startY;
+    if (Math.hypot(deltaX, deltaY) < TOUCH_LONG_PRESS_MOVE_TOLERANCE) {
+        return;
+    }
+
+    clearActiveTouchPress();
+}
+
+function handleBoardPointerEnd(event) {
+    if (state.activeTouchPress && state.activeTouchPress.pointerId !== event.pointerId) {
+        return;
+    }
+
+    if (state.activeTouchPress?.triggered) {
+        state.suppressBoardClickUntil = Date.now() + 700;
+    }
+
+    clearActiveTouchPress();
     clearTransientFace();
 }
 
@@ -320,6 +362,45 @@ function getCellFromButton(button) {
     }
 
     return state.board[row]?.[col] || null;
+}
+
+function startTouchLongPress(event, button) {
+    clearActiveTouchPress();
+
+    if (event.pointerType !== "touch") {
+        return;
+    }
+
+    const cell = getCellFromButton(button);
+    if (!cell || cell.revealed) {
+        return;
+    }
+
+    const timerId = window.setTimeout(() => {
+        const activeTouchPress = state.activeTouchPress;
+        if (!activeTouchPress || activeTouchPress.pointerId !== event.pointerId || state.finished) {
+            return;
+        }
+
+        toggleFlag(cell);
+        activeTouchPress.triggered = true;
+    }, TOUCH_LONG_PRESS_DELAY);
+
+    state.activeTouchPress = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        timerId,
+        triggered: false
+    };
+}
+
+function clearActiveTouchPress() {
+    if (state.activeTouchPress?.timerId) {
+        window.clearTimeout(state.activeTouchPress.timerId);
+    }
+
+    state.activeTouchPress = null;
 }
 
 function toggleFlag(cell) {
@@ -792,8 +873,16 @@ function syncResponsiveLayout() {
         !useMobileLandscapeLayout &&
         !isLandscape &&
         rotatedCellSize > defaultCellSize;
+    const useCompactTitlebar =
+        isMobileDevice &&
+        (
+            useMobileLandscapeLayout ||
+            usePortraitRotatedLayout ||
+            viewportWidth <= 430
+        );
 
     document.body.classList.toggle("is-mobile-device", isMobileDevice);
+    document.body.classList.toggle("is-compact-titlebar", useCompactTitlebar);
     document.body.classList.toggle("is-mobile-landscape-fullscreen", useMobileLandscapeLayout);
     document.body.classList.toggle("is-portrait-rotated", usePortraitRotatedLayout);
 }
