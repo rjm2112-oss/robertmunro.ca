@@ -212,24 +212,29 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     .meta{font-size:1rem;color:#555;margin-top:0;margin-bottom:1rem;}
 
 body.tetris-website-fullscreen #section1 .preview-list,
-body.solitaire-website-fullscreen #section1 .preview-list{
+body.solitaire-website-fullscreen #section1 .preview-list,
+body.minesweeper-website-fullscreen #section1 .preview-list{
     display:none;
 }
 
 body.tetris-website-fullscreen .glass-nav,
 body.tetris-website-fullscreen h1,
 body.solitaire-website-fullscreen .glass-nav,
-body.solitaire-website-fullscreen h1{
+body.solitaire-website-fullscreen h1,
+body.minesweeper-website-fullscreen .glass-nav,
+body.minesweeper-website-fullscreen h1{
     display:none;
 }
 
 body.tetris-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs),
-body.solitaire-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs){
+body.solitaire-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs),
+body.minesweeper-website-fullscreen > *:not(.glass-nav):not(.glass-filter-defs){
     margin-top:0;
 }
 
 body.tetris-website-fullscreen,
-body.solitaire-website-fullscreen{
+body.solitaire-website-fullscreen,
+body.minesweeper-website-fullscreen{
     overflow:hidden;
 }
 
@@ -237,8 +242,13 @@ body.tetris-website-fullscreen{
     background-color:#000;
 }
 
+body.minesweeper-website-fullscreen{
+    background-color:#a6a6a6;
+}
+
 body.tetris-website-fullscreen::after,
-body.solitaire-website-fullscreen::after{
+body.solitaire-website-fullscreen::after,
+body.minesweeper-website-fullscreen::after{
     display:none;
 }
 
@@ -247,7 +257,10 @@ body.tetris-website-fullscreen #section1,
 body.tetris-website-fullscreen #section1 .blog-container,
 body.solitaire-website-fullscreen main,
 body.solitaire-website-fullscreen #section1,
-body.solitaire-website-fullscreen #section1 .blog-container{
+body.solitaire-website-fullscreen #section1 .blog-container,
+body.minesweeper-website-fullscreen main,
+body.minesweeper-website-fullscreen #section1,
+body.minesweeper-website-fullscreen #section1 .blog-container{
     min-height:100vh;
     height:100vh;
     min-height:100dvh;
@@ -255,7 +268,8 @@ body.solitaire-website-fullscreen #section1 .blog-container{
 }
 
 body.tetris-website-fullscreen #section1 .post-detail,
-body.solitaire-website-fullscreen #section1 .post-detail{
+body.solitaire-website-fullscreen #section1 .post-detail,
+body.minesweeper-website-fullscreen #section1 .post-detail{
     position:fixed;
     top:0;
     left:0;
@@ -278,12 +292,15 @@ body.tetris-website-fullscreen #section1 .post-detail{
 body.tetris-website-fullscreen #section1 .post-detail article,
 body.tetris-website-fullscreen #section1 .post-detail .full-body,
 body.solitaire-website-fullscreen #section1 .post-detail article,
-body.solitaire-website-fullscreen #section1 .post-detail .full-body{
+body.solitaire-website-fullscreen #section1 .post-detail .full-body,
+body.minesweeper-website-fullscreen #section1 .post-detail article,
+body.minesweeper-website-fullscreen #section1 .post-detail .full-body{
     height:100%;
 }
 
 body.tetris-website-fullscreen #section1 .post-detail iframe[src="tetris.html"],
-body.solitaire-website-fullscreen #section1 .post-detail iframe[src="solitaire.html"]{
+body.solitaire-website-fullscreen #section1 .post-detail iframe[src="solitaire.html"],
+body.minesweeper-website-fullscreen #section1 .post-detail iframe[src="minesweeper.html"]{
     display:block;
     width:100%;
     height:100%;

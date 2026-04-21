@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const TETRIS_WEBSITE_FULLSCREEN_CLASS = 'tetris-website-fullscreen';
     const SOLITAIRE_WEBSITE_FULLSCREEN_CLASS = 'solitaire-website-fullscreen';
+    const MINESWEEPER_WEBSITE_FULLSCREEN_CLASS = 'minesweeper-website-fullscreen';
     const IS_FILE_ORIGIN = window.location.protocol === 'file:';
     const MESSAGE_TARGET_ORIGIN = window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
     const nav = document.querySelector('.glass-nav');
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultThemeColor =
         getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim() || '#033561';
     const TETRIS_FULLSCREEN_THEME_COLOR = '#000000';
+    const MINESWEEPER_FULLSCREEN_THEME_COLOR = '#a6a6a6';
 
     const panel = nav.querySelector('.panel');
     if (!panel) return;
@@ -57,9 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateBrowserThemeColor = () => {
-        const themeColor = document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS)
-            ? TETRIS_FULLSCREEN_THEME_COLOR
-            : defaultThemeColor;
+        let themeColor = defaultThemeColor;
+        if (document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS)) {
+            themeColor = TETRIS_FULLSCREEN_THEME_COLOR;
+        } else if (document.body.classList.contains(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS)) {
+            themeColor = MINESWEEPER_FULLSCREEN_THEME_COLOR;
+        }
         themeColorMeta.setAttribute('content', themeColor);
     };
 
@@ -92,11 +97,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setSolitaireWebsiteFullscreen = expanded => {
         document.body.classList.toggle(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS, expanded);
+        updateBrowserThemeColor();
         syncSolitaireWebsiteFullscreenState(expanded);
     };
 
     const clearSolitaireWebsiteFullscreen = () => {
         setSolitaireWebsiteFullscreen(false);
+    };
+
+    const getDetailMinesweeperFrame = () =>
+        document.querySelector('#section1 .post-detail iframe[src="minesweeper.html"]');
+
+    const syncMinesweeperWebsiteFullscreenState = expanded => {
+        const minesweeperFrame = getDetailMinesweeperFrame();
+        if (!minesweeperFrame?.contentWindow) return;
+
+        minesweeperFrame.contentWindow.postMessage(
+            {
+                type: 'minesweeper:website-fullscreen-state',
+                expanded
+            },
+            MESSAGE_TARGET_ORIGIN
+        );
+    };
+
+    const setMinesweeperWebsiteFullscreen = expanded => {
+        document.body.classList.toggle(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS, expanded);
+        updateBrowserThemeColor();
+        syncMinesweeperWebsiteFullscreenState(expanded);
+    };
+
+    const clearMinesweeperWebsiteFullscreen = () => {
+        setMinesweeperWebsiteFullscreen(false);
     };
 
     window.setTetrisWebsiteFullscreen = expanded => {
@@ -113,6 +145,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.getSolitaireWebsiteFullscreen = () =>
         document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
 
+    window.setMinesweeperWebsiteFullscreen = expanded => {
+        setMinesweeperWebsiteFullscreen(Boolean(expanded));
+    };
+
+    window.getMinesweeperWebsiteFullscreen = () =>
+        document.body.classList.contains(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS);
+
     updateBrowserThemeColor();
 
     const scrollToTop = () => {
@@ -124,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
+        clearMinesweeperWebsiteFullscreen();
         const title = post.querySelector('h3').outerHTML;
         const meta = post.querySelector('.meta')?.outerHTML || '';
         const body = post.querySelector('.full-body')?.innerHTML || '';
@@ -136,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sections.forEach(s => s.classList.remove('active'));
         clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
+        clearMinesweeperWebsiteFullscreen();
 
         const targetSec = document.getElementById(id);
         if (!targetSec) return;
@@ -247,19 +288,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const solitaireFrame = getDetailSolitaireFrame();
-        if (!solitaireFrame || event.source !== solitaireFrame.contentWindow) return;
+        if (solitaireFrame && event.source === solitaireFrame.contentWindow) {
+            if (event.data.type === 'solitaire:toggle-website-fullscreen') {
+                const nextState = typeof event.data.expanded === 'boolean'
+                    ? event.data.expanded
+                    : !document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
+                setSolitaireWebsiteFullscreen(nextState);
+                return;
+            }
 
-        if (event.data.type === 'solitaire:toggle-website-fullscreen') {
+            if (event.data.type === 'solitaire:request-website-fullscreen-state') {
+                syncSolitaireWebsiteFullscreenState(
+                    document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS)
+                );
+                return;
+            }
+        }
+
+        const minesweeperFrame = getDetailMinesweeperFrame();
+        if (!minesweeperFrame || event.source !== minesweeperFrame.contentWindow) return;
+
+        if (event.data.type === 'minesweeper:toggle-website-fullscreen') {
             const nextState = typeof event.data.expanded === 'boolean'
                 ? event.data.expanded
-                : !document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS);
-            setSolitaireWebsiteFullscreen(nextState);
+                : !document.body.classList.contains(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS);
+            setMinesweeperWebsiteFullscreen(nextState);
             return;
         }
 
-        if (event.data.type === 'solitaire:request-website-fullscreen-state') {
-            syncSolitaireWebsiteFullscreenState(
-                document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS)
+        if (event.data.type === 'minesweeper:request-website-fullscreen-state') {
+            syncMinesweeperWebsiteFullscreenState(
+                document.body.classList.contains(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS)
             );
         }
     });

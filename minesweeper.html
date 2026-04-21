@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Minesweeper</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    :root {
+        --window-gray: #c0c0c0;
+        --panel-white: #ffffff;
+        --panel-light: #dfdfdf;
+        --panel-mid: #b9b9b9;
+        --panel-dark: #7b7b7b;
+        --panel-black: #000000;
+        --title-blue-top: #1e3d9b;
+        --title-blue-bottom: #103080;
+        --cell-size: 24px;
+    }
+
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+    }
+
+    body {
+        min-height: 100vh;
+        min-height: 100dvh;
+        overflow: hidden;
+        background:
+            linear-gradient(180deg, #959595 0%, #a7a7a7 44%, #8b8b8b 100%);
+        color: #111;
+        font-family: "MS Sans Serif", Tahoma, Geneva, sans-serif;
+    }
+
+    button {
+        font: inherit;
+        color: inherit;
+    }
+
+    .ms-stage {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+
+    .ms-window {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: var(--window-gray);
+        border-top: 2px solid var(--panel-white);
+        border-left: 2px solid var(--panel-white);
+        border-right: 2px solid var(--panel-dark);
+        border-bottom: 2px solid var(--panel-dark);
+    }
+
+    .ms-titlebar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 8px;
+        color: #fff;
+        font-weight: 700;
+        background: linear-gradient(180deg, var(--title-blue-top), var(--title-blue-bottom));
+        letter-spacing: 0.02em;
+    }
+
+    .ms-titlebar-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ms-titlebar-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+
+    .ms-titlebar-actions span {
+        display: grid;
+        place-items: center;
+        width: 17px;
+        height: 15px;
+        color: #111;
+        font-size: 11px;
+        background: var(--window-gray);
+        border-top: 1px solid var(--panel-white);
+        border-left: 1px solid var(--panel-white);
+        border-right: 1px solid var(--panel-dark);
+        border-bottom: 1px solid var(--panel-dark);
+    }
+
+    .ms-client {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        flex: 1;
+        padding: 14px;
+    }
+
+    .ms-game-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 0;
+        flex: 1;
+    }
+
+    .ms-control-rail {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ms-toolbar,
+    .ms-board-panel {
+        background: var(--window-gray);
+        border-top: 2px solid var(--panel-dark);
+        border-left: 2px solid var(--panel-dark);
+        border-right: 2px solid var(--panel-white);
+        border-bottom: 2px solid var(--panel-white);
+    }
+
+    .ms-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 10px 12px;
+    }
+
+    .ms-led {
+        min-width: 72px;
+        padding: 5px 8px;
+        color: #ff2f2f;
+        text-align: center;
+        font-family: "Courier New", monospace;
+        font-size: clamp(1.5rem, 3vw, 2.2rem);
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 0.08em;
+        background: #101010;
+        border-top: 2px solid var(--panel-dark);
+        border-left: 2px solid var(--panel-dark);
+        border-right: 2px solid var(--panel-white);
+        border-bottom: 2px solid var(--panel-white);
+        box-sizing: border-box;
+    }
+
+    .ms-face-btn,
+    .ms-mode-btn,
+    .ms-action-btn,
+    .ms-cell {
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 0;
+        box-sizing: border-box;
+    }
+
+    .ms-face-btn,
+    .ms-mode-btn,
+    .ms-action-btn {
+        border-top: 2px solid var(--panel-white);
+        border-left: 2px solid var(--panel-white);
+        border-right: 2px solid var(--panel-dark);
+        border-bottom: 2px solid var(--panel-dark);
+        background: var(--window-gray);
+    }
+
+    .ms-face-btn {
+        width: 54px;
+        height: 54px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+    }
+
+    .ms-face-glyph {
+        width: 30px;
+        height: 30px;
+        display: block;
+    }
+
+    .ms-btn-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .ms-btn-icon {
+        width: 16px;
+        height: 16px;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .ms-btn-icon svg,
+    .ms-face-glyph svg,
+    .ms-cell-symbol svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
+    .ms-face-btn:active,
+    .ms-mode-btn:active,
+    .ms-action-btn:active,
+    .ms-cell.is-hidden:active {
+        border-top-color: var(--panel-dark);
+        border-left-color: var(--panel-dark);
+        border-right-color: var(--panel-white);
+        border-bottom-color: var(--panel-white);
+    }
+
+    .ms-mode-row,
+    .ms-action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .ms-mode-btn,
+    .ms-action-btn {
+        padding: 7px 12px;
+        cursor: pointer;
+    }
+
+    .ms-mode-btn.is-active,
+    .ms-action-btn.is-active {
+        border-top-color: var(--panel-dark);
+        border-left-color: var(--panel-dark);
+        border-right-color: var(--panel-white);
+        border-bottom-color: var(--panel-white);
+        background: var(--panel-light);
+    }
+
+    .ms-board-panel {
+        min-height: 0;
+        flex: 1;
+        padding: 10px;
+    }
+
+    .ms-board-viewport {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+        background: var(--window-gray);
+    }
+
+    .ms-board {
+        display: grid;
+        grid-auto-rows: var(--cell-size);
+        width: max-content;
+        height: max-content;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .ms-cell {
+        width: var(--cell-size);
+        height: var(--cell-size);
+        padding: 0;
+        display: grid;
+        place-items: center;
+        font-size: calc(var(--cell-size) * 0.58);
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .ms-cell.is-hidden {
+        background: var(--window-gray);
+        border-top: 2px solid var(--panel-white);
+        border-left: 2px solid var(--panel-white);
+        border-right: 2px solid var(--panel-dark);
+        border-bottom: 2px solid var(--panel-dark);
+    }
+
+    .ms-cell-symbol {
+        width: calc(var(--cell-size) * 0.72);
+        height: calc(var(--cell-size) * 0.72);
+        display: inline-block;
+        pointer-events: none;
+    }
+
+    .ms-cell.is-revealed {
+        background: var(--window-gray);
+        border: 1px solid #8a8a8a;
+        cursor: default;
+    }
+
+    .ms-cell.is-revealed[data-number="1"] { color: #0000fe; }
+    .ms-cell.is-revealed[data-number="2"] { color: #197319; }
+    .ms-cell.is-revealed[data-number="3"] { color: #fe0000; }
+    .ms-cell.is-revealed[data-number="4"] { color: #010080; }
+    .ms-cell.is-revealed[data-number="5"] { color: #810102; }
+    .ms-cell.is-revealed[data-number="6"] { color: #008081; }
+    .ms-cell.is-revealed[data-number="7"] { color: #000000; }
+    .ms-cell.is-revealed[data-number="8"] { color: #7f7f7f; }
+
+    .ms-cell.is-flagged {
+        color: #c60000;
+    }
+
+    .ms-cell.is-mine {
+        color: #111;
+    }
+
+    .ms-cell.is-exploded {
+        background: #f26c6c;
+    }
+
+    .ms-cell.is-misflagged {
+        position: relative;
+    }
+
+    .ms-cell-cross {
+        position: absolute;
+        inset: 2px;
+        pointer-events: none;
+    }
+
+    body.is-website-fullscreen .ms-stage {
+        padding: 0;
+    }
+
+    body.is-website-fullscreen .ms-window {
+        width: 100%;
+        max-width: none;
+        box-shadow: none;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-client {
+        padding: 6px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-titlebar {
+        display: none;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-game-layout {
+        flex-direction: row;
+        gap: 6px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-control-rail {
+        width: min(176px, 27vw);
+        flex-shrink: 0;
+        gap: 6px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-toolbar {
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 6px;
+        padding: 6px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-led {
+        width: 100%;
+        min-width: 0;
+        padding: 4px 6px;
+        font-size: 1.8rem;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-face-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-face-glyph {
+        width: 22px;
+        height: 22px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-mode-row,
+    body.is-mobile-landscape-fullscreen .ms-action-row {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 6px;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-action-row {
+        flex: 1;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-mode-btn,
+    body.is-mobile-landscape-fullscreen .ms-action-btn {
+        width: 100%;
+        text-align: left;
+        padding: 5px 8px;
+        font-size: 0.88rem;
+    }
+
+    body.is-mobile-landscape-fullscreen #fullscreen-btn {
+        order: 1;
+    }
+
+    body.is-mobile-landscape-fullscreen #flag-mode-btn {
+        order: 2;
+        margin-top: auto;
+    }
+
+    body.is-mobile-landscape-fullscreen .ms-board-panel {
+        padding: 6px;
+    }
+
+    @media (max-width: 720px) {
+        .ms-client {
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .ms-toolbar {
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .ms-face-btn {
+            width: 46px;
+            height: 46px;
+        }
+
+        .ms-face-glyph {
+            width: 24px;
+            height: 24px;
+        }
+
+        .ms-led {
+            min-width: 66px;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="ms-stage">
+    <div class="ms-window">
+        <div class="ms-titlebar">
+            <div class="ms-titlebar-label">Minesweeper</div>
+            <div class="ms-titlebar-actions" aria-hidden="true">
+                <span>_</span>
+                <span>[]</span>
+                <span>X</span>
+            </div>
+        </div>
+
+        <div class="ms-client">
+            <div class="ms-game-layout">
+                <div class="ms-control-rail">
+                    <div class="ms-toolbar">
+                        <div id="mines-counter" class="ms-led">080</div>
+                        <button type="button" id="face-btn" class="ms-face-btn" aria-label="Restart game"></button>
+                        <div id="timer-counter" class="ms-led">000</div>
+                    </div>
+
+                    <div class="ms-mode-row" aria-label="Board size">
+                        <button type="button" class="ms-mode-btn" data-mode="large">Medium</button>
+                        <button type="button" class="ms-mode-btn" data-mode="extra-large">Large</button>
+                        <button type="button" class="ms-mode-btn" data-mode="extreme">Extra Large</button>
+                    </div>
+
+                    <div class="ms-action-row">
+                        <button type="button" id="flag-mode-btn" class="ms-action-btn"></button>
+                        <button type="button" id="fullscreen-btn" class="ms-action-btn"></button>
+                    </div>
+                </div>
+
+                <div class="ms-board-panel">
+                    <div id="board-viewport" class="ms-board-viewport">
+                        <div id="ms-board" class="ms-board" role="grid" aria-label="Minesweeper board"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="minesweeper.js"></script>
+</body>
+</html>
