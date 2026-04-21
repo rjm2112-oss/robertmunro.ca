@@ -662,6 +662,35 @@ let previousWeatherSceneIndex = 0;
 let lastWeatherSceneTier = 0;
 let weatherTransitionStart = 0;
 let weatherLastFrameTs = 0;
+let audioContext = null;
+let audioMasterGain = null;
+let audioAvailable = true;
+const activeSoundVoices = new Set();
+
+const SOUND_CONFIG = {
+    DROP: { type: 'sine', frequency: 470, duration: 0.1, volume: 0.3 },
+    ROTATE: { type: 'complex', frequencies: [560, 580], durations: [0.3, 0.28], volume: 0.25, decay: true },
+    PIECE_LAND: { type: 'sine', frequency: 800, duration: 0.3, volume: 0.6 },
+    GAME_OVER: { type: 'complex', frequencies: [200, 300, 400], durations: [0.8, 0.7, 0.6], volume: 0.5, decay: true },
+    STOW: {
+        type: 'complex',
+        frequencies: [400, 450, 600],
+        durations: [0.15, 0.13, 0.11],
+        volume: 0.3,
+        decay: true,
+        detune: [-2, -1, 0],
+        waveShapes: ['square', 'sine', 'triangle']
+    },
+    UNSTOW: {
+        type: 'complex',
+        frequencies: [550, 600, 700],
+        durations: [0.18, 0.16, 0.14],
+        volume: 0.35,
+        decay: true,
+        detune: [5, 3, 1],
+        waveShapes: ['square', 'sawtooth', 'triangle']
+    }
+};
 
 /* ────────────────────── BUTTON HELPERS ─────────────────────── */
 const startBtn = document.getElementById('start-btn');
@@ -1908,6 +1937,7 @@ function resetGame() {
     lastStowTime = 0;
     holdLockActive = false;
     holdLockEndTime = 0;
+    suspendAudioContext();
     configureWeatherCycle(now);
     updatePauseButton();
     updatePauseOverlay();
@@ -1916,6 +1946,10 @@ function resetGame() {
 
 function restartGame() {
     resetGame();
+    isPaused = false;
+    primeAudioContext();
+    updatePauseButton();
+    updatePauseOverlay();
     dropStart = performance.now();
     lastTime = performance.now();
 }
@@ -1932,7 +1966,9 @@ function updatePauseOverlay() {
 function togglePause() {
     if (gameOver) return;
     isPaused = !isPaused;
-    if (!isPaused) {
+    if (isPaused) {
+        suspendAudioContext();
+    } else {
         primeAudioContext();
         dropStart = performance.now();
         lastTime = performance.now();
@@ -2081,14 +2117,17 @@ function hardDrop(){
 }
 function lockPiece(){
     if(!currentPiece)return;
-    for(let y=0;y<currentPiece.shape.length;y++)
-        for(let x=0;x<currentPiece.shape[y].length;x++)
-            if(currentPiece.shape[y][x]){
-                const by=currentPiece.position.y+y,bx=currentPiece.position.x+x;
-                if(by>=0)board[by][bx]=currentPiece.shape[y][x];
-            }
-            checkLines();
-        currentPiece=nextPiece;
+    for(let y=0;y<currentPiece.shape.length;y++) {
+        for(let x=0;x<currentPiece.shape[y].length;x++) {
+            if(!currentPiece.shape[y][x]) continue;
+
+            const by=currentPiece.position.y+y,bx=currentPiece.position.x+x;
+            if(by>=0)board[by][bx]=currentPiece.shape[y][x];
+        }
+    }
+
+    checkLines();
+    currentPiece=nextPiece;
     activateCurrentPiece();
     nextPiece=generateRandomPiece();
     lastStowTime=0;
@@ -2217,9 +2256,138 @@ function setupInput() {
 }
 
 /* ────────────────────── SOUND SYSTEM ───────────────────── */
-function primeAudioContext() {}
+function ensureAudioContext() {
+    if (!audioAvailable) return null;
+    if (audioContext) return audioContext;
 
-function playSound() {}
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+        audioAvailable = false;
+        return null;
+    }
+
+    try {
+        audioContext = new AudioContextClass();
+        audioMasterGain = audioContext.createGain();
+        audioMasterGain.gain.value = 0.5;
+        audioMasterGain.connect(audioContext.destination);
+    } catch (error) {
+        audioAvailable = false;
+        audioContext = null;
+        audioMasterGain = null;
+    }
+
+    return audioContext;
+}
+
+function cleanupVoice(voice) {
+    if (!activeSoundVoices.delete(voice)) return;
+
+    try {
+        voice.oscillator.disconnect();
+    } catch (error) {}
+
+    try {
+        voice.gainNode.disconnect();
+    } catch (error) {}
+}
+
+function stopAllSounds() {
+    for (const voice of Array.from(activeSoundVoices)) {
+        try {
+            voice.oscillator.stop();
+        } catch (error) {}
+        cleanupVoice(voice);
+    }
+}
+
+function suspendAudioContext() {
+    stopAllSounds();
+    if (!audioContext || audioContext.state === 'closed') return;
+    if (audioContext.state === 'running') {
+        audioContext.suspend().catch(() => {});
+    }
+}
+
+function primeAudioContext() {
+    const context = ensureAudioContext();
+    if (!context || context.state === 'closed') return;
+    if (context.state !== 'running') {
+        context.resume().catch(() => {});
+    }
+}
+
+function registerVoice(oscillator, gainNode) {
+    const voice = { oscillator, gainNode };
+    activeSoundVoices.add(voice);
+    oscillator.addEventListener('ended', () => cleanupVoice(voice), { once: true });
+}
+
+function playComplexSound({ frequencies = [], durations = [], decay = false }) {
+    if (!audioContext || !audioMasterGain) return;
+
+    const startTime = audioContext.currentTime;
+    frequencies.forEach((frequency, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        const duration = durations[index] || 0.5;
+        const endTime = startTime + duration;
+
+        gainNode.gain.setValueAtTime(0.5, startTime);
+        gainNode.connect(audioMasterGain);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        oscillator.connect(gainNode);
+
+        registerVoice(oscillator, gainNode);
+        oscillator.start(startTime);
+
+        if (decay) {
+            gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
+        }
+
+        oscillator.stop(endTime);
+    });
+}
+
+function playSound(soundName) {
+    if (isPaused) return;
+
+    const context = ensureAudioContext();
+    const config = SOUND_CONFIG[soundName];
+    if (!context || !audioMasterGain || !config || context.state !== 'running') return;
+
+    const volume = config.volume ?? 0.5;
+    audioMasterGain.gain.value = volume * 0.5;
+
+    if (config.type === 'complex') {
+        playComplexSound(config);
+        return;
+    }
+
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    const duration = config.duration || 0.2;
+    const endTime = context.currentTime + duration;
+
+    gainNode.gain.setValueAtTime(volume, context.currentTime);
+    gainNode.connect(audioMasterGain);
+
+    oscillator.type = config.type || 'sine';
+    if (config.detune) {
+        oscillator.detune.value = config.detune;
+    }
+    oscillator.frequency.setValueAtTime(
+        (config.frequency || 440) + (Math.random() * 20 - 10),
+        context.currentTime
+    );
+    oscillator.connect(gainNode);
+
+    registerVoice(oscillator, gainNode);
+    oscillator.start();
+    gainNode.gain.exponentialRampToValueAtTime(0.001, endTime);
+    oscillator.stop(endTime);
+}
 
 
 window.addEventListener('load',()=>{
