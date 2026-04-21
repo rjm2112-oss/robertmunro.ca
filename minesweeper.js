@@ -1,7 +1,7 @@
 const MODES = [
-    { id: "large", label: "Medium", rows: 16, cols: 24, mines: 80 },
-    { id: "extra-large", label: "Large", rows: 20, cols: 30, mines: 125 },
-    { id: "extreme", label: "Extra Large", rows: 24, cols: 36, mines: 180 }
+    { id: "large", label: "Medium", rows: 18, cols: 26, mines: 98 },
+    { id: "extra-large", label: "Large", rows: 22, cols: 32, mines: 147 },
+    { id: "extreme", label: "Extra Large", rows: 26, cols: 38, mines: 206 }
 ];
 
 const NUMBER_COLORS = {
@@ -64,11 +64,13 @@ const state = {
     websiteFullscreenActive: false,
     lastFullscreenTouchTime: 0,
     boardFitFrame: null,
+    boardScrollFrame: null,
     transientFace: null
 };
 
 const refs = {
     board: null,
+    boardShell: null,
     boardViewport: null,
     minesCounter: null,
     timerCounter: null,
@@ -80,6 +82,7 @@ const refs = {
 
 document.addEventListener("DOMContentLoaded", () => {
     refs.board = document.getElementById("ms-board");
+    refs.boardShell = document.getElementById("ms-board-shell");
     refs.boardViewport = document.getElementById("board-viewport");
     refs.minesCounter = document.getElementById("mines-counter");
     refs.timerCounter = document.getElementById("timer-counter");
@@ -175,6 +178,8 @@ function renderBoard() {
 
     refs.board.innerHTML = "";
     refs.board.style.gridTemplateColumns = `repeat(${mode.cols}, var(--cell-size))`;
+    refs.boardShell.style.setProperty("--board-rows", String(mode.rows));
+    refs.boardShell.style.setProperty("--board-cols", String(mode.cols));
 
     state.board.forEach(row => {
         row.forEach(cell => {
@@ -202,7 +207,7 @@ function updateCellElement(cell) {
 
     const element = cell.element;
     element.className = "ms-cell";
-    element.textContent = "";
+    element.innerHTML = "";
     element.style.color = "";
     delete element.dataset.number;
 
@@ -234,7 +239,7 @@ function updateCellElement(cell) {
 
     if (cell.adjacent > 0) {
         element.dataset.number = String(cell.adjacent);
-        element.textContent = String(cell.adjacent);
+        element.innerHTML = `<span class="ms-cell-text">${cell.adjacent}</span>`;
         element.style.color = NUMBER_COLORS[cell.adjacent] || "#111";
         return;
     }
@@ -617,21 +622,12 @@ function updateBoardFit() {
         return;
     }
 
-    const viewportStyles = window.getComputedStyle(refs.boardViewport);
-    const availableWidth = refs.boardViewport.clientWidth
-        - parseFloat(viewportStyles.paddingLeft || 0)
-        - parseFloat(viewportStyles.paddingRight || 0);
-    const availableHeight = refs.boardViewport.clientHeight
-        - parseFloat(viewportStyles.paddingTop || 0)
-        - parseFloat(viewportStyles.paddingBottom || 0);
-
-    const sizeFromWidth = Math.floor(availableWidth / mode.cols);
-    const sizeFromHeight = Math.floor(availableHeight / mode.rows);
-    const minSize = mode.id === "extreme" ? 13 : 15;
-    const maxSize = state.websiteFullscreenActive ? 30 : 28;
-    const nextSize = Math.max(minSize, Math.min(maxSize, sizeFromWidth, sizeFromHeight));
+    const boardIsRotated = document.body.classList.contains("is-portrait-rotated");
+    const viewportSize = getBoardViewportAvailableSize();
+    const nextSize = getFittedCellSize(mode, viewportSize, boardIsRotated);
 
     refs.board.style.setProperty("--cell-size", `${nextSize}px`);
+    scheduleBoardViewportScroll(boardIsRotated);
 }
 
 function toggleWebsiteFullscreen() {
@@ -780,13 +776,113 @@ function syncResponsiveLayout() {
     const isLandscape = viewportWidth > viewportHeight;
     const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
+    const isMobileDevice = isTouchCapable && isPhoneLikeViewport;
     const useMobileLandscapeLayout =
         state.websiteFullscreenActive &&
-        isTouchCapable &&
+        isMobileDevice &&
         isLandscape &&
         isPhoneLikeViewport;
 
+    applyMobileModeRestriction(isMobileDevice);
+    const mode = getCurrentMode();
+    const viewportSize = getBoardViewportAvailableSize();
+    const defaultCellSize = getFittedCellSize(mode, viewportSize, false);
+    const rotatedCellSize = getFittedCellSize(mode, viewportSize, true);
+    const usePortraitRotatedLayout =
+        !useMobileLandscapeLayout &&
+        !isLandscape &&
+        rotatedCellSize > defaultCellSize;
+
+    document.body.classList.toggle("is-mobile-device", isMobileDevice);
     document.body.classList.toggle("is-mobile-landscape-fullscreen", useMobileLandscapeLayout);
+    document.body.classList.toggle("is-portrait-rotated", usePortraitRotatedLayout);
+}
+
+function applyMobileModeRestriction(enabled) {
+    if (!enabled || state.modeId === MODES[0].id) {
+        return;
+    }
+
+    state.modeId = MODES[0].id;
+    resetGame();
+}
+
+function getBoardViewportAvailableSize() {
+    if (!refs.boardViewport) {
+        return { width: 0, height: 0 };
+    }
+
+    const viewportStyles = window.getComputedStyle(refs.boardViewport);
+    const width = refs.boardViewport.clientWidth
+        - parseFloat(viewportStyles.paddingLeft || 0)
+        - parseFloat(viewportStyles.paddingRight || 0);
+    const height = refs.boardViewport.clientHeight
+        - parseFloat(viewportStyles.paddingTop || 0)
+        - parseFloat(viewportStyles.paddingBottom || 0);
+
+    return {
+        width: Math.max(width, 0),
+        height: Math.max(height, 0)
+    };
+}
+
+function getFittedCellSize(mode, viewportSize, rotated) {
+    if (!mode) {
+        return 0;
+    }
+
+    const visibleCols = rotated ? mode.rows : mode.cols;
+    const visibleRows = rotated ? mode.cols : mode.rows;
+    const sizeFromWidth = Math.floor(viewportSize.width / visibleCols);
+    const sizeFromHeight = Math.floor(viewportSize.height / visibleRows);
+    const minSize = mode.id === "extreme" ? 13 : 15;
+    const maxSize = state.websiteFullscreenActive ? 33 : 30.8;
+
+    return Math.max(minSize, Math.min(maxSize, sizeFromWidth, sizeFromHeight));
+}
+
+function syncBoardViewportScroll(rotated) {
+    if (!refs.boardViewport || !refs.boardShell) {
+        return;
+    }
+
+    if (!rotated) {
+        refs.boardShell.style.marginLeft = "0px";
+        refs.boardShell.style.width = "";
+        refs.boardShell.style.height = "";
+        refs.boardViewport.scrollLeft = 0;
+        refs.boardViewport.scrollTop = 0;
+        return;
+    }
+
+    const boardRect = refs.board.getBoundingClientRect();
+    const rotatedWidth = Math.ceil(boardRect.width);
+    const rotatedHeight = Math.ceil(boardRect.height);
+
+    refs.boardShell.style.width = `${rotatedWidth}px`;
+    refs.boardShell.style.height = `${rotatedHeight}px`;
+
+    const viewportWidth = refs.boardViewport.clientWidth;
+    const horizontalInset = Math.max(Math.floor((viewportWidth - rotatedWidth) / 2), 0);
+
+    refs.boardShell.style.marginLeft = `${horizontalInset}px`;
+
+    const overflowWidth = Math.max(rotatedWidth - viewportWidth, 0);
+    refs.boardViewport.scrollLeft = Math.round(overflowWidth / 2);
+    refs.boardViewport.scrollTop = 0;
+}
+
+function scheduleBoardViewportScroll(rotated) {
+    if (state.boardScrollFrame !== null) {
+        window.cancelAnimationFrame(state.boardScrollFrame);
+    }
+
+    state.boardScrollFrame = window.requestAnimationFrame(() => {
+        state.boardScrollFrame = window.requestAnimationFrame(() => {
+            state.boardScrollFrame = null;
+            syncBoardViewportScroll(rotated);
+        });
+    });
 }
 
 function getFlagButtonIcon() {

@@ -14,7 +14,7 @@
         --panel-black: #000000;
         --title-blue-top: #1e3d9b;
         --title-blue-bottom: #103080;
-        --cell-size: 24px;
+        --cell-size: 26.4px;
     }
 
     html,
@@ -116,6 +116,12 @@
     .ms-control-rail {
         display: flex;
         flex-direction: column;
+        gap: 12px;
+    }
+
+    .ms-selection-row {
+        display: flex;
+        align-items: flex-start;
         gap: 12px;
     }
 
@@ -223,8 +229,23 @@
     .ms-mode-row,
     .ms-action-row {
         display: flex;
-        flex-wrap: wrap;
         gap: 8px;
+    }
+
+    .ms-mode-row {
+        flex: 1;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    body:not(.is-mobile-landscape-fullscreen) .ms-action-row {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .ms-action-row {
+        flex-shrink: 0;
+        margin-left: auto;
     }
 
     .ms-mode-btn,
@@ -269,6 +290,12 @@
         -webkit-user-select: none;
     }
 
+    .ms-board-shell {
+        position: relative;
+        width: max-content;
+        height: max-content;
+    }
+
     .ms-cell {
         width: var(--cell-size);
         height: var(--cell-size);
@@ -293,6 +320,12 @@
         width: calc(var(--cell-size) * 0.72);
         height: calc(var(--cell-size) * 0.72);
         display: inline-block;
+        pointer-events: none;
+    }
+
+    .ms-cell-text {
+        display: inline-block;
+        line-height: 1;
         pointer-events: none;
     }
 
@@ -393,6 +426,11 @@
         gap: 6px;
     }
 
+    body.is-mobile-landscape-fullscreen .ms-selection-row {
+        flex-direction: column;
+        gap: 6px;
+    }
+
     body.is-mobile-landscape-fullscreen .ms-action-row {
         flex: 1;
     }
@@ -418,10 +456,56 @@
         padding: 6px;
     }
 
+    body.is-portrait-rotated .ms-board {
+        position: absolute;
+        top: 0;
+        left: calc(var(--board-rows) * var(--cell-size));
+        transform: rotate(90deg);
+        transform-origin: top left;
+    }
+
+    body.is-portrait-rotated .ms-board-viewport {
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    body.is-portrait-rotated .ms-board-shell {
+        width: calc(var(--board-rows) * var(--cell-size));
+        height: calc(var(--board-cols) * var(--cell-size));
+    }
+
+    body.is-portrait-rotated .ms-cell-symbol,
+    body.is-portrait-rotated .ms-cell-text {
+        transform: rotate(-90deg);
+        transform-origin: center center;
+    }
+
+    body.is-mobile-device .ms-mode-row {
+        display: none;
+    }
+
+    body.is-mobile-device .ms-selection-row {
+        justify-content: flex-start;
+    }
+
+    body.is-mobile-device .ms-action-row {
+        margin-left: 0;
+    }
+
     @media (max-width: 720px) {
         .ms-client {
             gap: 10px;
             padding: 10px;
+        }
+
+        .ms-selection-row {
+            flex-direction: column;
+        }
+
+        body:not(.is-mobile-landscape-fullscreen) .ms-action-row {
+            flex-direction: row;
+            flex-wrap: wrap;
+            margin-left: 0;
         }
 
         .ms-toolbar {
@@ -466,21 +550,25 @@
                         <div id="timer-counter" class="ms-led">000</div>
                     </div>
 
-                    <div class="ms-mode-row" aria-label="Board size">
-                        <button type="button" class="ms-mode-btn" data-mode="large">Medium</button>
-                        <button type="button" class="ms-mode-btn" data-mode="extra-large">Large</button>
-                        <button type="button" class="ms-mode-btn" data-mode="extreme">Extra Large</button>
-                    </div>
+                    <div class="ms-selection-row">
+                        <div class="ms-mode-row" aria-label="Board size">
+                            <button type="button" class="ms-mode-btn" data-mode="large">Medium</button>
+                            <button type="button" class="ms-mode-btn" data-mode="extra-large">Large</button>
+                            <button type="button" class="ms-mode-btn" data-mode="extreme">Extra Large</button>
+                        </div>
 
-                    <div class="ms-action-row">
-                        <button type="button" id="flag-mode-btn" class="ms-action-btn"></button>
-                        <button type="button" id="fullscreen-btn" class="ms-action-btn"></button>
+                        <div class="ms-action-row">
+                            <button type="button" id="fullscreen-btn" class="ms-action-btn"></button>
+                            <button type="button" id="flag-mode-btn" class="ms-action-btn"></button>
+                        </div>
                     </div>
                 </div>
 
                 <div class="ms-board-panel">
                     <div id="board-viewport" class="ms-board-viewport">
-                        <div id="ms-board" class="ms-board" role="grid" aria-label="Minesweeper board"></div>
+                        <div id="ms-board-shell" class="ms-board-shell">
+                            <div id="ms-board" class="ms-board" role="grid" aria-label="Minesweeper board"></div>
+                        </div>
                     </div>
                 </div>
             </div>
