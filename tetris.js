@@ -1841,7 +1841,6 @@ function init() {
     nextCtx = nextCanvas.getContext('2d');
     weatherCtx = weatherCanvas.getContext('2d');
 
-    initAudio();
     resizeWeatherCanvas();
     syncTouchDeviceState();
     syncTouchControlsMetrics();
@@ -2218,87 +2217,9 @@ function setupInput() {
 }
 
 /* ────────────────────── SOUND SYSTEM ───────────────────── */
-const SOUND_CONFIG = {
-    DROP: { type: 'sine', frequency: 470, duration: .1, volume: .3 },
-    ROTATE: { type: 'complex', frequencies: [560,580], durations: [.3,.28], volume:.25, decay:true },
-    PIECE_LAND: { type:'sine',frequency:800,duration:.3,volume:.6 },
-    GAME_OVER:{type:'complex',frequencies:[200,300,400],durations:[.8,.7,.6],decay:true},
-    STOW: {
-        type: 'complex',
-        frequencies: [400, 450, 600], // Added harmonics for richness
-        durations: [0.15, 0.13, 0.11], // Slightly different durations for each frequency
-        volume: 0.3,
-        decay: true, // Use exponential decay for smoother sound
-        detune: [-2, -1, 0], // Different detunes for each frequency
-        waveShapes: ['square', 'sine', 'triangle'], // Different waveforms for complexity
-    },
+function primeAudioContext() {}
 
-    UNSTOW: {
-        type: 'complex',
-        frequencies: [550, 600, 700], // Higher frequencies with more spread
-        durations: [0.18, 0.16, 0.14],
-        volume: 0.35,
-        decay: true,
-        detune: [5, 3, 1], // Positive detunes for a brighter sound
-        waveShapes: ['square', 'sawtooth', 'triangle'],
-    }
-
-};
-
-let audioCtx, masterGain;
-
-function initAudio(){
-    try{
-        audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-        masterGain=audioCtx.createGain();masterGain.gain.value=.5;
-        masterGain.connect(audioCtx.destination);
-    }catch(e){console.log("Web Audio API not supported");}
-}
-
-function primeAudioContext() {
-    if (!audioCtx) {
-        initAudio();
-    }
-
-    if (audioCtx?.state === 'suspended') {
-        void audioCtx.resume().catch(() => {});
-    }
-}
-
-function playSound(name, opts={}) {
-    if(!audioCtx||isPaused)return;
-    const cfg=SOUND_CONFIG[name]||{}, vol=opts.volume!==undefined?opts.volume:cfg.volume||.5;
-    masterGain.gain.value=vol*.5;
-
-    if(cfg.type==='complex') return playComplex(cfg);
-
-    const osc=audioCtx.createOscillator(), g=audioCtx.createGain();
-    g.gain.value=vol;g.connect(masterGain);
-    osc.type=cfg.type||'sine';
-
-    if(cfg.detune) {
-        osc.detune.value = cfg.detune;
-    }
-    osc.frequency.value=(cfg.frequency||440)+(Math.random()*20-10);
-    osc.connect(g);osc.start();osc.stop(audioCtx.currentTime+(cfg.duration||.2));
-    g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+(cfg.duration||.2));
-}
-
-function playComplex({frequencies,durations,decay}) {
-    const t=audioCtx.currentTime;
-    frequencies.forEach((f,i)=>{
-        const osc=audioCtx.createOscillator(), g=audioCtx.createGain();
-        g.gain.value=.5;g.connect(masterGain);
-        osc.type='sine';osc.frequency.value=f;
-        osc.connect(g);osc.start(t);
-        if(decay){
-            const d=durations[i]||.5;
-            g.gain.exponentialRampToValueAtTime(.001,t+d);
-        }else{
-            osc.stop(t+(durations[i]||.3));
-        }
-    });
-}
+function playSound() {}
 
 
 window.addEventListener('load',()=>{
