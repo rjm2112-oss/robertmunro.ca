@@ -1,5 +1,5 @@
 const MODES = [
-    { id: "large", label: "Medium", rows: 16, cols: 23, mines: 75 },
+    { id: "large", label: "Medium", rows: 16, cols: 24, mines: 80 },
     { id: "extra-large", label: "Large", rows: 22, cols: 32, mines: 147 },
     { id: "extreme", label: "Extra Large", rows: 26, cols: 38, mines: 206 }
 ];
