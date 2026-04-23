@@ -324,6 +324,33 @@ body.tetris-website-fullscreen #section1 .post-detail .tetris-controls{
     z-index:30;
 }
 
+@media (max-width: 560px) and (pointer: coarse) {
+    body.tetris-website-fullscreen #section1 .post-detail .tetris-controls{
+        top:max(0px, env(safe-area-inset-top));
+        right:max(0px, env(safe-area-inset-right));
+    }
+
+    body.tetris-website-fullscreen #section1 .post-detail .tetris-controls .tetris-website-fullscreen-btn{
+        width:32px;
+        height:32px;
+        min-width:32px;
+        min-height:32px;
+        padding:0;
+        border-radius:50%;
+        font-size:0;
+        line-height:1;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+    }
+
+    body.tetris-website-fullscreen #section1 .post-detail .tetris-controls .tetris-website-fullscreen-btn::before{
+        content:"\00d7";
+        font-size:18px;
+        line-height:1;
+    }
+}
+
     /* ------------------------------------------------------------------
      *   Static post (contact card) -------------------------------------- */
     .post.static{
