@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = Array.from(nav.querySelectorAll('[data-target]'));
     const sections = Array.from(document.querySelectorAll('section'));
     const displacementMap = document.getElementById('glass-displacement');
-    const turbulence = document.getElementById('glass-turbulence');
+    const mapBlur = document.getElementById('glass-map-blur');
 
     let currentNavIndex = null;
 
@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (linkIdx !== null) {
             movePanelTo(linkIdx);
             currentNavIndex = linkIdx;
+            activeIdx = linkIdx;
             navLinks.forEach((l, i) =>
                 l.classList.toggle('active-link', i === currentNavIndex)
             );
@@ -214,7 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const distance = targetLeft - currentLeft;
         const dur = durationForDistance(distance);
         panel.style.transitionDuration = `${dur}s`;
-        updatePanelMotion(distance, dur);
+        nav.style.setProperty('--panel-center-x', `${targetLeft + panel.clientWidth / 2}px`);
+        updatePanelMotion(distance, dur, targetLeft);
         panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
         currentLeft = targetLeft;
     };
@@ -343,24 +345,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
     const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
 
+    const restingWarp = 16;
+
     const setWarpStrength = strength => {
-        const clamped = Math.max(0, Math.min(56, strength));
-        const normalized = clamped / 56;
+        const maxWarp = 88;
+        const clamped = Math.max(restingWarp, Math.min(maxWarp, strength));
+        const normalized = (clamped - restingWarp) / (maxWarp - restingWarp);
 
         warpLevel = clamped;
         panel.style.setProperty('--panel-warp', normalized.toFixed(3));
+        panel.style.setProperty('--panel-blur', `${(0.75 + normalized * 0.75).toFixed(2)}px`);
+        panel.style.setProperty('--panel-saturation', '1.72');
+        panel.style.setProperty('--panel-brightness', '0.985');
+        panel.style.setProperty('--panel-glint-opacity', '0.18');
+        panel.style.setProperty('--panel-lens-opacity', '0.08');
+        panel.style.setProperty('--panel-lens-edge-opacity', '0.055');
+        nav.style.setProperty('--panel-warp', normalized.toFixed(3));
+        nav.style.setProperty('--nav-hot-alpha', '0.11');
+        nav.style.setProperty('--nav-hot-size', '13%');
+        nav.style.setProperty('--nav-saturation', '1.12');
+        nav.style.setProperty('--nav-y-shift', '0px');
+        nav.style.setProperty('--nav-scale', '1.01');
 
         if (displacementMap) {
             displacementMap.setAttribute('scale', clamped.toFixed(2));
         }
 
-        if (turbulence) {
-            const freqX = 0.008 + normalized * 0.003;
-            const freqY = 0.06 + normalized * 0.012;
-            turbulence.setAttribute(
-                'baseFrequency',
-                `${freqX.toFixed(4)} ${freqY.toFixed(4)}`
-            );
+        if (mapBlur) {
+            mapBlur.setAttribute('stdDeviation', (0.95 - normalized * 0.32).toFixed(2));
         }
     };
 
@@ -397,19 +409,29 @@ document.addEventListener('DOMContentLoaded', () => {
         warpFrame = window.requestAnimationFrame(step);
     };
 
-    const updatePanelMotion = (distance, durationSeconds) => {
+    const updatePanelMotion = (distance, durationSeconds, targetLeft) => {
         const direction = distance === 0 ? 0 : Math.sign(distance);
         const travel = Math.min(Math.abs(distance) / Math.max(nav.clientWidth, 1), 1);
-        const shiftPx = Math.max(-14, Math.min(14, distance * 0.055));
+        const rawShiftPx = Math.max(-14, Math.min(14, distance * 0.055));
+        const maxLeftShift = -targetLeft;
+        const maxRightShift = nav.clientWidth - panel.clientWidth - targetLeft;
+        const shiftPx = Math.max(maxLeftShift, Math.min(maxRightShift, rawShiftPx));
         const tiltDeg = Math.max(-0.18, Math.min(0.18, direction * travel * 0.18));
         const peakWarp = distance === 0
-            ? 0
-            : Math.min(56, 8 + Math.abs(distance) * 0.036 + travel * 18);
+            ? restingWarp
+            : Math.min(88, 26 + Math.abs(distance) * 0.052 + travel * 24);
         const travelMs = Math.max(durationSeconds * 1000, 320);
         const rampUpMs = Math.max(140, Math.min(travelMs * 0.42, 280));
         const rampDownMs = Math.max(420, Math.min(travelMs * 0.9, 700));
 
         panel.style.setProperty('--panel-shift-x', `${shiftPx}px`);
+        panel.style.setProperty('--panel-scale-x', (1 + travel * 0.045).toFixed(4));
+        panel.style.setProperty('--panel-scale-y', '1');
+        panel.style.setProperty('--panel-glint-shift', `${(-shiftPx * 0.38).toFixed(2)}px`);
+        panel.style.setProperty('--panel-lens-shift', `${(shiftPx * 0.62).toFixed(2)}px`);
+        panel.style.setProperty('--panel-lens-counter-shift', `${(-shiftPx * 0.28).toFixed(2)}px`);
+        nav.style.setProperty('--nav-liquid-shift', `${shiftPx}px`);
+        nav.style.setProperty('--nav-liquid-drift', `${(-shiftPx * 0.16).toFixed(2)}px`);
         panel.style.setProperty('--panel-tilt', `${tiltDeg}deg`);
         panel.style.setProperty('--panel-travel', travel.toFixed(3));
         animateWarpTo(peakWarp, rampUpMs, easeOutCubic);
@@ -417,9 +439,16 @@ document.addEventListener('DOMContentLoaded', () => {
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
             panel.style.setProperty('--panel-shift-x', '0px');
+            panel.style.setProperty('--panel-scale-x', '1');
+            panel.style.setProperty('--panel-scale-y', '1');
+            panel.style.setProperty('--panel-glint-shift', '0px');
+            panel.style.setProperty('--panel-lens-shift', '0px');
+            panel.style.setProperty('--panel-lens-counter-shift', '0px');
+            nav.style.setProperty('--nav-liquid-shift', '0px');
+            nav.style.setProperty('--nav-liquid-drift', '0px');
             panel.style.setProperty('--panel-tilt', '0deg');
             panel.style.setProperty('--panel-travel', '0');
-            animateWarpTo(0, rampDownMs, easeInOutSine);
+            animateWarpTo(restingWarp, rampDownMs, easeInOutSine);
         }, travelMs);
     };
 
