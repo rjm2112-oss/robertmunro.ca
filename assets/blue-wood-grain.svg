@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 320" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#001a38"/>
+      <stop offset="0.34" stop-color="#033561"/>
+      <stop offset="0.62" stop-color="#075986"/>
+      <stop offset="1" stop-color="#001e3f"/>
+    </linearGradient>
+    <filter id="roughen" x="-8%" y="-20%" width="116%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="4" seed="23" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="13" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="320" fill="url(#base)"/>
+
+  <g filter="url(#roughen)" fill="none" stroke-linecap="round">
+    <g opacity="0.34" stroke="#65d4f1" stroke-width="2.2">
+      <path d="M-40 38 C130 12 240 68 378 43 C514 18 595 52 720 35 C862 15 1002 58 1162 34 C1268 18 1348 24 1440 12"/>
+      <path d="M-44 60 C102 42 218 91 356 68 C488 46 620 72 738 56 C894 35 988 81 1164 59 C1278 45 1370 47 1448 38"/>
+      <path d="M-34 96 C116 82 242 116 394 96 C516 80 628 104 756 92 C908 78 1006 116 1168 98 C1288 84 1374 88 1442 76"/>
+      <path d="M-48 138 C94 121 202 154 348 134 C472 116 602 144 726 128 C878 108 990 151 1168 132 C1292 119 1364 121 1440 108"/>
+      <path d="M-36 186 C112 170 244 204 392 182 C520 163 620 193 760 176 C892 160 1018 200 1168 180 C1300 162 1372 169 1446 152"/>
+      <path d="M-52 224 C80 202 218 246 354 220 C512 190 626 233 768 216 C910 198 1018 235 1168 218 C1282 205 1376 207 1448 190"/>
+      <path d="M-42 270 C108 252 246 286 388 264 C538 242 654 282 798 262 C956 240 1050 286 1194 260 C1302 240 1376 246 1442 232"/>
+    </g>
+
+    <g opacity="0.40" stroke="#001226" stroke-width="6">
+      <path d="M-60 75 C112 42 235 102 390 78 C530 56 638 92 780 70 C942 46 1040 110 1212 78 C1306 60 1380 64 1460 51"/>
+      <path d="M-62 164 C98 140 248 177 394 158 C550 138 668 171 808 153 C950 134 1070 178 1215 159 C1334 143 1390 148 1462 134"/>
+      <path d="M-62 251 C110 222 240 274 402 248 C552 224 690 264 826 242 C974 218 1084 268 1230 244 C1324 229 1402 231 1460 218"/>
+    </g>
+
+    <g opacity="0.56" stroke="#2b99bf" stroke-width="1.25">
+      <path d="M-54 28 C112 4 236 52 384 30 C540 7 650 45 812 27 C962 10 1074 45 1224 25 C1312 14 1375 17 1452 7"/>
+      <path d="M-54 116 C96 94 246 131 392 112 C538 93 662 123 810 108 C956 92 1080 132 1226 111 C1322 98 1390 101 1454 91"/>
+      <path d="M-54 205 C100 184 242 221 394 200 C532 181 660 213 814 194 C968 174 1074 218 1226 198 C1322 185 1386 187 1452 176"/>
+      <path d="M-54 294 C96 276 238 306 394 288 C530 272 662 301 814 286 C958 271 1082 304 1228 286 C1320 274 1390 276 1454 266"/>
+    </g>
+  </g>
+
+  <g fill="none" stroke-linecap="round" opacity="0.72">
+    <ellipse cx="440" cy="152" rx="116" ry="34" stroke="#68d8f5" stroke-width="2.2" transform="rotate(-4 440 152)"/>
+    <ellipse cx="440" cy="152" rx="84" ry="23" stroke="#01234b" stroke-width="4" transform="rotate(-4 440 152)" opacity="0.62"/>
+    <ellipse cx="440" cy="152" rx="48" ry="13" stroke="#8de7fa" stroke-width="1.6" transform="rotate(-4 440 152)" opacity="0.58"/>
+    <ellipse cx="440" cy="152" rx="18" ry="5" stroke="#001226" stroke-width="5" transform="rotate(-4 440 152)" opacity="0.54"/>
+
+    <ellipse cx="1010" cy="92" rx="146" ry="39" stroke="#52c7e9" stroke-width="2" transform="rotate(3 1010 92)" opacity="0.7"/>
+    <ellipse cx="1010" cy="92" rx="106" ry="28" stroke="#001a38" stroke-width="4.2" transform="rotate(3 1010 92)" opacity="0.58"/>
+    <ellipse cx="1010" cy="92" rx="62" ry="16" stroke="#8de7fa" stroke-width="1.4" transform="rotate(3 1010 92)" opacity="0.48"/>
+    <ellipse cx="1010" cy="92" rx="25" ry="7" stroke="#001226" stroke-width="5" transform="rotate(3 1010 92)" opacity="0.48"/>
+  </g>
+
+  <g opacity="0.16" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round">
+    <path d="M-30 147 C118 132 236 166 386 148 C456 139 488 136 558 148 C630 160 676 160 762 150 C908 132 1034 172 1190 150 C1306 134 1378 139 1434 128"/>
+    <path d="M-24 239 C118 221 250 260 398 238 C544 216 660 252 812 232 C962 212 1078 254 1230 234 C1328 221 1390 224 1434 212"/>
+  </g>
+</svg>

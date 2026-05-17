@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 360" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00162f"/>
+      <stop offset="0.34" stop-color="#033561"/>
+      <stop offset="0.68" stop-color="#075986"/>
+      <stop offset="1" stop-color="#001e3f"/>
+    </linearGradient>
+    <radialGradient id="coolGlow" cx="0.48" cy="0.3" r="0.82">
+      <stop offset="0" stop-color="#49bde3" stop-opacity="0.16"/>
+      <stop offset="0.42" stop-color="#49bde3" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#001226" stop-opacity="0.24"/>
+    </radialGradient>
+    <filter id="warp" x="-8%" y="-22%" width="116%" height="144%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.075" numOctaves="4" seed="41" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="9" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="360" fill="url(#base)"/>
+  <rect width="1600" height="360" fill="url(#coolGlow)"/>
+
+  <g filter="url(#warp)" fill="none" stroke-linecap="round">
+    <g opacity="0.18" stroke="#d9f8ff" stroke-width="1.35">
+      <path d="M-70 38 C116 8 274 66 438 39 C608 11 760 58 938 36 C1120 12 1286 66 1468 34 C1530 23 1582 22 1668 12"/>
+      <path d="M-78 76 C100 46 260 102 430 74 C606 46 764 96 946 70 C1128 45 1288 102 1470 72 C1540 60 1596 58 1676 46"/>
+      <path d="M-66 122 C116 96 276 145 440 120 C616 93 768 138 950 116 C1128 94 1288 142 1472 118 C1544 108 1604 105 1672 92"/>
+      <path d="M-80 176 C96 142 264 204 430 172 C608 138 772 198 958 168 C1138 139 1288 202 1478 170 C1542 159 1600 153 1678 139"/>
+      <path d="M-72 235 C110 204 278 260 446 232 C614 204 774 254 956 228 C1138 203 1292 258 1478 230 C1546 219 1600 216 1670 202"/>
+      <path d="M-70 300 C112 272 278 322 446 296 C620 270 776 318 960 292 C1138 268 1296 318 1476 294 C1548 285 1606 280 1672 268"/>
+    </g>
+
+    <g opacity="0.12" stroke="#ffffff" stroke-width="2.2">
+      <path d="M-86 59 C92 32 252 86 420 58 C600 28 760 82 948 56 C1134 30 1280 86 1470 55 C1546 42 1608 44 1680 31"/>
+      <path d="M-86 153 C98 126 260 178 430 150 C608 121 774 174 962 146 C1144 120 1284 180 1472 150 C1542 138 1606 137 1680 124"/>
+      <path d="M-86 270 C96 242 260 296 434 266 C608 236 782 292 966 262 C1148 234 1290 294 1478 264 C1544 253 1604 251 1680 238"/>
+    </g>
+
+    <g opacity="0.18" stroke="#001226" stroke-width="5">
+      <path d="M-92 92 C94 58 270 122 438 90 C610 58 782 119 966 86 C1146 54 1292 124 1484 91 C1558 78 1612 79 1688 64"/>
+      <path d="M-94 214 C98 180 264 240 440 210 C620 178 778 238 968 206 C1148 177 1294 242 1484 210 C1556 198 1614 196 1688 181"/>
+    </g>
+
+    <g opacity="0.14" stroke="#62d4f2" stroke-width="0.95">
+      <path d="M-82 20 C110 -4 272 43 444 20 C622 -4 778 42 966 18 C1146 -4 1294 42 1482 20 C1550 12 1608 10 1680 0"/>
+      <path d="M-84 135 C100 108 268 160 438 132 C616 104 778 156 966 130 C1142 106 1298 158 1482 133 C1554 124 1608 121 1682 110"/>
+      <path d="M-84 252 C104 224 270 278 442 250 C620 220 780 276 968 248 C1148 222 1294 278 1484 250 C1550 240 1610 238 1682 226"/>
+      <path d="M-84 336 C100 314 270 350 442 330 C620 310 780 348 968 326 C1148 306 1296 350 1484 329 C1552 321 1610 319 1682 309"/>
+    </g>
+  </g>
+
+  <g fill="none" stroke-linecap="round" opacity="0.42">
+    <ellipse cx="420" cy="148" rx="136" ry="36" stroke="#e7fbff" stroke-width="1.3" transform="rotate(-5 420 148)"/>
+    <ellipse cx="420" cy="148" rx="98" ry="25" stroke="#001a38" stroke-width="4.2" opacity="0.44" transform="rotate(-5 420 148)"/>
+    <ellipse cx="420" cy="148" rx="58" ry="15" stroke="#9beaff" stroke-width="1.1" opacity="0.34" transform="rotate(-5 420 148)"/>
+
+    <ellipse cx="1110" cy="96" rx="170" ry="42" stroke="#dff8ff" stroke-width="1.2" opacity="0.38" transform="rotate(3 1110 96)"/>
+    <ellipse cx="1110" cy="96" rx="124" ry="30" stroke="#001a38" stroke-width="4.4" opacity="0.34" transform="rotate(3 1110 96)"/>
+    <ellipse cx="1110" cy="96" rx="72" ry="18" stroke="#8de7fa" stroke-width="1.0" opacity="0.28" transform="rotate(3 1110 96)"/>
+  </g>
+</svg>

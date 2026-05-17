@@ -30,8 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const sections = Array.from(document.querySelectorAll('section'));
     const displacementMap = document.getElementById('glass-displacement');
     const mapBlur = document.getElementById('glass-map-blur');
+    const sideDisplacementMap = document.getElementById('side-glass-displacement');
+    const sideMapBlur = document.getElementById('side-glass-map-blur');
+    const sideList = document.querySelector('#section1 .preview-list');
+    const sidePanel = sideList?.querySelector('.side-panel');
+    const sidePosts = sideList ? Array.from(sideList.querySelectorAll('.post:not(.static)')) : [];
+    const supportsHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     let currentNavIndex = null;
+    let pendingSectionDetailFrame = null;
+    let layoutSyncFrame = null;
 
     const getDetailTetrisFrame = () =>
         document.querySelector('#section1 .post-detail iframe[src="tetris.html"]');
@@ -43,6 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = getDetailTetrisFullscreenButton();
         if (!button) return;
         button.textContent = expanded ? 'Exit Fullscreen' : 'Fullscreen';
+    };
+
+    const getPostSignature = container => {
+        if (!container) return '';
+
+        const title = container.querySelector('h3')?.textContent?.trim() || '';
+        const meta = container.querySelector('.meta')?.innerHTML?.trim() || '';
+        const body = container.querySelector('.full-body')?.innerHTML?.trim() || '';
+
+        return `${title}|||${meta}|||${body}`;
     };
 
     const syncTetrisWebsiteFullscreenState = expanded => {
@@ -164,6 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
         clearMinesweeperWebsiteFullscreen();
+
+        const nextSignature = getPostSignature(post);
+        const currentArticle = detailArea.querySelector('article');
+        if (currentArticle && getPostSignature(currentArticle) === nextSignature) {
+            updateTetrisFullscreenButtonLabel(false);
+            return;
+        }
+
         const title = post.querySelector('h3').outerHTML;
         const meta = post.querySelector('.meta')?.outerHTML || '';
         const body = post.querySelector('.full-body')?.innerHTML || '';
@@ -172,7 +198,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTetrisFullscreenButtonLabel(false);
     };
 
+    const clearPendingSectionDetail = () => {
+        if (pendingSectionDetailFrame === null) return;
+
+        window.cancelAnimationFrame(pendingSectionDetailFrame);
+        pendingSectionDetailFrame = null;
+    };
+
     const showSection = (id, linkIdx = null) => {
+        clearPendingSectionDetail();
+
         sections.forEach(s => s.classList.remove('active'));
         clearTetrisWebsiteFullscreen();
         clearSolitaireWebsiteFullscreen();
@@ -184,16 +219,16 @@ document.addEventListener('DOMContentLoaded', () => {
         targetSec.classList.add('active');
 
         clearActive(id);
-        expandFirstInSection(id);
 
         if (linkIdx !== null) {
-            movePanelTo(linkIdx);
-            currentNavIndex = linkIdx;
-            activeIdx = linkIdx;
-            navLinks.forEach((l, i) =>
-                l.classList.toggle('active-link', i === currentNavIndex)
-            );
+            setActiveNavLink(linkIdx);
         }
+
+        // Let the new section and pill paint before rebuilding the detail pane.
+        pendingSectionDetailFrame = window.requestAnimationFrame(() => {
+            pendingSectionDetailFrame = null;
+            expandFirstInSection(id);
+        });
     };
 
     const clearActive = sectionId => {
@@ -208,17 +243,56 @@ document.addEventListener('DOMContentLoaded', () => {
         return linkRect.left + linkRect.width / 2 - navRect.left - panel.clientWidth / 2;
     };
 
-    const movePanelTo = idx => {
+    const movePanelTo = (idx, instant = false) => {
         if (idx < 0 || idx >= navLinks.length) return;
 
         const targetLeft = getPanelTargetLeft(idx);
         const distance = targetLeft - currentLeft;
+
+        if (instant) {
+            panel.style.transitionDuration = '0s';
+            panel.style.setProperty('--panel-center-x', `${targetLeft + panel.clientWidth / 2}px`);
+            panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
+            panel.style.setProperty('--panel-shift-x', '0px');
+            panel.style.setProperty('--panel-scale-x', '1');
+            panel.style.setProperty('--panel-scale-y', '1');
+            panel.style.setProperty('--panel-tilt', '0deg');
+            panel.style.setProperty('--panel-travel', '0');
+            currentLeft = targetLeft;
+
+            setNavRefractionTarget(0, 0, 0, 0, 0);
+            animateWarpTo(restingWarp, 0);
+
+            return 0;
+        }
+
+        // Keep an in-flight desktop hover transition alive when the target is unchanged.
+        if (Math.abs(distance) < 0.5) {
+            currentLeft = targetLeft;
+            return 0;
+        }
+
         const dur = durationForDistance(distance);
         panel.style.transitionDuration = `${dur}s`;
         nav.style.setProperty('--panel-center-x', `${targetLeft + panel.clientWidth / 2}px`);
         updatePanelMotion(distance, dur, targetLeft);
         panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
         currentLeft = targetLeft;
+
+        return dur;
+    };
+
+    const setActiveNavLink = linkIdx => {
+        if (linkIdx < 0 || linkIdx >= navLinks.length) return;
+
+        const duration = movePanelTo(linkIdx);
+        currentNavIndex = linkIdx;
+        activeIdx = linkIdx;
+        navLinks.forEach((l, i) =>
+            l.classList.toggle('active-link', i === currentNavIndex)
+        );
+
+        return duration;
     };
 
     const expandFirstInSection = sectionId => {
@@ -230,6 +304,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const firstPost = list.querySelector('.post:not(.static)');
         if (!firstPost) return;
         firstPost.classList.add('active');
+        activeSidePost = firstPost;
+        moveSidePanelTo(firstPost, true);
 
         const detailArea = document.querySelector(`#${sectionId} .post-detail`);
         renderPostDetail(firstPost, detailArea);
@@ -238,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
     navLinks.forEach((link, i) => {
         link.addEventListener('click', e => {
             e.preventDefault();
-            showSection(link.dataset.target, i);
+            showSection(link.dataset.target);
+            setActiveNavLink(i);
         });
     });
 
@@ -249,6 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             list.querySelectorAll('.post.active').forEach(p => p.classList.remove('active'));
             post.classList.add('active');
+            activeSidePost = post;
+            clearSideHoverDelay();
+            moveSidePanelTo(post);
 
             const detailArea = list.nextElementSibling;
             renderPostDetail(post, detailArea);
@@ -344,8 +424,289 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
     const easeInOutSine = t => -(Math.cos(Math.PI * t) - 1) / 2;
+    const smoothDamp = (current, target, velocity, smoothTime, deltaTime) => {
+        const time = Math.max(0.0001, smoothTime);
+        const omega = 2 / time;
+        const x = omega * deltaTime;
+        const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+        const change = current - target;
+        const temp = (velocity + omega * change) * deltaTime;
+
+        return [
+            target + (change + temp) * exp,
+            (velocity - omega * temp) * exp
+        ];
+    };
+
+    const navRefractionState = {
+        frame: null,
+        lastNow: 0,
+        shift: 0,
+        shiftVelocity: 0,
+        drift: 0,
+        driftVelocity: 0,
+        glint: 0,
+        glintVelocity: 0,
+        lens: 0,
+        lensVelocity: 0,
+        lensCounter: 0,
+        lensCounterVelocity: 0,
+        targetShift: 0,
+        targetDrift: 0,
+        targetGlint: 0,
+        targetLens: 0,
+        targetLensCounter: 0
+    };
+
+    const applyNavRefraction = (shift, drift, glint, lens, lensCounter) => {
+        panel.style.setProperty('--panel-glint-shift', `${glint.toFixed(2)}px`);
+        panel.style.setProperty('--panel-lens-shift', `${lens.toFixed(2)}px`);
+        panel.style.setProperty('--panel-lens-counter-shift', `${lensCounter.toFixed(2)}px`);
+        nav.style.setProperty('--nav-liquid-shift', `${shift.toFixed(2)}px`);
+        nav.style.setProperty('--nav-liquid-drift', `${drift.toFixed(2)}px`);
+    };
+
+    const stepNavRefraction = now => {
+        const deltaTime = navRefractionState.lastNow === 0
+            ? 0.016
+            : Math.min((now - navRefractionState.lastNow) / 1000, 0.033);
+        navRefractionState.lastNow = now;
+
+        [navRefractionState.shift, navRefractionState.shiftVelocity] = smoothDamp(
+            navRefractionState.shift,
+            navRefractionState.targetShift,
+            navRefractionState.shiftVelocity,
+            0.11,
+            deltaTime
+        );
+        [navRefractionState.drift, navRefractionState.driftVelocity] = smoothDamp(
+            navRefractionState.drift,
+            navRefractionState.targetDrift,
+            navRefractionState.driftVelocity,
+            0.13,
+            deltaTime
+        );
+        [navRefractionState.glint, navRefractionState.glintVelocity] = smoothDamp(
+            navRefractionState.glint,
+            navRefractionState.targetGlint,
+            navRefractionState.glintVelocity,
+            0.10,
+            deltaTime
+        );
+        [navRefractionState.lens, navRefractionState.lensVelocity] = smoothDamp(
+            navRefractionState.lens,
+            navRefractionState.targetLens,
+            navRefractionState.lensVelocity,
+            0.10,
+            deltaTime
+        );
+        [navRefractionState.lensCounter, navRefractionState.lensCounterVelocity] = smoothDamp(
+            navRefractionState.lensCounter,
+            navRefractionState.targetLensCounter,
+            navRefractionState.lensCounterVelocity,
+            0.12,
+            deltaTime
+        );
+
+        const motion = Math.min(Math.abs(navRefractionState.targetShift) / 14, 1);
+        const shimmer = Math.sin(now * 0.0028) * motion * 0.28;
+        const counterShimmer = Math.sin(now * 0.0034 + 1.35) * motion * 0.16;
+        const nextShift = navRefractionState.shift + shimmer * 0.18;
+        const nextDrift = navRefractionState.drift - counterShimmer * 0.18;
+        const nextGlint = navRefractionState.glint + shimmer;
+        const nextLens = navRefractionState.lens + shimmer * 0.62;
+        const nextLensCounter = navRefractionState.lensCounter - counterShimmer;
+
+        applyNavRefraction(
+            nextShift,
+            nextDrift,
+            nextGlint,
+            nextLens,
+            nextLensCounter
+        );
+
+        const settled =
+            Math.abs(navRefractionState.shift - navRefractionState.targetShift) < 0.03 &&
+            Math.abs(navRefractionState.drift - navRefractionState.targetDrift) < 0.03 &&
+            Math.abs(navRefractionState.glint - navRefractionState.targetGlint) < 0.03 &&
+            Math.abs(navRefractionState.lens - navRefractionState.targetLens) < 0.03 &&
+            Math.abs(navRefractionState.lensCounter - navRefractionState.targetLensCounter) < 0.03 &&
+            Math.abs(navRefractionState.shiftVelocity) < 0.02 &&
+            Math.abs(navRefractionState.driftVelocity) < 0.02 &&
+            Math.abs(navRefractionState.glintVelocity) < 0.02 &&
+            Math.abs(navRefractionState.lensVelocity) < 0.02 &&
+            Math.abs(navRefractionState.lensCounterVelocity) < 0.02;
+
+        if (!settled) {
+            navRefractionState.frame = window.requestAnimationFrame(stepNavRefraction);
+            return;
+        }
+
+        applyNavRefraction(
+            navRefractionState.targetShift,
+            navRefractionState.targetDrift,
+            navRefractionState.targetGlint,
+            navRefractionState.targetLens,
+            navRefractionState.targetLensCounter
+        );
+        navRefractionState.frame = null;
+        navRefractionState.lastNow = 0;
+    };
+
+    const setNavRefractionTarget = (shift, drift, glint, lens, lensCounter) => {
+        navRefractionState.targetShift = shift;
+        navRefractionState.targetDrift = drift;
+        navRefractionState.targetGlint = glint;
+        navRefractionState.targetLens = lens;
+        navRefractionState.targetLensCounter = lensCounter;
+
+        if (navRefractionState.frame !== null) {
+            return;
+        }
+
+        navRefractionState.frame = window.requestAnimationFrame(stepNavRefraction);
+    };
 
     const restingWarp = 16;
+    const sideRestingWarp = 16;
+    let sideWarpFrame = null;
+    let sideWarpLevel = 0;
+    let currentSideTop = 0;
+    let activeSidePost = null;
+    let sideSettleTimer = null;
+    let sideHoverDelayTimer = null;
+    const sideHoverDelayMs = 180;
+
+    const clearSideHoverDelay = () => {
+        window.clearTimeout(sideHoverDelayTimer);
+        sideHoverDelayTimer = null;
+    };
+
+    const setSideGlassStrength = strength => {
+        const maxWarp = 56;
+        const clamped = Math.max(sideRestingWarp, Math.min(maxWarp, strength));
+        const normalized = (clamped - sideRestingWarp) / (maxWarp - sideRestingWarp);
+
+        sideWarpLevel = clamped;
+
+        if (sideDisplacementMap) {
+            sideDisplacementMap.setAttribute('scale', clamped.toFixed(2));
+        }
+
+        if (sideMapBlur) {
+            sideMapBlur.setAttribute('stdDeviation', (0.95 - normalized * 0.32).toFixed(2));
+        }
+    };
+
+    const animateSideGlassTo = (target, durationMs, easing = easeOutCubic) => {
+        const start = sideWarpLevel;
+        const change = target - start;
+        const startedAt = performance.now();
+
+        if (sideWarpFrame !== null) {
+            window.cancelAnimationFrame(sideWarpFrame);
+        }
+
+        if (durationMs <= 0 || change === 0) {
+            setSideGlassStrength(target);
+            sideWarpFrame = null;
+            return;
+        }
+
+        const step = now => {
+            const elapsed = now - startedAt;
+            const progress = Math.min(elapsed / durationMs, 1);
+            const eased = easing(progress);
+
+            setSideGlassStrength(start + change * eased);
+
+            if (progress < 1) {
+                sideWarpFrame = window.requestAnimationFrame(step);
+                return;
+            }
+
+            sideWarpFrame = null;
+        };
+
+        sideWarpFrame = window.requestAnimationFrame(step);
+    };
+
+    const updateSidePanelMotion = (distance, durationSeconds) => {
+        if (!sideList) return;
+
+        const travelMs = Math.max(durationSeconds * 1000, 560);
+        const rampUpMs = Math.max(220, Math.min(travelMs * 0.5, 440));
+        const rampDownMs = Math.max(840, Math.min(travelMs * 1.15, 1320));
+
+        sideList.style.setProperty('--side-panel-scale-x', '1');
+        sideList.style.setProperty('--side-panel-scale-y', '1');
+        sideList.style.setProperty('--side-panel-glint-shift', '0px');
+        animateSideGlassTo(sideRestingWarp, rampUpMs, easeOutCubic);
+
+        window.clearTimeout(sideSettleTimer);
+        sideSettleTimer = window.setTimeout(() => {
+            sideList.style.setProperty('--side-panel-shift-y', '0px');
+            sideList.style.setProperty('--side-panel-scale-x', '1');
+            sideList.style.setProperty('--side-panel-scale-y', '1');
+            sideList.style.setProperty('--side-panel-glint-shift', '0px');
+            animateSideGlassTo(sideRestingWarp, rampDownMs, easeInOutSine);
+        }, travelMs);
+    };
+
+    const moveSidePanelTo = (post, instant = false) => {
+        if (!sidePanel || !sideList || !post || !sideList.contains(post)) return;
+
+        const heading = post.querySelector('h3');
+        const headingTop = heading ? post.offsetTop + heading.offsetTop : post.offsetTop;
+        const headingHeight = heading ? heading.offsetHeight : post.offsetHeight;
+        const panelHeight = Math.max(headingHeight + 42, 72);
+        const targetTop = headingTop + (headingHeight / 2) - (panelHeight / 2);
+
+        const distance = targetTop - currentSideTop;
+        const duration = instant
+            ? 0
+            : Math.min(Math.max(Math.abs(distance) * msPerPixel / 1000 * 1.65, 1.15), 2.05);
+
+        sidePanel.style.transitionDuration = `${duration}s`;
+        sidePanel.style.transitionTimingFunction = 'cubic-bezier(.16,.86,.16,1)';
+        sidePanel.style.height = `${panelHeight}px`;
+        sidePanel.style.opacity = '1';
+        sideList.style.setProperty('--side-panel-y', `${targetTop}px`);
+        sideList.style.setProperty('--side-panel-highlight-y', `${targetTop}px`);
+        sideList.style.setProperty('--side-panel-highlight-height', `${panelHeight}px`);
+        currentSideTop = targetTop;
+
+        if (instant) {
+            sideList.style.setProperty('--side-panel-shift-y', '0px');
+            sideList.style.setProperty('--side-panel-scale-x', '1');
+            sideList.style.setProperty('--side-panel-scale-y', '1');
+            sideList.style.setProperty('--side-panel-glint-shift', '0px');
+            sideList.style.setProperty('--side-panel-highlight-opacity', '0.24');
+            setSideGlassStrength(sideRestingWarp);
+            return;
+        }
+
+        sideList.style.setProperty('--side-panel-highlight-opacity', '0.30');
+
+        updateSidePanelMotion(distance, duration);
+    };
+
+    sidePosts.forEach(post => {
+        post.addEventListener('mouseenter', () => {
+            clearSideHoverDelay();
+
+            sideHoverDelayTimer = window.setTimeout(() => {
+                if (!post.matches(':hover')) return;
+                moveSidePanelTo(post);
+            }, sideHoverDelayMs);
+        });
+    });
+
+    sideList?.addEventListener('mouseleave', () => {
+        clearSideHoverDelay();
+        if (!activeSidePost) return;
+        moveSidePanelTo(activeSidePost);
+    });
 
     const setWarpStrength = strength => {
         const maxWarp = 88;
@@ -412,47 +773,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const updatePanelMotion = (distance, durationSeconds, targetLeft) => {
         const direction = distance === 0 ? 0 : Math.sign(distance);
         const travel = Math.min(Math.abs(distance) / Math.max(nav.clientWidth, 1), 1);
-        const rawShiftPx = Math.max(-14, Math.min(14, distance * 0.055));
+        // Keep the refraction strong, but make the visible overshoot smaller.
+        const refractionShiftPx = Math.max(-8, Math.min(8, distance * 0.038));
+        const physicalShiftPx = Math.max(-5, Math.min(5, distance * 0.024));
         const maxLeftShift = -targetLeft;
         const maxRightShift = nav.clientWidth - panel.clientWidth - targetLeft;
-        const shiftPx = Math.max(maxLeftShift, Math.min(maxRightShift, rawShiftPx));
-        const tiltDeg = Math.max(-0.18, Math.min(0.18, direction * travel * 0.18));
+        const shiftPx = Math.max(maxLeftShift, Math.min(maxRightShift, physicalShiftPx));
+        const tiltDeg = Math.max(-0.08, Math.min(0.08, direction * travel * 0.08));
         const peakWarp = distance === 0
             ? restingWarp
             : Math.min(88, 26 + Math.abs(distance) * 0.052 + travel * 24);
         const travelMs = Math.max(durationSeconds * 1000, 320);
         const rampUpMs = Math.max(140, Math.min(travelMs * 0.42, 280));
         const rampDownMs = Math.max(420, Math.min(travelMs * 0.9, 700));
+        const settleDuration = Math.max(0.2, Math.min(durationSeconds * 0.36, 0.48));
 
         panel.style.setProperty('--panel-shift-x', `${shiftPx}px`);
-        panel.style.setProperty('--panel-scale-x', (1 + travel * 0.045).toFixed(4));
+        panel.style.setProperty('--panel-scale-x', (1 + travel * 0.02).toFixed(4));
         panel.style.setProperty('--panel-scale-y', '1');
-        panel.style.setProperty('--panel-glint-shift', `${(-shiftPx * 0.38).toFixed(2)}px`);
-        panel.style.setProperty('--panel-lens-shift', `${(shiftPx * 0.62).toFixed(2)}px`);
-        panel.style.setProperty('--panel-lens-counter-shift', `${(-shiftPx * 0.28).toFixed(2)}px`);
-        nav.style.setProperty('--nav-liquid-shift', `${shiftPx}px`);
-        nav.style.setProperty('--nav-liquid-drift', `${(-shiftPx * 0.16).toFixed(2)}px`);
         panel.style.setProperty('--panel-tilt', `${tiltDeg}deg`);
         panel.style.setProperty('--panel-travel', travel.toFixed(3));
+        setNavRefractionTarget(
+            refractionShiftPx,
+            -refractionShiftPx * 0.16,
+            -refractionShiftPx * 0.38,
+            refractionShiftPx * 0.62,
+            -refractionShiftPx * 0.28
+        );
         animateWarpTo(peakWarp, rampUpMs, easeOutCubic);
 
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
+            panel.style.transitionDuration = `${settleDuration}s`;
             panel.style.setProperty('--panel-shift-x', '0px');
             panel.style.setProperty('--panel-scale-x', '1');
             panel.style.setProperty('--panel-scale-y', '1');
-            panel.style.setProperty('--panel-glint-shift', '0px');
-            panel.style.setProperty('--panel-lens-shift', '0px');
-            panel.style.setProperty('--panel-lens-counter-shift', '0px');
-            nav.style.setProperty('--nav-liquid-shift', '0px');
-            nav.style.setProperty('--nav-liquid-drift', '0px');
             panel.style.setProperty('--panel-tilt', '0deg');
             panel.style.setProperty('--panel-travel', '0');
+            setNavRefractionTarget(0, 0, 0, 0, 0);
             animateWarpTo(restingWarp, rampDownMs, easeInOutSine);
         }, travelMs);
     };
 
-    const setPanel = idx => movePanelTo(idx);
+    const setPanel = (idx, instant = false) => movePanelTo(idx, instant);
+
+    const syncGlassPanels = () => {
+        layoutSyncFrame = null;
+
+        if (activeIdx !== -1) {
+            setPanel(activeIdx, true);
+        }
+
+        if (activeSidePost) {
+            moveSidePanelTo(activeSidePost, true);
+        }
+    };
+
+    const scheduleGlassPanelSync = () => {
+        if (layoutSyncFrame !== null) return;
+
+        layoutSyncFrame = window.requestAnimationFrame(syncGlassPanels);
+    };
+
+    if (!supportsHover) {
+        window.addEventListener('resize', scheduleGlassPanelSync);
+        window.addEventListener('orientationchange', scheduleGlassPanelSync);
+    }
 
     const initialIdx = 0;
     showSection(navLinks[initialIdx].dataset.target, initialIdx);
@@ -464,36 +850,56 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.opacity = '0';
     }
 
-    navLinks.forEach((link, i) => {
-        link.addEventListener('mouseenter', () => {
-            activeIdx = i;
-            setPanel(i);
+    if (supportsHover) {
+        navLinks.forEach((link, i) => {
+            link.addEventListener('mouseenter', () => {
+                activeIdx = i;
+                setPanel(i);
+                panel.style.opacity = '1';
+            });
+        });
+
+        nav.addEventListener('mouseleave', () => {
+            const activeLink = nav.querySelector('a.active-link');
+            if (!activeLink) return;
+
+            const idx = navLinks.indexOf(activeLink);
+            if (idx === -1) return;
+
+            activeIdx = idx;
+            setPanel(idx);
             panel.style.opacity = '1';
         });
-    });
-
-    nav.addEventListener('mouseleave', () => {
-        const activeLink = nav.querySelector('a.active-link');
-        if (!activeLink) return;
-
-        const idx = navLinks.indexOf(activeLink);
-        if (idx === -1) return;
-
-        activeIdx = idx;
-        setPanel(idx);
-        panel.style.opacity = '1';
-    });
+    }
 
     let startX = null;
+    let startY = null;
     let startT = null;
+    let isHorizontalTouch = null;
+
+    const resetSwipeState = () => {
+        startX = null;
+        startY = null;
+        startT = null;
+        isHorizontalTouch = null;
+    };
 
     const minDistance = 30;
     const minSpeed = 0.3;
 
     const handlePointerDown = e => {
         if (e.pointerType === 'mouse' && e.button !== 0) return;
+        resetSwipeState();
         startX = e.clientX;
         startT = performance.now();
+
+        if (e.pointerType !== 'mouse' && nav.setPointerCapture) {
+            try {
+                nav.setPointerCapture(e.pointerId);
+            } catch (error) {
+                // Ignore capture failures and fall back to the regular pointer path.
+            }
+        }
     };
 
     const handlePointerUp = e => {
@@ -520,21 +926,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        startX = null;
-        startT = null;
+        if (e.pointerType !== 'mouse' && nav.releasePointerCapture) {
+            try {
+                nav.releasePointerCapture(e.pointerId);
+            } catch (error) {
+                // Ignore release failures.
+            }
+        }
+
+        resetSwipeState();
     };
 
     nav.addEventListener('pointerdown', handlePointerDown, { passive: true });
     nav.addEventListener('pointerup',   handlePointerUp);
+    nav.addEventListener('pointercancel', resetSwipeState);
 
     /* Touch‑only fallback – blocks vertical scroll during horizontal swipe */
-    if ('ontouchstart' in window) {
-        let startY = null;           // Y coordinate at touchstart (for direction test)
-        let isHorizontalTouch = null; // unknown until we see the first move
-
+    if (!window.PointerEvent && 'ontouchstart' in window) {
         nav.addEventListener('touchstart', e => {
             if (e.touches.length !== 1) return;
 
+            resetSwipeState();
             const t = e.touches[0];
             startX   = t.clientX;
             startY   = t.clientY;
@@ -543,7 +955,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { passive: false });
 
         nav.addEventListener('touchmove', e => {
-            if (!e.touches || e.touches.length !== 1) return;
+            if (!e.touches || e.touches.length !== 1 || startX === null || startY === null) return;
 
             const t   = e.touches[0];
             const dx  = t.clientX - startX;
@@ -560,8 +972,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, { passive: false });
 
+        nav.addEventListener('touchcancel', resetSwipeState);
+
         nav.addEventListener('touchend', e => {
-            if (!e.changedTouches || e.changedTouches.length !== 1) return;
+            if (!e.changedTouches || e.changedTouches.length !== 1 || startX === null || startT === null) {
+                resetSwipeState();
+                return;
+            }
 
             const t   = e.changedTouches[0];
             const endX = t.clientX;
@@ -585,9 +1002,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            startX = null;
-            startY = null;
-            isHorizontalTouch = null;
+            resetSwipeState();
         });
     }
 });
