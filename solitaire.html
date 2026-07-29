@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b5e2c">
 <title>Solitaire</title>
 <style>
     :root {
@@ -28,7 +29,11 @@
     }
 
     html {
-        background: linear-gradient(180deg, var(--win-blue-top) 0%, var(--win-blue-bottom) 100%);
+        background: #0b5e2c;
+    }
+
+    html.is-website-fullscreen {
+        overflow: hidden;
     }
 
     body {
@@ -596,12 +601,12 @@
     }
 
     body.is-website-fullscreen .solitaire-shell {
-        background: linear-gradient(180deg, var(--win-blue-top) 0%, var(--win-blue-bottom) 100%);
+        background: linear-gradient(180deg, #0b5e2c 0%, #0a4d24 100%);
     }
 
     body.is-website-fullscreen .window-body {
         min-height: 100vh;
-        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4px);
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -880,6 +885,6 @@
 </div>
 
 <script src="drone-reference-shapes.js?v=animals-v8"></script>
-<script src="solitaire.js?v=animals-v8"></script>
+<script src="solitaire.js?v=animals-v10"></script>
 </body>
 </html>

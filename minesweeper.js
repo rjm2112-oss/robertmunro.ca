@@ -6,7 +6,7 @@ const MODES = [
 ];
 
 const FILL_BOARD_MODE_ID = "fill-board";
-const FILL_BOARD_MINE_DENSITY = 0.185;
+const FILL_BOARD_MINE_DENSITY = 0.208;
 const FILL_BOARD_NORMAL_CELL_SIZE = 30;
 const FILL_BOARD_FULLSCREEN_CELL_SIZE = 32;
 const FILL_BOARD_MOBILE_CELL_SIZE = 28;
@@ -868,7 +868,7 @@ function requestWebsiteFullscreenState() {
 
     const parentWindow = getParentWindow();
     if (!parentWindow) {
-        applyWebsiteFullscreenState(false);
+        applyWebsiteFullscreenState(true);
         return;
     }
 

@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const defaultThemeColor =
         getComputedStyle(document.documentElement).getPropertyValue('--background-color').trim() || '#033561';
     const TETRIS_FULLSCREEN_THEME_COLOR = '#000000';
-    const MINESWEEPER_FULLSCREEN_THEME_COLOR = '#a6a6a6';
+    const SOLITAIRE_FULLSCREEN_THEME_COLOR = '#0b5e2c';
+    const MINESWEEPER_FULLSCREEN_THEME_COLOR = '#c0c0c0';
 
     const panel = nav.querySelector('.panel');
     if (!panel) return;
@@ -80,10 +81,13 @@ document.addEventListener('DOMContentLoaded', () => {
         let themeColor = defaultThemeColor;
         if (document.body.classList.contains(TETRIS_WEBSITE_FULLSCREEN_CLASS)) {
             themeColor = TETRIS_FULLSCREEN_THEME_COLOR;
+        } else if (document.body.classList.contains(SOLITAIRE_WEBSITE_FULLSCREEN_CLASS)) {
+            themeColor = SOLITAIRE_FULLSCREEN_THEME_COLOR;
         } else if (document.body.classList.contains(MINESWEEPER_WEBSITE_FULLSCREEN_CLASS)) {
             themeColor = MINESWEEPER_FULLSCREEN_THEME_COLOR;
         }
         themeColorMeta.setAttribute('content', themeColor);
+        document.documentElement.style.backgroundColor = themeColor;
     };
 
     const setTetrisWebsiteFullscreen = expanded => {

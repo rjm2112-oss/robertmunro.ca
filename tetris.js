@@ -1215,7 +1215,7 @@ function requestWebsiteFullscreenState() {
 
     const parentWindow = getParentWindow();
     if (!parentWindow) {
-        applyWebsiteFullscreenState(false);
+        applyWebsiteFullscreenState(true);
         return;
     }
 

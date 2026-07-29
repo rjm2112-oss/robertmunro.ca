@@ -3714,7 +3714,7 @@ function requestWebsiteFullscreenState() {
 
     const parentWindow = getParentWindow();
     if (!parentWindow) {
-        applyWebsiteFullscreenState(false);
+        applyWebsiteFullscreenState(true);
         return;
     }
 
@@ -3779,6 +3779,7 @@ function initParentFullscreenObserver() {
 
 function applyWebsiteFullscreenState(expanded) {
     websiteFullscreenActive = expanded;
+    document.documentElement.classList.toggle("is-website-fullscreen", expanded);
     document.body.classList.toggle("is-website-fullscreen", expanded);
     updateFullscreenButtonLabel();
     scheduleBoardScale();
