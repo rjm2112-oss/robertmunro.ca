@@ -57,7 +57,7 @@
     .window-frame {
         border: 3px solid #d6d4ce;
         border-top-color: #fbfbf9;
-        border-left-color: #fbfbf9;
+        border-left-color: #d8d8d2;
         border-right-color: #6f6d69;
         border-bottom-color: #6f6d69;
         background: #c0c0c0;
@@ -837,6 +837,12 @@
 </style>
 </head>
 <body>
+<script>
+    if (window.parent === window) {
+        document.documentElement.classList.add("is-website-fullscreen");
+        document.body.classList.add("is-website-fullscreen");
+    }
+</script>
 <div class="solitaire-shell">
     <div class="window-frame">
         <div class="window-body">

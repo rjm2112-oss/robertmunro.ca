@@ -904,9 +904,19 @@ function getParentDocument() {
 }
 
 function detectTouchDevice() {
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport ? viewport.width : window.innerWidth;
+    const viewportHeight = viewport ? viewport.height : window.innerHeight;
+    const isDirectPhoneViewport =
+        window.parent === window &&
+        Math.min(viewportWidth, viewportHeight) <= 600 &&
+        Math.max(viewportWidth, viewportHeight) <= 1024;
+
     return Boolean(
         navigator.maxTouchPoints > 0 ||
-        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches)
+        'ontouchstart' in window ||
+        (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+        isDirectPhoneViewport
     );
 }
 

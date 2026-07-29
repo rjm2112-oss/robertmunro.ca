@@ -542,6 +542,23 @@
 </head>
 
 <body>
+<script>
+    if (window.parent === window) {
+        const viewportWidth = window.visualViewport?.width || window.innerWidth;
+        const viewportHeight = window.visualViewport?.height || window.innerHeight;
+        const isPhoneViewport =
+            Math.min(viewportWidth, viewportHeight) <= 600 &&
+            Math.max(viewportWidth, viewportHeight) <= 1024;
+        const isTouchDevice =
+            navigator.maxTouchPoints > 0 ||
+            "ontouchstart" in window ||
+            window.matchMedia?.("(pointer: coarse)").matches ||
+            isPhoneViewport;
+
+        document.body.classList.add("is-website-fullscreen");
+        document.body.classList.toggle("is-touch-device", isTouchDevice);
+    }
+</script>
 <canvas id="weather-backdrop" aria-hidden="true"></canvas>
 <div class="game-stage">
     <div class="touch-fullscreen-stack">
@@ -665,7 +682,7 @@
 </div>
 </div>
 
-<script src="tetris.js?v=20260729-6"></script>
+<script src="tetris.js?v=20260729-7"></script>
 
 <script>
 const eyeIn = document.querySelector('.eye-inner');

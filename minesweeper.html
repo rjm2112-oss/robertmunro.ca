@@ -540,6 +540,11 @@
 </style>
 </head>
 <body>
+<script>
+    if (window.parent === window) {
+        document.body.classList.add("is-website-fullscreen");
+    }
+</script>
 <div class="ms-stage">
     <div class="ms-window">
         <div class="ms-titlebar">
