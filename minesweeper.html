@@ -453,6 +453,10 @@
         display: none;
     }
 
+    body.is-direct-page.is-mobile-device .ms-selection-row {
+        display: none;
+    }
+
     body.is-mobile-device .ms-selection-row {
         justify-content: flex-start;
     }
@@ -542,7 +546,7 @@
 <body>
 <script>
     if (window.parent === window) {
-        document.body.classList.add("is-website-fullscreen");
+        document.body.classList.add("is-direct-page", "is-website-fullscreen");
     }
 </script>
 <div class="ms-stage">
