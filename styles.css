@@ -41,10 +41,10 @@ html{
     --panel-blur: .75px;
     --panel-saturation: 1.9;
     --panel-brightness: .92;
-    --panel-glint-opacity: .12;
+    --panel-glint-opacity: .08;
     --panel-glint-shift: 0px;
-    --panel-lens-opacity: .04;
-    --panel-lens-edge-opacity: .03;
+    --panel-lens-opacity: .028;
+    --panel-lens-edge-opacity: .02;
     --panel-lens-shift: 0px;
     --panel-lens-counter-shift: 0px;
     --panel-center-x: 12vw;
@@ -151,11 +151,13 @@ body::after{
     z-index:0;
     background:
         linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.015) 46%, rgba(0,10,26,.22)),
-        linear-gradient(90deg, rgba(0,12,28,.30), rgba(0,12,28,.02) 42%, rgba(0,12,28,.28)),
+        linear-gradient(180deg, rgba(0,10,24,0), rgba(0,10,24,0) 37.5%, rgba(0,10,24,.24) 39%, rgba(0,10,24,0) 40.5%),
+        linear-gradient(90deg, rgba(0,12,28,.30), rgba(0,12,28,.02) 42%, rgba(0,12,28,.24) 88%, rgba(0,10,24,.44) 98.5%, rgba(0,12,28,.30)),
         var(--nav-white-wood-grain),
         linear-gradient(105deg, var(--blue-wood-dark) 0%, var(--blue-wood-base) 38%, var(--blue-wood-mid) 61%, var(--blue-wood-dark) 100%);
-    background-size:100% 100%, 100% 100%, cover, 100% 100%;
-    background-position:center, center, center 48%, center;
+    background-size:100% 100%, 60% 100%, 100% 100%, cover, 100% 100%;
+    background-position:center, right top, center, center 48%, center;
+    background-repeat:no-repeat, no-repeat, no-repeat, repeat, no-repeat;
     filter:saturate(1.18) contrast(1.12);
     opacity:.96;
     transform:translate3d(var(--nav-liquid-drift), 0, 0) scale(1.01);
@@ -282,16 +284,16 @@ body::after{
 
 .glass-nav .panel-backdrop::before{
     background:
-        radial-gradient(ellipse 48% 82% at 18% 50%, rgba(255,255,255,.055), transparent 74%),
-        radial-gradient(ellipse 46% 82% at 82% 50%, rgba(0,0,0,.07), transparent 76%);
+        radial-gradient(ellipse 48% 82% at 18% 50%, rgba(255,255,255,.032), transparent 74%),
+        radial-gradient(ellipse 46% 82% at 82% 50%, rgba(0,0,0,.055), transparent 76%);
     opacity:var(--panel-lens-opacity);
     transform:translate3d(var(--panel-lens-shift), 0, 0);
 }
 
 .glass-nav .panel-backdrop::after{
     background:
-        linear-gradient(90deg, rgba(127,225,255,.055), transparent 17%, transparent 83%, rgba(255,190,230,.045)),
-        radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(255,255,255,.065) 76%, transparent 88%);
+        linear-gradient(90deg, rgba(127,225,255,.032), transparent 17%, transparent 83%, rgba(255,190,230,.028)),
+        radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(255,255,255,.04) 76%, transparent 88%);
     opacity:var(--panel-lens-edge-opacity);
     transform:translate3d(var(--panel-lens-counter-shift), 0, 0);
 }
@@ -342,8 +344,8 @@ body::after{
     inset:1px;
     z-index:3;
     background:
-        radial-gradient(ellipse 72% 46% at 30% 3%, rgba(255,255,255,.04), transparent 48%),
-        linear-gradient(104deg, rgba(255,255,255,.03), transparent 18%, transparent 72%, rgba(255,255,255,.012));
+        radial-gradient(ellipse 72% 46% at 30% 3%, rgba(255,255,255,.022), transparent 48%),
+        linear-gradient(104deg, rgba(255,255,255,.018), transparent 18%, transparent 72%, rgba(255,255,255,.008));
     opacity:var(--panel-glint-opacity);
     transform:translate3d(var(--panel-glint-shift), 0, 0);
 }
@@ -358,25 +360,11 @@ body::after{
 }
 
 .glass-nav .panel::before{
-    inset:-26% -18%;
-    background:
-        radial-gradient(ellipse at 18% 7%, rgba(255,255,255,.18), transparent 24%),
-        radial-gradient(ellipse at 88% 88%, rgba(255,255,255,.08), transparent 34%);
-    filter:blur(.4px);
-    opacity:.30;
-    transform:translate3d(var(--panel-glint-shift), 0, 0);
-    z-index:1;
+    content:none;
 }
 
 .glass-nav .panel::after{
-    inset:1px;
-    border:1px solid rgba(255,255,255,.11);
-    box-shadow:
-        inset 0 0 0 1px rgba(0,0,0,.10),
-        inset 0 0 18px rgba(255,255,255,.032),
-        inset 0 9px 13px rgba(255,255,255,.022),
-        inset 0 -10px 16px rgba(0,0,0,.08);
-    z-index:4;
+    content:none;
 }
 
 @media (max-width: 680px){
@@ -446,6 +434,8 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
 #section1 .preview-list{
     position:relative;
     isolation:isolate;
+    --side-panel-min-height:72px;
+    --side-panel-max-height:132px;
     --side-panel-highlight-y:0px;
     --side-panel-highlight-height:5.25rem;
     --side-panel-highlight-opacity:.12;
@@ -479,10 +469,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     opacity:0;
     background:none;
     mix-blend-mode:normal;
-    transition:
-        transform .6s cubic-bezier(.18,.86,.16,1),
-        height .6s cubic-bezier(.18,.86,.16,1),
-        opacity .35s ease;
+    transition:opacity .28s ease;
 }
 
 #section1 .preview-list .post{
@@ -508,6 +495,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
     left:.45rem;
     right:.45rem;
     height:5.25rem;
+    max-height:var(--side-panel-max-height);
     overflow:hidden;
     isolation:isolate;
     background:
@@ -530,8 +518,7 @@ img{max-width:100%;height:auto;margin:20px auto;display:block;}
         scaleX(var(--side-panel-scale-x))
         scaleY(var(--side-panel-scale-y));
     transform-origin:center center;
-    transition-property:transform, opacity, height;
-    transition-timing-function:ease;
+    transition:opacity .24s ease-out;
     will-change:transform, backdrop-filter, opacity, height;
     backface-visibility:hidden;
 }

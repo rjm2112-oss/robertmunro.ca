@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.style.setProperty('--panel-travel', '0');
             currentLeft = targetLeft;
 
-            setNavRefractionTarget(0, 0, 0, 0, 0);
+            applyStaticNavRefractionTarget();
             animateWarpTo(restingWarp, 0);
 
             return 0;
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const dur = durationForDistance(distance);
         panel.style.transitionDuration = `${dur}s`;
         nav.style.setProperty('--panel-center-x', `${targetLeft + panel.clientWidth / 2}px`);
-        updatePanelMotion(distance, dur, targetLeft);
+        updatePanelMotion(distance, dur);
         panel.style.setProperty('--panel-offset-x', `${targetLeft}px`);
         currentLeft = targetLeft;
 
@@ -568,18 +568,130 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const restingWarp = 16;
+    const staticNavRefraction = {
+        shift: 2.4,
+        drift: -0.38,
+        glint: -0.9,
+        lens: 1.48,
+        lensCounter: -0.7
+    };
     const sideRestingWarp = 16;
     let sideWarpFrame = null;
     let sideWarpLevel = 0;
-    let currentSideTop = 0;
     let activeSidePost = null;
     let sideSettleTimer = null;
     let sideHoverDelayTimer = null;
-    const sideHoverDelayMs = 180;
+    const sidePanelBasePadding = 42;
+    const fallbackSidePanelMinHeight = 72;
+    const fallbackSidePanelMaxHeight = 132;
+    const sideHoverDelayMs = 0;
+    let sidePanelCurrentTop = 0;
+    let sidePanelCurrentHeight = fallbackSidePanelMinHeight;
+    let sidePanelTargetTop = 0;
+    let sidePanelTargetHeight = fallbackSidePanelMinHeight;
+    let sidePanelTopVelocity = 0;
+    let sidePanelHeightVelocity = 0;
+    let sidePanelMotionFrame = null;
+    let sidePanelMotionLastNow = 0;
+
+    const getSidePanelHeightRange = () => {
+        if (!sideList) {
+            return {
+                minHeight: fallbackSidePanelMinHeight,
+                maxHeight: fallbackSidePanelMaxHeight
+            };
+        }
+
+        const sideStyles = window.getComputedStyle(sideList);
+        const minHeightRaw = Number.parseFloat(sideStyles.getPropertyValue('--side-panel-min-height'));
+        const maxHeightRaw = Number.parseFloat(sideStyles.getPropertyValue('--side-panel-max-height'));
+        const minHeight = Number.isFinite(minHeightRaw)
+            ? minHeightRaw
+            : fallbackSidePanelMinHeight;
+        const maxHeight = Number.isFinite(maxHeightRaw)
+            ? maxHeightRaw
+            : fallbackSidePanelMaxHeight;
+
+        return {
+            minHeight,
+            maxHeight: Math.max(minHeight, maxHeight)
+        };
+    };
 
     const clearSideHoverDelay = () => {
         window.clearTimeout(sideHoverDelayTimer);
         sideHoverDelayTimer = null;
+    };
+
+    const applySidePanelPlacement = (top, height) => {
+        if (!sidePanel || !sideList) return;
+
+        sidePanelCurrentTop = top;
+        sidePanelCurrentHeight = height;
+        sidePanel.style.height = `${height.toFixed(2)}px`;
+        sideList.style.setProperty('--side-panel-y', `${top.toFixed(2)}px`);
+        sideList.style.setProperty('--side-panel-highlight-y', `${top.toFixed(2)}px`);
+        sideList.style.setProperty('--side-panel-highlight-height', `${height.toFixed(2)}px`);
+    };
+
+    const stopSidePanelMotion = () => {
+        if (sidePanelMotionFrame !== null) {
+            window.cancelAnimationFrame(sidePanelMotionFrame);
+            sidePanelMotionFrame = null;
+        }
+
+        sidePanelMotionLastNow = 0;
+        sidePanelTopVelocity = 0;
+        sidePanelHeightVelocity = 0;
+    };
+
+    const stepSidePanelMotion = now => {
+        if (!sidePanel || !sideList) {
+            stopSidePanelMotion();
+            return;
+        }
+
+        const deltaTime = sidePanelMotionLastNow === 0
+            ? 0.016
+            : Math.min((now - sidePanelMotionLastNow) / 1000, 0.05);
+        sidePanelMotionLastNow = now;
+
+        [sidePanelCurrentTop, sidePanelTopVelocity] = smoothDamp(
+            sidePanelCurrentTop,
+            sidePanelTargetTop,
+            sidePanelTopVelocity,
+            0.26,
+            deltaTime
+        );
+        [sidePanelCurrentHeight, sidePanelHeightVelocity] = smoothDamp(
+            sidePanelCurrentHeight,
+            sidePanelTargetHeight,
+            sidePanelHeightVelocity,
+            0.30,
+            deltaTime
+        );
+
+        applySidePanelPlacement(sidePanelCurrentTop, sidePanelCurrentHeight);
+
+        const settled =
+            Math.abs(sidePanelCurrentTop - sidePanelTargetTop) < 0.16 &&
+            Math.abs(sidePanelCurrentHeight - sidePanelTargetHeight) < 0.16 &&
+            Math.abs(sidePanelTopVelocity) < 0.08 &&
+            Math.abs(sidePanelHeightVelocity) < 0.08;
+
+        if (!settled) {
+            sidePanelMotionFrame = window.requestAnimationFrame(stepSidePanelMotion);
+            return;
+        }
+
+        applySidePanelPlacement(sidePanelTargetTop, sidePanelTargetHeight);
+        stopSidePanelMotion();
+    };
+
+    const startSidePanelMotion = () => {
+        if (sidePanelMotionFrame !== null) return;
+
+        sidePanelMotionFrame = window.requestAnimationFrame(stepSidePanelMotion);
     };
 
     const setSideGlassStrength = strength => {
@@ -631,12 +743,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sideWarpFrame = window.requestAnimationFrame(step);
     };
 
-    const updateSidePanelMotion = (distance, durationSeconds) => {
+    const updateSidePanelMotion = distance => {
         if (!sideList) return;
 
-        const travelMs = Math.max(durationSeconds * 1000, 560);
-        const rampUpMs = Math.max(220, Math.min(travelMs * 0.5, 440));
-        const rampDownMs = Math.max(840, Math.min(travelMs * 1.15, 1320));
+        const travelMs = Math.min(Math.max(Math.abs(distance) * 1.15, 420), 860);
+        const rampUpMs = Math.max(180, Math.min(travelMs * 0.38, 320));
+        const rampDownMs = Math.max(520, Math.min(travelMs * 1.05, 940));
 
         sideList.style.setProperty('--side-panel-scale-x', '1');
         sideList.style.setProperty('--side-panel-scale-y', '1');
@@ -659,24 +771,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const heading = post.querySelector('h3');
         const headingTop = heading ? post.offsetTop + heading.offsetTop : post.offsetTop;
         const headingHeight = heading ? heading.offsetHeight : post.offsetHeight;
-        const panelHeight = Math.max(headingHeight + 42, 72);
-        const targetTop = headingTop + (headingHeight / 2) - (panelHeight / 2);
+        const { minHeight, maxHeight } = getSidePanelHeightRange();
+        const panelHeight = Math.min(
+            maxHeight,
+            Math.max(headingHeight + sidePanelBasePadding, minHeight)
+        );
+        const rawTargetTop = headingTop + (headingHeight / 2) - (panelHeight / 2);
+        const maxTargetTop = Math.max(0, sideList.scrollHeight - panelHeight);
+        const targetTop = Math.max(0, Math.min(rawTargetTop, maxTargetTop));
+        const distance = targetTop - sidePanelCurrentTop;
 
-        const distance = targetTop - currentSideTop;
-        const duration = instant
-            ? 0
-            : Math.min(Math.max(Math.abs(distance) * msPerPixel / 1000 * 1.65, 1.15), 2.05);
-
-        sidePanel.style.transitionDuration = `${duration}s`;
-        sidePanel.style.transitionTimingFunction = 'cubic-bezier(.16,.86,.16,1)';
-        sidePanel.style.height = `${panelHeight}px`;
+        sidePanelTargetTop = targetTop;
+        sidePanelTargetHeight = panelHeight;
         sidePanel.style.opacity = '1';
-        sideList.style.setProperty('--side-panel-y', `${targetTop}px`);
-        sideList.style.setProperty('--side-panel-highlight-y', `${targetTop}px`);
-        sideList.style.setProperty('--side-panel-highlight-height', `${panelHeight}px`);
-        currentSideTop = targetTop;
 
         if (instant) {
+            stopSidePanelMotion();
+            applySidePanelPlacement(targetTop, panelHeight);
             sideList.style.setProperty('--side-panel-shift-y', '0px');
             sideList.style.setProperty('--side-panel-scale-x', '1');
             sideList.style.setProperty('--side-panel-scale-y', '1');
@@ -686,9 +797,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        startSidePanelMotion();
         sideList.style.setProperty('--side-panel-highlight-opacity', '0.30');
 
-        updateSidePanelMotion(distance, duration);
+        updateSidePanelMotion(distance);
     };
 
     sidePosts.forEach(post => {
@@ -717,12 +829,12 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.style.setProperty('--panel-warp', normalized.toFixed(3));
         panel.style.setProperty('--panel-blur', `${(0.75 + normalized * 0.75).toFixed(2)}px`);
         panel.style.setProperty('--panel-saturation', '1.72');
-        panel.style.setProperty('--panel-brightness', '0.985');
-        panel.style.setProperty('--panel-glint-opacity', '0.18');
-        panel.style.setProperty('--panel-lens-opacity', '0.08');
-        panel.style.setProperty('--panel-lens-edge-opacity', '0.055');
+        panel.style.setProperty('--panel-brightness', '0.97');
+        panel.style.setProperty('--panel-glint-opacity', '0.08');
+        panel.style.setProperty('--panel-lens-opacity', '0.045');
+        panel.style.setProperty('--panel-lens-edge-opacity', '0.03');
         nav.style.setProperty('--panel-warp', normalized.toFixed(3));
-        nav.style.setProperty('--nav-hot-alpha', '0.11');
+        nav.style.setProperty('--nav-hot-alpha', '0.075');
         nav.style.setProperty('--nav-hot-size', '13%');
         nav.style.setProperty('--nav-saturation', '1.12');
         nav.style.setProperty('--nav-y-shift', '0px');
@@ -770,36 +882,30 @@ document.addEventListener('DOMContentLoaded', () => {
         warpFrame = window.requestAnimationFrame(step);
     };
 
-    const updatePanelMotion = (distance, durationSeconds, targetLeft) => {
-        const direction = distance === 0 ? 0 : Math.sign(distance);
+    const applyStaticNavRefractionTarget = () => {
+        setNavRefractionTarget(
+            staticNavRefraction.shift,
+            staticNavRefraction.drift,
+            staticNavRefraction.glint,
+            staticNavRefraction.lens,
+            staticNavRefraction.lensCounter
+        );
+    };
+
+    const updatePanelMotion = (distance, durationSeconds) => {
         const travel = Math.min(Math.abs(distance) / Math.max(nav.clientWidth, 1), 1);
-        // Keep the refraction strong, but make the visible overshoot smaller.
-        const refractionShiftPx = Math.max(-8, Math.min(8, distance * 0.038));
-        const physicalShiftPx = Math.max(-5, Math.min(5, distance * 0.024));
-        const maxLeftShift = -targetLeft;
-        const maxRightShift = nav.clientWidth - panel.clientWidth - targetLeft;
-        const shiftPx = Math.max(maxLeftShift, Math.min(maxRightShift, physicalShiftPx));
-        const tiltDeg = Math.max(-0.08, Math.min(0.08, direction * travel * 0.08));
-        const peakWarp = distance === 0
-            ? restingWarp
-            : Math.min(88, 26 + Math.abs(distance) * 0.052 + travel * 24);
+        const peakWarp = restingWarp;
         const travelMs = Math.max(durationSeconds * 1000, 320);
-        const rampUpMs = Math.max(140, Math.min(travelMs * 0.42, 280));
-        const rampDownMs = Math.max(420, Math.min(travelMs * 0.9, 700));
+        const rampUpMs = 0;
+        const rampDownMs = 0;
         const settleDuration = Math.max(0.2, Math.min(durationSeconds * 0.36, 0.48));
 
-        panel.style.setProperty('--panel-shift-x', `${shiftPx}px`);
-        panel.style.setProperty('--panel-scale-x', (1 + travel * 0.02).toFixed(4));
+        panel.style.setProperty('--panel-shift-x', '0px');
+        panel.style.setProperty('--panel-scale-x', '1');
         panel.style.setProperty('--panel-scale-y', '1');
-        panel.style.setProperty('--panel-tilt', `${tiltDeg}deg`);
+        panel.style.setProperty('--panel-tilt', '0deg');
         panel.style.setProperty('--panel-travel', travel.toFixed(3));
-        setNavRefractionTarget(
-            refractionShiftPx,
-            -refractionShiftPx * 0.16,
-            -refractionShiftPx * 0.38,
-            refractionShiftPx * 0.62,
-            -refractionShiftPx * 0.28
-        );
+        applyStaticNavRefractionTarget();
         animateWarpTo(peakWarp, rampUpMs, easeOutCubic);
 
         window.clearTimeout(settleTimer);
@@ -810,7 +916,7 @@ document.addEventListener('DOMContentLoaded', () => {
             panel.style.setProperty('--panel-scale-y', '1');
             panel.style.setProperty('--panel-tilt', '0deg');
             panel.style.setProperty('--panel-travel', '0');
-            setNavRefractionTarget(0, 0, 0, 0, 0);
+            applyStaticNavRefractionTarget();
             animateWarpTo(restingWarp, rampDownMs, easeInOutSine);
         }, travelMs);
     };
