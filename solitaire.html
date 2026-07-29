@@ -596,7 +596,7 @@
         min-height: 100vh;
         min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         flex: 1 1 auto;
-        border-width: 2px;
+        border-width: 0;
         box-shadow: 0 14px 30px var(--frame-shadow);
     }
 
@@ -606,7 +606,7 @@
 
     body.is-website-fullscreen .window-body {
         min-height: 100vh;
-        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 4px);
+        min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
         display: flex;
         flex-direction: column;
         overflow: hidden;
