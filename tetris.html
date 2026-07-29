@@ -11,21 +11,22 @@
     }
 
     :root {
-        --game-width: 515px;
-        --base-game-height: 678px;
+        --game-width: 520px;
+        --base-game-height: 676px;
         --touch-controls-gap: 8px;
         --touch-controls-height: 214px;
         --touch-control-button-width: calc((var(--board-width) - 20px) / 3);
         --game-height: var(--base-game-height);
         --board-width: 300px;
         --side-panel-width: 150px;
-        --panel-gap: 15px;
+        --panel-gap: 20px;
         --game-shell-padding-x: 24px;
         --page-padding: 10px;
         --game-bottom-gap: 18px;
+        --game-zoom: 1;
         --game-scale: min(
             1,
-            calc((100vw - (var(--page-padding) * 2)) / 515px),
+            calc((100vw - (var(--page-padding) * 2)) / var(--game-width)),
             calc((100vh - (var(--page-padding) * 2) - var(--game-bottom-gap)) / var(--game-height))
         );
     }
@@ -48,6 +49,12 @@
     body.is-website-fullscreen {
         --page-padding: 0px;
         --game-bottom-gap: 0px;
+        --fullscreen-free-space: clamp(80px, 11vh, 112px);
+        --game-scale: min(
+            var(--game-zoom),
+            calc(100vw / var(--game-width)),
+            calc((100vh - var(--fullscreen-free-space)) / var(--game-height))
+        );
     }
 
     body.is-touch-device.is-website-fullscreen {
@@ -59,7 +66,7 @@
             var(--touch-controls-height)
         );
         --game-scale: min(
-            1,
+            var(--game-zoom),
             calc((100vw - (var(--page-padding) * 2)) / var(--game-width)),
             calc((100vh - var(--touch-top-offset) - var(--touch-bottom-offset)) / var(--game-height))
         );
@@ -74,10 +81,11 @@
     }
 
     body.is-website-fullscreen .game-container {
-        top: 50%;
+        top: calc((100vh - (var(--game-height) * var(--game-scale))) / 3);
+        top: calc((100dvh - (var(--game-height) * var(--game-scale))) / 3);
         left: 50%;
-        transform: translate(-50%, -50%) scale(var(--game-scale));
-        transform-origin: center center;
+        transform: translateX(-50%) scale(var(--game-scale));
+        transform-origin: top center;
     }
 
     body.is-touch-device.is-website-fullscreen .game-stage {
@@ -107,10 +115,6 @@
         left: auto;
         transform: none;
         transform-origin: top center;
-    }
-
-    body.is-touch-device.is-website-fullscreen .side-panel {
-        height: var(--base-game-height);
     }
 
     #weather-backdrop {
@@ -143,7 +147,7 @@
         left: 50%;
         transform: translateX(-50%) scale(var(--game-scale));
         transform-origin: top center;
-        padding: 22px var(--game-shell-padding-x) 12px;
+        padding: 22px var(--game-shell-padding-x);
         border: 1px solid rgba(168, 190, 255, 0.18);
         border-radius: 24px;
         background: rgba(3, 8, 16, 0.2);
@@ -162,11 +166,26 @@
         width: var(--board-width);
         height: 630px;
     }
+    .board-shell::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        box-sizing: border-box;
+        border: 1px solid rgba(156, 174, 215, 0.28);
+        pointer-events: none;
+        z-index: 2;
+    }
     #tetris-board{
-        width:var(--board-width);height:630px;border:2px solid rgba(156, 174, 215, 0.28);
+        width:var(--board-width);height:630px;border:0;
         background:rgba(4, 9, 16, 0.34);
         position:relative;overflow:hidden;
 
+    }
+    #next-canvas,
+    #stow-canvas {
+        display: block;
+        width: 150px;
+        height: 150px;
     }
     .pause-overlay {
         position: absolute;
@@ -196,24 +215,105 @@
         letter-spacing: 0.04em;
         color: rgba(255, 255, 255, 0.75);
     }
+    .pause-resize-controls {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 7px 8px 7px 12px;
+        border: 1px solid rgba(165, 184, 230, 0.18);
+        border-radius: 999px;
+        background: rgba(11, 17, 28, 0.68);
+        color: rgba(242, 245, 255, 0.84);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+    }
+    body.is-website-fullscreen .pause-overlay:not([hidden]) {
+        pointer-events: auto;
+    }
+    body.is-website-fullscreen:not(.is-touch-device) .pause-overlay:not([hidden]) .pause-resize-controls {
+        display: flex;
+    }
+    .pause-resize-buttons {
+        display: flex;
+        gap: 5px;
+    }
+    .pause-resize-button {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border-radius: 50%;
+        background: rgba(18, 27, 43, 0.9);
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    .pause-resize-button:hover:not(:disabled) {
+        border-color: rgba(183, 201, 244, 0.48);
+        background: rgba(29, 42, 65, 0.94);
+    }
+    .pause-resize-button:focus-visible {
+        outline: 2px solid rgba(160, 194, 255, 0.78);
+        outline-offset: 2px;
+    }
+    .pause-resize-button:disabled {
+        opacity: 0.34;
+        cursor: default;
+    }
+    .pause-resize-icon {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
 
     .side-panel{
         display:flex;
         flex-direction:column;
         gap:20px;
         width: var(--side-panel-width);
+        height: 630px;
+        min-height: 0;
         align-items: center;
+    }
+    .side-panel > * {
+        flex-shrink: 0;
     }
     #next-piece{
         width:150px;
         height:150px;
-        border:2px solid rgba(156, 174, 215, 0.28);
+        border:0;
         background:rgba(4, 9, 16, 0.34);
         position:relative;overflow:hidden;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
-    .stats{display:flex;flex-direction:column;gap:10px;}
+    #next-piece::after,
+    .stow-box::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 200%;
+        box-sizing: border-box;
+        border: 1px solid rgba(156, 174, 215, 0.28);
+        transform: scale(0.5);
+        transform-origin: top left;
+        pointer-events: none;
+        z-index: 2;
+    }
+    .stats{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+        width:100%;
+    }
     .stat-item{
+        box-sizing:border-box;
+        width:100%;
         padding:8px 10px;
         text-align:center;
         font-size:14px;
@@ -225,9 +325,18 @@
         margin-top:20px;
         display:flex;
         align-items:center;
-        justify-content:flex-start;
-        gap:10px;
+        justify-content:space-between;
+        gap:8px;
+        width:100%;
         flex-wrap:nowrap;
+        transform: translateY(-10px);
+    }
+    .controls button{
+        box-sizing:border-box;
+        flex:1 1 0;
+        min-width:0;
+        padding-left:6px;
+        padding-right:6px;
     }
 
     .board-actions {
@@ -356,8 +465,9 @@
     .bottom-section{
         margin-top:auto;
         align-self:flex-start;
-        min-width: var(--side-panel-width);
-        width: max-content;
+        box-sizing:border-box;
+        min-width:0;
+        width:var(--side-panel-width);
     }
 
 
@@ -365,12 +475,11 @@
     .stow-box {
         width: 150px;
         height: 150px;
-        border: 2px solid rgba(156, 174, 215, 0.28);
+        border: 0;
         background: rgba(4, 9, 16, 0.34);
         position: relative;
         overflow: hidden;
         margin-top: -179px;
-        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
     }
 
     .eye-wrapper {
@@ -380,6 +489,24 @@
         transform: none;
         position: relative;
         overflow: visible;
+    }
+
+    .eye-wrapper,
+    .stow-box,
+    .bottom-section {
+        position: relative;
+    }
+
+    .eye-wrapper {
+        top: -10px;
+    }
+
+    .stow-box {
+        top: -7px;
+    }
+
+    .bottom-section {
+        top: -12px;
     }
 
     .eye-stage {
@@ -422,6 +549,35 @@
                     <div id="pause-overlay" class="pause-overlay" hidden>
                         <div class="pause-title">Paused</div>
                         <div class="pause-copy">Press Resume to keep playing</div>
+                        <div id="pause-resize-controls" class="pause-resize-controls" aria-label="Resize game">
+                            <span>Resize game</span>
+                            <div class="pause-resize-buttons">
+                                <button
+                                    id="game-size-down"
+                                    class="pause-resize-button"
+                                    type="button"
+                                    aria-label="Make game smaller"
+                                    title="Make game smaller"
+                                >
+                                    <svg class="pause-resize-icon" viewBox="0 0 20 20" aria-hidden="true">
+                                        <line x1="10" y1="4" x2="10" y2="16"></line>
+                                        <polyline points="5.5 11.5 10 16 14.5 11.5"></polyline>
+                                    </svg>
+                                </button>
+                                <button
+                                    id="game-size-up"
+                                    class="pause-resize-button"
+                                    type="button"
+                                    aria-label="Make game larger"
+                                    title="Make game larger"
+                                >
+                                    <svg class="pause-resize-icon" viewBox="0 0 20 20" aria-hidden="true">
+                                        <line x1="10" y1="16" x2="10" y2="4"></line>
+                                        <polyline points="5.5 8.5 10 4 14.5 8.5"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="board-actions">
@@ -506,7 +662,7 @@
 </div>
 </div>
 
-<script src="tetris.js"></script>
+<script src="tetris.js?v=20260729-5"></script>
 
 <script>
 const eyeIn = document.querySelector('.eye-inner');

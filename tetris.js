@@ -2,6 +2,12 @@
 const COLS = 10;
 const ROWS = 20;
 const BLOCK_SIZE = 30;
+const BOARD_LOGICAL_WIDTH = COLS * BLOCK_SIZE;
+const BOARD_LOGICAL_HEIGHT = ROWS * BLOCK_SIZE;
+const PREVIEW_LOGICAL_SIZE = 150;
+const MIN_DROP_INTERVAL_MS = 200;
+const LOCK_DELAY_MS = 500;
+const MAX_LOCK_RESETS = 15;
 
 const COLORS = [
     null,
@@ -56,17 +62,21 @@ let stowedPiece = null;
 let score = 0, level = 1, lines = 0;
 let gameOver = false, isPaused = true;
 let dropStart = 0, lastTime = 0, gameSpeed = 1000;
+let groundedAt = null, lockResetCount = 0;
 
-let ctx, nextCtx, tetrisCanvas, nextCanvas, weatherCanvas, weatherCtx;
+let ctx, nextCtx, stowCtx, tetrisCanvas, nextCanvas, stowCanvas, weatherCanvas, weatherCtx;
 let clearingRows = null, flashCount = 0, lastFlashTime = 0, isFlashing = false;
 let pendingScoreData = null;
 const FLASH_INTERVAL_MS = 120;
 const WEBSITE_FULLSCREEN_CLASS = 'tetris-website-fullscreen';
 const TOUCH_DEVICE_CLASS = 'is-touch-device';
+const GAME_ZOOM_STEPS = [0.72, 0.85, 1, 1.15, 1.3];
 const IS_FILE_ORIGIN = window.location.protocol === 'file:';
 const MESSAGE_TARGET_ORIGIN =
     window.location.origin === 'null' || IS_FILE_ORIGIN ? '*' : window.location.origin;
 let websiteFullscreenActive = false;
+let gameZoomStepIndex = 2;
+let gameCanvasResolutionFrame = 0;
 let lastFullscreenTouchTime = 0;
 let lastTouchControlTime = 0;
 
@@ -80,6 +90,8 @@ let lastStowTime = 0;
 const STOW_COOLDOWN_MS = 0;
 const WEATHER_SCENE_ADVANCE_LINES = 10;
 const WEATHER_TRANSITION_MS = 1800;
+const CLOUD_VISIBILITY_BOOST = 1.18;
+const RAIN_VISIBILITY_BOOST = 1.2;
 
 const WEATHER_SCENE_DEFAULTS = {
     skyTop: '#02040a',
@@ -112,8 +124,8 @@ const WEATHER_SCENE_DEFAULTS = {
     scenery: 'mountains',
     horizon: 0.76,
     groundColor: '#061019',
-    detailColor: 'rgba(118, 142, 168, 0.10)',
-    accentColor: 'rgba(198, 214, 234, 0.12)'
+    detailColor: 'rgba(118, 142, 168, 0.13)',
+    accentColor: 'rgba(198, 214, 234, 0.14)'
 };
 
 function createWeatherScene(config) {
@@ -144,7 +156,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.12,
         horizon: 0.76,
         groundColor: '#050d15',
-        detailColor: 'rgba(126, 151, 178, 0.10)'
+        detailColor: 'rgba(126, 151, 178, 0.13)'
     }),
     createWeatherScene({
         name: 'Black Forest Thunder',
@@ -171,7 +183,7 @@ const WEATHER_SCENES = [
         lightningGapMax: 7.8,
         horizon: 0.73,
         groundColor: '#040a10',
-        detailColor: 'rgba(100, 122, 146, 0.08)'
+        detailColor: 'rgba(100, 122, 146, 0.11)'
     }),
     createWeatherScene({
         name: 'Atacama Ghost Flats',
@@ -195,8 +207,8 @@ const WEATHER_SCENES = [
         scenery: 'saltflats',
         horizon: 0.82,
         groundColor: '#08121a',
-        detailColor: 'rgba(154, 178, 206, 0.12)',
-        accentColor: 'rgba(208, 225, 246, 0.08)'
+        detailColor: 'rgba(154, 178, 206, 0.15)',
+        accentColor: 'rgba(208, 225, 246, 0.10)'
     }),
     createWeatherScene({
         name: 'Namib Fog Dunes',
@@ -221,7 +233,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.18,
         horizon: 0.79,
         groundColor: '#071019',
-        detailColor: 'rgba(134, 152, 173, 0.09)'
+        detailColor: 'rgba(134, 152, 173, 0.12)'
     }),
     createWeatherScene({
         name: 'Himalayan Ridge Lightning',
@@ -250,7 +262,7 @@ const WEATHER_SCENES = [
         lightningGapMax: 5.8,
         horizon: 0.71,
         groundColor: '#04080e',
-        detailColor: 'rgba(100, 120, 144, 0.08)'
+        detailColor: 'rgba(100, 120, 144, 0.11)'
     }),
     createWeatherScene({
         name: 'Yukon Lake Mist',
@@ -274,7 +286,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.17,
         horizon: 0.79,
         groundColor: '#08111a',
-        detailColor: 'rgba(122, 147, 170, 0.09)'
+        detailColor: 'rgba(122, 147, 170, 0.12)'
     }),
     createWeatherScene({
         name: 'Iceland Ash Cone',
@@ -302,8 +314,8 @@ const WEATHER_SCENES = [
         fogOpacity: 0.08,
         horizon: 0.77,
         groundColor: '#06090f',
-        detailColor: 'rgba(92, 106, 124, 0.08)',
-        accentColor: 'rgba(255, 129, 76, 0.12)'
+        detailColor: 'rgba(92, 106, 124, 0.11)',
+        accentColor: 'rgba(255, 129, 76, 0.14)'
     }),
     createWeatherScene({
         name: 'Carpathian Tree Line',
@@ -327,7 +339,7 @@ const WEATHER_SCENES = [
         rainOpacity: 0.14,
         horizon: 0.75,
         groundColor: '#071019',
-        detailColor: 'rgba(116, 140, 164, 0.08)'
+        detailColor: 'rgba(116, 140, 164, 0.11)'
     }),
     createWeatherScene({
         name: 'Norway Fjord Rain',
@@ -353,7 +365,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.11,
         horizon: 0.79,
         groundColor: '#050d15',
-        detailColor: 'rgba(130, 151, 176, 0.10)'
+        detailColor: 'rgba(130, 151, 176, 0.13)'
     }),
     createWeatherScene({
         name: 'Arctic Tundra Gloom',
@@ -379,7 +391,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.14,
         horizon: 0.81,
         groundColor: '#09111a',
-        detailColor: 'rgba(150, 169, 192, 0.10)'
+        detailColor: 'rgba(150, 169, 192, 0.13)'
     }),
     createWeatherScene({
         name: 'Sahara Moon Dunes',
@@ -402,7 +414,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.07,
         horizon: 0.8,
         groundColor: '#08111a',
-        detailColor: 'rgba(140, 157, 180, 0.10)'
+        detailColor: 'rgba(140, 157, 180, 0.13)'
     }),
     createWeatherScene({
         name: 'Patagonia Escarpment',
@@ -428,7 +440,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.09,
         horizon: 0.74,
         groundColor: '#050c13',
-        detailColor: 'rgba(118, 135, 156, 0.09)'
+        detailColor: 'rgba(118, 135, 156, 0.12)'
     }),
     createWeatherScene({
         name: 'Amazon Canopy Dark',
@@ -455,8 +467,8 @@ const WEATHER_SCENES = [
         fogOpacity: 0.14,
         horizon: 0.78,
         groundColor: '#051016',
-        detailColor: 'rgba(94, 124, 112, 0.12)',
-        accentColor: 'rgba(140, 184, 152, 0.10)'
+        detailColor: 'rgba(94, 124, 112, 0.15)',
+        accentColor: 'rgba(140, 184, 152, 0.12)'
     }),
     createWeatherScene({
         name: 'Dolomite Ravine',
@@ -482,7 +494,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.08,
         horizon: 0.77,
         groundColor: '#071019',
-        detailColor: 'rgba(134, 149, 170, 0.10)'
+        detailColor: 'rgba(134, 149, 170, 0.13)'
     }),
     createWeatherScene({
         name: 'Greenland Glacier Silence',
@@ -505,8 +517,8 @@ const WEATHER_SCENES = [
         fogOpacity: 0.1,
         horizon: 0.81,
         groundColor: '#08111a',
-        detailColor: 'rgba(166, 189, 216, 0.14)',
-        accentColor: 'rgba(212, 228, 248, 0.10)'
+        detailColor: 'rgba(166, 189, 216, 0.17)',
+        accentColor: 'rgba(212, 228, 248, 0.12)'
     }),
     createWeatherScene({
         name: 'Okavango Night Marsh',
@@ -532,8 +544,8 @@ const WEATHER_SCENES = [
         fogOpacity: 0.16,
         horizon: 0.82,
         groundColor: '#071019',
-        detailColor: 'rgba(132, 158, 142, 0.10)',
-        accentColor: 'rgba(170, 204, 184, 0.08)'
+        detailColor: 'rgba(132, 158, 142, 0.13)',
+        accentColor: 'rgba(170, 204, 184, 0.10)'
     }),
     createWeatherScene({
         name: 'Hebridean Shore Squall',
@@ -560,7 +572,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.08,
         horizon: 0.79,
         groundColor: '#050c14',
-        detailColor: 'rgba(126, 149, 176, 0.09)'
+        detailColor: 'rgba(126, 149, 176, 0.12)'
     }),
     createWeatherScene({
         name: 'Altiplano Storm Plain',
@@ -591,8 +603,8 @@ const WEATHER_SCENES = [
         fogOpacity: 0.1,
         horizon: 0.8,
         groundColor: '#050c13',
-        detailColor: 'rgba(132, 150, 172, 0.12)',
-        accentColor: 'rgba(206, 220, 242, 0.08)'
+        detailColor: 'rgba(132, 150, 172, 0.15)',
+        accentColor: 'rgba(206, 220, 242, 0.10)'
     }),
     createWeatherScene({
         name: 'Basalt Coast Gale',
@@ -620,7 +632,7 @@ const WEATHER_SCENES = [
         fogOpacity: 0.12,
         horizon: 0.75,
         groundColor: '#04080f',
-        detailColor: 'rgba(108, 126, 147, 0.08)'
+        detailColor: 'rgba(108, 126, 147, 0.11)'
     }),
     createWeatherScene({
         name: 'Fiordland Peak Squall',
@@ -650,7 +662,7 @@ const WEATHER_SCENES = [
         lightningGapMax: 7.2,
         horizon: 0.72,
         groundColor: '#04070d',
-        detailColor: 'rgba(112, 128, 150, 0.08)'
+        detailColor: 'rgba(112, 128, 150, 0.11)'
     })
 ];
 
@@ -697,6 +709,9 @@ const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const pauseOverlay = document.getElementById('pause-overlay');
+const pauseResizeControls = document.getElementById('pause-resize-controls');
+const gameSizeDownBtn = document.getElementById('game-size-down');
+const gameSizeUpBtn = document.getElementById('game-size-up');
 const touchControls = document.getElementById('touch-controls');
 const touchControlsShell = touchControls?.closest('.touch-controls-shell') ?? null;
 const gameContainerEl = document.querySelector('.game-container');
@@ -714,6 +729,14 @@ pauseBtn.addEventListener('keydown', e => {
 if (fullscreenBtn) {
     fullscreenBtn.addEventListener('click', handleFullscreenButtonClick);
     fullscreenBtn.addEventListener('touchend', handleFullscreenButtonTouch, { passive: false });
+}
+
+if (gameSizeDownBtn) {
+    gameSizeDownBtn.addEventListener('click', () => stepGameZoom(-1));
+}
+
+if (gameSizeUpBtn) {
+    gameSizeUpBtn.addEventListener('click', () => stepGameZoom(1));
 }
 
 if (touchControls) {
@@ -740,7 +763,7 @@ function changeEyeColor() {
 
 function getSpeedForLevel(lvl) {
     const factor = 0.9;
-    return Math.max(200, 1000 * Math.pow(factor, lvl - 1));
+    return Math.max(MIN_DROP_INTERVAL_MS, 1000 * Math.pow(factor, lvl - 1));
 }
 
 function clamp(value, min, max) {
@@ -782,6 +805,78 @@ function resizeWeatherCanvas() {
     weatherCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
+function resizeLogicalCanvas(canvas, renderCtx, logicalWidth, logicalHeight, renderScale, dpr) {
+    if (!canvas || !renderCtx) return false;
+
+    const cssWidth = canvas.clientWidth || logicalWidth;
+    const cssHeight = canvas.clientHeight || logicalHeight;
+    const pixelWidth = Math.max(1, Math.round(cssWidth * renderScale * dpr));
+    const pixelHeight = Math.max(1, Math.round(cssHeight * renderScale * dpr));
+    const dimensionsChanged = canvas.width !== pixelWidth || canvas.height !== pixelHeight;
+
+    if (dimensionsChanged) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+    }
+
+    renderCtx.setTransform(
+        pixelWidth / logicalWidth,
+        0,
+        0,
+        pixelHeight / logicalHeight,
+        0,
+        0
+    );
+    renderCtx.imageSmoothingEnabled = false;
+    return dimensionsChanged;
+}
+
+function syncGameCanvasResolution() {
+    gameCanvasResolutionFrame = 0;
+    if (!gameContainerEl || !ctx || !nextCtx || !stowCtx) return;
+
+    const unscaledWidth = gameContainerEl.offsetWidth;
+    const renderedWidth = gameContainerEl.getBoundingClientRect().width;
+    const renderScale = unscaledWidth > 0 ? renderedWidth / unscaledWidth : 1;
+    const dpr = Math.max(window.devicePixelRatio || 1, 1);
+
+    resizeLogicalCanvas(
+        tetrisCanvas,
+        ctx,
+        BOARD_LOGICAL_WIDTH,
+        BOARD_LOGICAL_HEIGHT,
+        renderScale,
+        dpr
+    );
+    resizeLogicalCanvas(
+        nextCanvas,
+        nextCtx,
+        PREVIEW_LOGICAL_SIZE,
+        PREVIEW_LOGICAL_SIZE,
+        renderScale,
+        dpr
+    );
+    resizeLogicalCanvas(
+        stowCanvas,
+        stowCtx,
+        PREVIEW_LOGICAL_SIZE,
+        PREVIEW_LOGICAL_SIZE,
+        renderScale,
+        dpr
+    );
+
+    drawBoard();
+    drawNextPiece();
+    drawStowPiece();
+}
+
+function scheduleGameCanvasResolutionSync() {
+    if (gameCanvasResolutionFrame) {
+        cancelAnimationFrame(gameCanvasResolutionFrame);
+    }
+    gameCanvasResolutionFrame = requestAnimationFrame(syncGameCanvasResolution);
+}
+
 function getParentWindow() {
     if (window.parent === window) {
         return null;
@@ -817,6 +912,8 @@ function detectTouchDevice() {
 
 function syncTouchDeviceState() {
     document.body.classList.toggle(TOUCH_DEVICE_CLASS, detectTouchDevice());
+    updateGameZoomControls();
+    scheduleGameCanvasResolutionSync();
 }
 
 function measureTouchControlsHeight() {
@@ -901,8 +998,61 @@ function scheduleTouchControlsPositionSync() {
 function applyWebsiteFullscreenState(expanded) {
     websiteFullscreenActive = expanded;
     document.body.classList.toggle('is-website-fullscreen', expanded);
+    updateGameZoomControls();
     syncTouchControlsMetrics();
+    scheduleGameCanvasResolutionSync();
     updateFullscreenButtonLabel();
+}
+
+function applyGameZoom() {
+    const zoom = GAME_ZOOM_STEPS[gameZoomStepIndex];
+    document.body.style.setProperty('--game-zoom', zoom.toString());
+    updateGameZoomControls();
+    syncTouchControlsMetrics();
+    scheduleGameCanvasResolutionSync();
+}
+
+function stepGameZoom(direction) {
+    if (
+        !websiteFullscreenActive ||
+        !isPaused ||
+        gameOver ||
+        document.body.classList.contains(TOUCH_DEVICE_CLASS)
+    ) {
+        return;
+    }
+
+    const nextIndex = clamp(
+        gameZoomStepIndex + Math.sign(direction),
+        0,
+        GAME_ZOOM_STEPS.length - 1
+    );
+    if (nextIndex === gameZoomStepIndex) {
+        return;
+    }
+
+    gameZoomStepIndex = nextIndex;
+    applyGameZoom();
+}
+
+function updateGameZoomControls() {
+    const controlsAvailable =
+        websiteFullscreenActive &&
+        isPaused &&
+        !gameOver &&
+        !document.body.classList.contains(TOUCH_DEVICE_CLASS);
+    const zoomPercent = Math.round(GAME_ZOOM_STEPS[gameZoomStepIndex] * 100);
+
+    if (pauseResizeControls) {
+        pauseResizeControls.setAttribute('aria-hidden', controlsAvailable ? 'false' : 'true');
+        pauseResizeControls.setAttribute('aria-label', `Resize game, ${zoomPercent} percent`);
+    }
+    if (gameSizeDownBtn) {
+        gameSizeDownBtn.disabled = !controlsAvailable || gameZoomStepIndex === 0;
+    }
+    if (gameSizeUpBtn) {
+        gameSizeUpBtn.disabled = !controlsAvailable || gameZoomStepIndex === GAME_ZOOM_STEPS.length - 1;
+    }
 }
 
 function updateFullscreenButtonLabel() {
@@ -973,7 +1123,7 @@ function getTouchControlAction(target) {
 }
 
 function runTouchControl(actionName) {
-    if (isPaused || gameOver) {
+    if (isPaused || gameOver || isFlashing || !currentPiece) {
         return;
     }
 
@@ -1138,7 +1288,7 @@ function updateWeatherSceneStates(ts) {
         const state = weatherSceneStates[index];
         if (!state) continue;
 
-        state.flash *= Math.pow(0.84, frameScale);
+        state.flash *= Math.pow(0.86, frameScale);
 
         if (!scene.lightning) {
             state.flash = 0;
@@ -1146,7 +1296,7 @@ function updateWeatherSceneStates(ts) {
         }
 
         if (seconds >= state.nextLightningAt) {
-            state.flash = 0.55 + Math.random() * scene.lightning * 0.65;
+            state.flash = 0.34 + Math.random() * scene.lightning * 0.28;
             state.nextLightningAt = seconds + scene.lightningGapMin +
                 Math.random() * (scene.lightningGapMax - scene.lightningGapMin);
             state.secondaryQueued = Math.random() < 0.58;
@@ -1157,7 +1307,7 @@ function updateWeatherSceneStates(ts) {
 
         if (state.secondaryQueued && seconds >= state.secondaryFlashAt) {
             state.secondaryQueued = false;
-            state.flash = Math.max(state.flash, 0.3 + Math.random() * scene.lightning * 0.45);
+            state.flash = Math.max(state.flash, 0.16 + Math.random() * scene.lightning * 0.18);
         }
     }
 }
@@ -1204,10 +1354,50 @@ function drawSceneMoon(renderCtx, scene, width, height) {
     renderCtx.arc(x, y, radius * 3.2, 0, Math.PI * 2);
     renderCtx.fill();
 
-    renderCtx.fillStyle = `rgba(225, 233, 247, ${scene.moonAlpha})`;
+    const disc = renderCtx.createRadialGradient(
+        x - radius * 0.3,
+        y - radius * 0.34,
+        radius * 0.08,
+        x,
+        y,
+        radius
+    );
+    disc.addColorStop(0, `rgba(232, 238, 248, ${scene.moonAlpha})`);
+    disc.addColorStop(0.68, `rgba(214, 225, 241, ${scene.moonAlpha * 0.72})`);
+    disc.addColorStop(1, `rgba(156, 175, 202, ${scene.moonAlpha * 0.25})`);
+    renderCtx.fillStyle = disc;
     renderCtx.beginPath();
     renderCtx.arc(x, y, radius, 0, Math.PI * 2);
     renderCtx.fill();
+}
+
+function drawFeatheredEllipse(
+    renderCtx,
+    x,
+    y,
+    radiusX,
+    radiusY,
+    color,
+    opacity = 1,
+    solidCore = 0.3
+) {
+    if (radiusX <= 0 || radiusY <= 0 || opacity <= 0) return;
+
+    renderCtx.save();
+    renderCtx.translate(x, y);
+    renderCtx.scale(radiusX / radiusY, 1);
+    renderCtx.globalAlpha *= opacity;
+
+    const gradient = renderCtx.createRadialGradient(0, 0, 0, 0, 0, radiusY);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(solidCore, color);
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    renderCtx.fillStyle = gradient;
+    renderCtx.beginPath();
+    renderCtx.arc(0, 0, radiusY, 0, Math.PI * 2);
+    renderCtx.fill();
+    renderCtx.restore();
 }
 
 function drawSceneClouds(renderCtx, scene, width, height, timeSeconds) {
@@ -1222,14 +1412,36 @@ function drawSceneClouds(renderCtx, scene, width, height, timeSeconds) {
             const y = height * band + (hash01(seed + 2) - 0.5) * height * 0.04;
             const radiusX = lerp(100, 230, hash01(seed + 3)) * scene.cloudScale;
             const radiusY = radiusX * lerp(0.16, 0.3, hash01(seed + 4));
-            const puffScale = 0.6 + hash01(seed + 5) * 0.5;
 
-            renderCtx.fillStyle = scene.cloudColor;
-            renderCtx.beginPath();
-            renderCtx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
-            renderCtx.ellipse(x - radiusX * 0.42, y + radiusY * 0.08, radiusX * 0.55, radiusY * 0.86, 0, 0, Math.PI * 2);
-            renderCtx.ellipse(x + radiusX * 0.38, y + radiusY * 0.04, radiusX * puffScale, radiusY * 0.78, 0, 0, Math.PI * 2);
-            renderCtx.fill();
+            drawFeatheredEllipse(
+                renderCtx,
+                x,
+                y + radiusY * 0.18,
+                radiusX,
+                radiusY * 0.88,
+                scene.cloudColor,
+                0.45 * CLOUD_VISIBILITY_BOOST,
+                0.34
+            );
+
+            for (let puff = 0; puff < 4; puff++) {
+                const puffSeed = seed + 5 + puff * 7.7;
+                const offsetX = lerp(-0.62, 0.62, puff / 3) * radiusX;
+                const offsetY = (hash01(puffSeed) - 0.68) * radiusY * 0.58;
+                const puffRadiusX = radiusX * lerp(0.34, 0.54, hash01(puffSeed + 1));
+                const puffRadiusY = radiusY * lerp(0.62, 1.08, hash01(puffSeed + 2));
+
+                drawFeatheredEllipse(
+                    renderCtx,
+                    x + offsetX,
+                    y + offsetY,
+                    puffRadiusX,
+                    puffRadiusY,
+                    scene.cloudColor,
+                    0.28 * CLOUD_VISIBILITY_BOOST,
+                    0.22
+                );
+            }
         }
     }
 }
@@ -1241,17 +1453,23 @@ function drawSceneRain(renderCtx, scene, width, height, timeSeconds) {
 
     for (let i = 0; i < scene.rainCount; i++) {
         const seed = scene.seed * 307 + i * 19.41;
-        const speed = scene.rainSpeed * lerp(0.85, 1.22, hash01(seed + 1));
+        const depth = lerp(0.45, 1, hash01(seed + 8));
+        const speed = scene.rainSpeed * lerp(0.82, 1.2, hash01(seed + 1)) * lerp(0.72, 1.08, depth);
         const cycleHeight = height + 160;
         const y = wrap(hash01(seed + 2) * cycleHeight + timeSeconds * speed * 340, cycleHeight) - 80;
         const x = wrap(
             hash01(seed + 3) * (width + 180) + timeSeconds * scene.rainAngle * -90 * (0.4 + hash01(seed + 4)),
             width + 180
         ) - 90;
-        const length = lerp(scene.rainLength[0], scene.rainLength[1], hash01(seed + 5));
-        const thickness = lerp(0.7, 1.35, hash01(seed + 6));
+        const length = lerp(scene.rainLength[0], scene.rainLength[1], hash01(seed + 5)) *
+            lerp(0.58, 1.04, depth);
+        const thickness = lerp(0.45, 1.2, depth) * lerp(0.85, 1.08, hash01(seed + 6));
         const dx = length * scene.rainAngle;
-        const alpha = scene.rainOpacity * lerp(0.7, 1.15, hash01(seed + 7));
+        const alpha = Math.min(
+            1,
+            scene.rainOpacity * RAIN_VISIBILITY_BOOST * lerp(0.42, 0.94, depth) *
+                lerp(0.82, 1.08, hash01(seed + 7))
+        );
 
         renderCtx.strokeStyle = `rgba(${scene.rainColor}, ${alpha})`;
         renderCtx.lineWidth = thickness;
@@ -1270,16 +1488,445 @@ function drawSceneFog(renderCtx, scene, width, height, timeSeconds) {
         const radiusX = lerp(200, 420, hash01(seed + 2));
         const radiusY = lerp(30, 62, hash01(seed + 3));
         const alpha = scene.fogOpacity * lerp(0.75, 1.15, hash01(seed + 4));
+        const color = `rgba(170, 188, 210, ${alpha})`;
 
-        renderCtx.fillStyle = `rgba(170, 188, 210, ${alpha})`;
-        renderCtx.beginPath();
-        renderCtx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
-        renderCtx.ellipse(x + radiusX * 0.45, y + 8, radiusX * 0.7, radiusY * 0.8, 0, 0, Math.PI * 2);
-        renderCtx.fill();
+        drawFeatheredEllipse(renderCtx, x, y, radiusX, radiusY, color, 0.68, 0.14);
+        drawFeatheredEllipse(
+            renderCtx,
+            x + radiusX * 0.45,
+            y + 8,
+            radiusX * 0.7,
+            radiusY * 0.8,
+            color,
+            0.5,
+            0.1
+        );
     }
 }
 
+function drawLandscapeHaze(renderCtx, scene, width, height, horizonY) {
+    const haze = renderCtx.createLinearGradient(0, horizonY - 90, 0, horizonY + 120);
+    haze.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    haze.addColorStop(0.48, scene.detailColor);
+    haze.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.28;
+    renderCtx.fillStyle = haze;
+    renderCtx.fillRect(0, horizonY - 90, width, 210);
+    renderCtx.restore();
+}
+
+function drawDistantRidge(
+    renderCtx,
+    scene,
+    width,
+    horizonY,
+    {
+        amplitude = 40,
+        baseOffset = 0,
+        pointCount = 10,
+        opacity = 0.4,
+        seedOffset = 0,
+        smooth = false
+    } = {}
+) {
+    const points = [];
+    for (let index = 0; index <= pointCount; index++) {
+        const seed = scene.seed * 877 + seedOffset + index * 13.17;
+        const x = width * index / pointCount;
+        const broadVariation = 0.5 + 0.5 * Math.sin(scene.seed * 29 + index * 1.31);
+        const heightVariation = 0.24 + hash01(seed) * 0.52 + broadVariation * 0.24;
+        points.push({
+            x,
+            y: horizonY + baseOffset - amplitude * heightVariation
+        });
+    }
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= opacity;
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(points[0].x, points[0].y);
+
+    if (smooth && points.length > 2) {
+        for (let index = 1; index < points.length - 1; index++) {
+            const point = points[index];
+            const next = points[index + 1];
+            renderCtx.quadraticCurveTo(
+                point.x,
+                point.y,
+                (point.x + next.x) * 0.5,
+                (point.y + next.y) * 0.5
+            );
+        }
+        const lastPoint = points[points.length - 1];
+        renderCtx.lineTo(lastPoint.x, lastPoint.y);
+    } else {
+        for (let index = 1; index < points.length; index++) {
+            renderCtx.lineTo(points[index].x, points[index].y);
+        }
+    }
+
+    const ridgeFloor = horizonY + baseOffset + amplitude * 0.35;
+    renderCtx.lineTo(width, ridgeFloor);
+    renderCtx.lineTo(0, ridgeFloor);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.restore();
+}
+
+function drawWaterRipples(
+    renderCtx,
+    scene,
+    width,
+    topY,
+    bottomY,
+    count = 8,
+    opacity = 0.55
+) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= opacity;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.8;
+
+    for (let index = 0; index < count; index++) {
+        const seed = scene.seed * 929 + index * 17.9;
+        const depth = (index + 1) / (count + 1);
+        const y = lerp(topY, bottomY, depth);
+        const length = width * lerp(0.04, 0.2, depth) * lerp(0.72, 1.2, hash01(seed + 1));
+        const x = hash01(seed) * Math.max(1, width - length);
+        const lift = lerp(0.2, 1.4, depth) * (hash01(seed + 2) - 0.5);
+
+        renderCtx.beginPath();
+        renderCtx.moveTo(x, y);
+        renderCtx.quadraticCurveTo(x + length * 0.48, y + lift, x + length, y);
+        renderCtx.stroke();
+    }
+
+    renderCtx.restore();
+}
+
+function drawForegroundShade(renderCtx, width, height, horizonY) {
+    const shade = renderCtx.createLinearGradient(0, horizonY, 0, height);
+    shade.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    shade.addColorStop(0.7, 'rgba(0, 0, 0, 0.025)');
+    shade.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+    renderCtx.fillStyle = shade;
+    renderCtx.fillRect(0, horizonY, width, height - horizonY);
+}
+
+function drawPineSilhouette(renderCtx, x, baseY, treeHeight, color, seed = 0) {
+    const lean = (hash01(seed + 0.7) - 0.5) * treeHeight * 0.07;
+    const trunkBaseHalfWidth = Math.max(0.7, treeHeight * 0.024);
+    const trunkTopHalfWidth = Math.max(0.35, treeHeight * 0.009);
+    const branchTips = [];
+
+    renderCtx.fillStyle = color;
+    renderCtx.beginPath();
+    renderCtx.moveTo(x - trunkBaseHalfWidth, baseY);
+    renderCtx.lineTo(x + lean * 0.76 - trunkTopHalfWidth, baseY - treeHeight * 0.82);
+    renderCtx.lineTo(x + lean * 0.76 + trunkTopHalfWidth, baseY - treeHeight * 0.82);
+    renderCtx.lineTo(x + trunkBaseHalfWidth, baseY);
+    renderCtx.closePath();
+
+    const tierCount = hash01(seed + 1.3) > 0.52 ? 6 : 5;
+    for (let tier = 0; tier < tierCount; tier++) {
+        const progress = tier / Math.max(1, tierCount - 1);
+        const tierTop = baseY - treeHeight + treeHeight * tier * (0.72 / tierCount);
+        const tierDepth = treeHeight * lerp(0.2, 0.31, progress);
+        const centerX = x + lean * (1 - progress * 0.76);
+        const baseSpread = treeHeight * lerp(0.055, 0.205, progress);
+        const leftSpread = baseSpread * lerp(0.84, 1.14, hash01(seed + tier * 7.1 + 2));
+        const rightSpread = baseSpread * lerp(0.84, 1.14, hash01(seed + tier * 7.1 + 3));
+        const leftDrop = tierDepth * lerp(0.5, 0.68, hash01(seed + tier * 7.1 + 4));
+        const rightDrop = tierDepth * lerp(0.5, 0.68, hash01(seed + tier * 7.1 + 5));
+
+        renderCtx.moveTo(centerX, tierTop);
+        renderCtx.quadraticCurveTo(
+            centerX - leftSpread * 0.28,
+            tierTop + tierDepth * 0.24,
+            centerX - leftSpread,
+            tierTop + leftDrop
+        );
+        renderCtx.quadraticCurveTo(
+            centerX - leftSpread * 0.4,
+            tierTop + tierDepth * 0.78,
+            centerX,
+            tierTop + tierDepth
+        );
+        renderCtx.quadraticCurveTo(
+            centerX + rightSpread * 0.42,
+            tierTop + tierDepth * 0.78,
+            centerX + rightSpread,
+            tierTop + rightDrop
+        );
+        renderCtx.quadraticCurveTo(
+            centerX + rightSpread * 0.26,
+            tierTop + tierDepth * 0.24,
+            centerX,
+            tierTop
+        );
+        renderCtx.closePath();
+
+        if (tier >= 2 && tier % 2 === 0) {
+            branchTips.push({
+                centerX,
+                tierTop,
+                tierDepth,
+                leftSpread,
+                rightSpread,
+                leftDrop,
+                rightDrop
+            });
+        }
+    }
+    renderCtx.fill();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.72;
+    renderCtx.strokeStyle = color;
+    renderCtx.lineCap = 'round';
+    renderCtx.lineWidth = Math.max(0.45, treeHeight * 0.007);
+    renderCtx.beginPath();
+    for (const branch of branchTips) {
+        renderCtx.moveTo(branch.centerX, branch.tierTop + branch.tierDepth * 0.55);
+        renderCtx.lineTo(
+            branch.centerX - branch.leftSpread * 1.08,
+            branch.tierTop + branch.leftDrop
+        );
+        renderCtx.moveTo(branch.centerX, branch.tierTop + branch.tierDepth * 0.58);
+        renderCtx.lineTo(
+            branch.centerX + branch.rightSpread * 1.08,
+            branch.tierTop + branch.rightDrop
+        );
+    }
+    renderCtx.stroke();
+    renderCtx.restore();
+}
+
+function getPineGroundY(x, width, horizonY) {
+    const splitX = width * 0.46;
+    if (x <= splitX) {
+        const t = clamp(x / Math.max(1, splitX), 0, 1);
+        return (1 - t) ** 2 * (horizonY - 8) +
+            2 * (1 - t) * t * (horizonY - 44) +
+            t ** 2 * (horizonY - 10);
+    }
+
+    const t = clamp((x - splitX) / Math.max(1, width - splitX), 0, 1);
+    return (1 - t) ** 2 * (horizonY - 10) +
+        2 * (1 - t) * t * (horizonY + 18) +
+        t ** 2 * (horizonY - 18);
+}
+
+function drawBroadleafTreeSilhouette(
+    renderCtx,
+    scene,
+    x,
+    baseY,
+    treeHeight,
+    canopyWidth,
+    seed
+) {
+    const lean = (hash01(seed + 1) - 0.5) * treeHeight * 0.12;
+    const crownX = x + lean;
+    const crownY = baseY - treeHeight * 0.76;
+    const canopyHeight = canopyWidth * lerp(0.55, 0.72, hash01(seed + 2));
+    const trunkBaseHalfWidth = Math.max(1, treeHeight * 0.035);
+    const trunkTopHalfWidth = Math.max(0.55, treeHeight * 0.012);
+    const forkY = baseY - treeHeight * 0.48;
+
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(x - treeHeight * 0.12, baseY + 3);
+    renderCtx.quadraticCurveTo(x - trunkBaseHalfWidth * 1.2, baseY - 2, x - trunkBaseHalfWidth, baseY - 8);
+    renderCtx.lineTo(crownX - trunkTopHalfWidth, crownY + canopyHeight * 0.22);
+    renderCtx.lineTo(crownX + trunkTopHalfWidth, crownY + canopyHeight * 0.22);
+    renderCtx.lineTo(x + trunkBaseHalfWidth, baseY - 8);
+    renderCtx.quadraticCurveTo(x + trunkBaseHalfWidth * 1.2, baseY - 2, x + treeHeight * 0.12, baseY + 3);
+    renderCtx.lineTo(x, baseY - 1);
+    renderCtx.closePath();
+    renderCtx.fill();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.78;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineCap = 'round';
+    renderCtx.lineWidth = Math.max(0.65, treeHeight * 0.014);
+    renderCtx.beginPath();
+    renderCtx.moveTo(x + lean * 0.48, forkY);
+    renderCtx.quadraticCurveTo(
+        crownX - canopyWidth * 0.12,
+        crownY + canopyHeight * 0.38,
+        crownX - canopyWidth * 0.32,
+        crownY + canopyHeight * 0.05
+    );
+    renderCtx.moveTo(x + lean * 0.5, forkY - treeHeight * 0.05);
+    renderCtx.quadraticCurveTo(
+        crownX + canopyWidth * 0.1,
+        crownY + canopyHeight * 0.32,
+        crownX + canopyWidth * 0.34,
+        crownY + canopyHeight * 0.02
+    );
+    renderCtx.stroke();
+    renderCtx.restore();
+
+    const lobes = [
+        [0, -0.3, 0.32, 0.35],
+        [-0.24, -0.18, 0.34, 0.37],
+        [0.25, -0.16, 0.36, 0.36],
+        [-0.43, 0.04, 0.31, 0.33],
+        [0.44, 0.06, 0.33, 0.33],
+        [-0.18, 0.16, 0.38, 0.37],
+        [0.19, 0.17, 0.4, 0.36]
+    ];
+
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    for (let index = 0; index < lobes.length; index++) {
+        const [offsetX, offsetY, radiusX, radiusY] = lobes[index];
+        const lobeSeed = seed + index * 9.7;
+        renderCtx.ellipse(
+            crownX + canopyWidth * (offsetX + (hash01(lobeSeed) - 0.5) * 0.08),
+            crownY + canopyHeight * (offsetY + (hash01(lobeSeed + 1) - 0.5) * 0.08),
+            canopyWidth * radiusX * lerp(0.88, 1.12, hash01(lobeSeed + 2)),
+            canopyHeight * radiusY * lerp(0.86, 1.12, hash01(lobeSeed + 3)),
+            lerp(-0.2, 0.2, hash01(lobeSeed + 4)),
+            0,
+            Math.PI * 2
+        );
+    }
+    renderCtx.fill();
+}
+
+function drawGroundContours(
+    renderCtx,
+    scene,
+    width,
+    topY,
+    bottomY,
+    {
+        count = 6,
+        opacity = 0.4,
+        seedOffset = 0,
+        maxWidth = 0.34,
+        bend = 5
+    } = {}
+) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= opacity;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineWidth = 0.75;
+
+    for (let index = 0; index < count; index++) {
+        const seed = scene.seed * 1181 + seedOffset + index * 29.3;
+        const depth = (index + 1) / (count + 1);
+        const y = lerp(topY, bottomY, depth);
+        const length = width * lerp(0.1, maxWidth, depth) * lerp(0.72, 1.12, hash01(seed + 1));
+        const x = hash01(seed) * Math.max(1, width - length);
+        const curve = (hash01(seed + 2) - 0.5) * bend * lerp(0.45, 1, depth);
+
+        renderCtx.beginPath();
+        renderCtx.moveTo(x, y);
+        renderCtx.bezierCurveTo(
+            x + length * 0.3,
+            y + curve,
+            x + length * 0.68,
+            y - curve * 0.45,
+            x + length,
+            y + curve * 0.15
+        );
+        renderCtx.stroke();
+    }
+
+    renderCtx.restore();
+}
+
+function drawTerrainRocks(
+    renderCtx,
+    scene,
+    width,
+    topY,
+    bottomY,
+    {
+        count = 10,
+        opacity = 0.42,
+        seedOffset = 0,
+        maxSize = 7
+    } = {}
+) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= opacity;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+
+    for (let index = 0; index < count; index++) {
+        const seed = scene.seed * 1217 + seedOffset + index * 31.7;
+        const depth = lerp(0.12, 0.96, hash01(seed + 1));
+        const x = hash01(seed) * width;
+        const y = lerp(topY, bottomY, depth);
+        const size = lerp(1.5, maxSize, depth) * lerp(0.7, 1.15, hash01(seed + 2));
+
+        renderCtx.beginPath();
+        renderCtx.moveTo(x - size, y);
+        renderCtx.lineTo(x - size * 0.38, y - size * lerp(0.45, 0.82, hash01(seed + 3)));
+        renderCtx.lineTo(x + size * 0.42, y - size * lerp(0.36, 0.68, hash01(seed + 4)));
+        renderCtx.lineTo(x + size, y);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+
+    renderCtx.restore();
+}
+
+function drawGrassTufts(
+    renderCtx,
+    scene,
+    width,
+    topY,
+    bottomY,
+    {
+        count = 14,
+        opacity = 0.46,
+        seedOffset = 0,
+        maxHeight = 14
+    } = {}
+) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= opacity;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.8;
+
+    for (let index = 0; index < count; index++) {
+        const seed = scene.seed * 1237 + seedOffset + index * 17.3;
+        const x = hash01(seed) * width;
+        const depth = hash01(seed + 1);
+        const baseY = lerp(topY, bottomY, depth);
+        const tuftHeight = lerp(3, maxHeight, depth) * lerp(0.72, 1.08, hash01(seed + 2));
+
+        renderCtx.beginPath();
+        renderCtx.moveTo(x, baseY);
+        renderCtx.lineTo(x - tuftHeight * 0.32, baseY - tuftHeight * 0.78);
+        renderCtx.moveTo(x, baseY);
+        renderCtx.lineTo(x + tuftHeight * 0.06, baseY - tuftHeight);
+        renderCtx.moveTo(x, baseY);
+        renderCtx.lineTo(x + tuftHeight * 0.38, baseY - tuftHeight * 0.7);
+        renderCtx.stroke();
+    }
+
+    renderCtx.restore();
+}
+
 function drawLakeScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 40,
+        baseOffset: 4,
+        pointCount: 12,
+        opacity: 0.42,
+        seedOffset: 11,
+        smooth: true
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1293,9 +1940,46 @@ function drawLakeScene(renderCtx, scene, width, height, horizonY) {
 
     renderCtx.fillStyle = scene.detailColor;
     renderCtx.fillRect(0, horizonY - 4, width, height - horizonY + 4);
+    drawWaterRipples(renderCtx, scene, width, horizonY + 8, height * 0.94, 10, 0.62);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.9;
+    renderCtx.fillStyle = scene.groundColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, height);
+    renderCtx.lineTo(0, horizonY + 22);
+    renderCtx.quadraticCurveTo(width * 0.1, horizonY + 14, width * 0.2, horizonY + 48);
+    renderCtx.quadraticCurveTo(width * 0.28, horizonY + 76, width * 0.36, height);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.beginPath();
+    renderCtx.moveTo(width, height);
+    renderCtx.lineTo(width, horizonY + 18);
+    renderCtx.quadraticCurveTo(width * 0.92, horizonY + 12, width * 0.84, horizonY + 38);
+    renderCtx.quadraticCurveTo(width * 0.76, horizonY + 68, width * 0.7, height);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.restore();
+
+    drawTerrainRocks(renderCtx, scene, width * 0.34, horizonY + 30, height * 0.95, {
+        count: 5,
+        opacity: 0.34,
+        seedOffset: 17,
+        maxSize: 4
+    });
 }
 
 function drawPineScene(renderCtx, scene, width, height, horizonY) {
+    const treeScale = clamp(height / 720, 0.78, 1.45);
+
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 38,
+        baseOffset: 6,
+        pointCount: 14,
+        opacity: 0.34,
+        seedOffset: 23
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1306,22 +1990,58 @@ function drawPineScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
-    renderCtx.fillStyle = scene.detailColor;
-    for (let i = 0; i < 16; i++) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.42;
+    for (let i = 0; i < 22; i++) {
         const seed = scene.seed * 503 + i * 11.7;
-        const x = hash01(seed) * width;
-        const treeHeight = lerp(24, 72, hash01(seed + 1));
-        const baseY = horizonY - lerp(0, 28, hash01(seed + 2));
-        renderCtx.beginPath();
-        renderCtx.moveTo(x, baseY - treeHeight);
-        renderCtx.lineTo(x - treeHeight * 0.22, baseY);
-        renderCtx.lineTo(x + treeHeight * 0.22, baseY);
-        renderCtx.closePath();
-        renderCtx.fill();
+        const x = ((i + hash01(seed) * 0.84) / 22) * width;
+        const treeHeight = lerp(22, 54, hash01(seed + 1)) * treeScale;
+        const baseY = getPineGroundY(x, width, horizonY) - lerp(1, 7, hash01(seed + 2)) * treeScale;
+        drawPineSilhouette(renderCtx, x, baseY, treeHeight, scene.detailColor, seed);
     }
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.64;
+    for (let i = 0; i < 9; i++) {
+        const seed = scene.seed * 547 + i * 19.3;
+        const x = ((i + hash01(seed) * 0.82) / 9) * width;
+        const treeHeight = lerp(50, 94, hash01(seed + 1)) * treeScale;
+        const baseY = getPineGroundY(x, width, horizonY) + lerp(2, 9, hash01(seed + 2)) * treeScale;
+        drawPineSilhouette(renderCtx, x, baseY, treeHeight, scene.detailColor, seed);
+    }
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 16, height * 0.94, {
+        count: 5,
+        opacity: 0.28,
+        seedOffset: 29,
+        maxWidth: 0.26,
+        bend: 4
+    });
+    drawGrassTufts(renderCtx, scene, width, horizonY + 20, height * 0.96, {
+        count: 18,
+        opacity: 0.32,
+        seedOffset: 31,
+        maxHeight: 11
+    });
+    drawTerrainRocks(renderCtx, scene, width, horizonY + 28, height * 0.96, {
+        count: 8,
+        opacity: 0.3,
+        seedOffset: 41,
+        maxSize: 5
+    });
 }
 
 function drawSaltFlatScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 24,
+        baseOffset: -2,
+        pointCount: 12,
+        opacity: 0.46,
+        seedOffset: 37
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY - 6, width, height - horizonY + 6);
 
@@ -1338,13 +2058,71 @@ function drawSaltFlatScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.58;
     renderCtx.fillStyle = scene.accentColor || scene.detailColor;
-    renderCtx.fillRect(0, horizonY + 8, width, 3);
-    renderCtx.fillRect(width * 0.12, horizonY + 26, width * 0.32, 2);
-    renderCtx.fillRect(width * 0.58, horizonY + 20, width * 0.24, 2);
+    renderCtx.fillRect(0, horizonY + 8, width, 1.4);
+    renderCtx.fillRect(width * 0.12, horizonY + 26, width * 0.32, 1);
+    renderCtx.fillRect(width * 0.58, horizonY + 20, width * 0.24, 1);
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.48;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.8;
+    for (let index = 0; index < 9; index++) {
+        const seed = scene.seed * 971 + index * 21.1;
+        const startX = width * lerp(0.28, 0.72, hash01(seed));
+        const endX = width * lerp(-0.08, 1.08, hash01(seed + 1));
+        renderCtx.beginPath();
+        renderCtx.moveTo(startX, horizonY + 12);
+        renderCtx.quadraticCurveTo(
+            lerp(startX, endX, 0.45) + width * (hash01(seed + 2) - 0.5) * 0.08,
+            lerp(horizonY + 12, height, 0.45),
+            endX,
+            height
+        );
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+    drawWaterRipples(renderCtx, scene, width, horizonY + 12, height * 0.88, 7, 0.36);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.34;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.65;
+    for (let row = 0; row < 4; row++) {
+        const depth = (row + 1) / 5;
+        const y = lerp(horizonY + 20, height * 0.94, depth);
+        const cellWidth = lerp(width * 0.055, width * 0.16, depth);
+        const offset = (row % 2) * cellWidth * 0.42;
+        for (let x = -cellWidth + offset; x < width + cellWidth; x += cellWidth) {
+            const seed = scene.seed * 1291 + row * 31 + x * 0.07;
+            renderCtx.beginPath();
+            renderCtx.moveTo(x, y);
+            renderCtx.lineTo(x + cellWidth * 0.46, y + (hash01(seed) - 0.5) * 2.4);
+            renderCtx.lineTo(x + cellWidth, y + lerp(2, 7, depth));
+            renderCtx.stroke();
+        }
+    }
+    renderCtx.restore();
+
 }
 
 function drawDuneScene(renderCtx, scene, width, height, horizonY) {
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.34;
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, height);
+    renderCtx.lineTo(0, horizonY + 4);
+    renderCtx.bezierCurveTo(width * 0.18, horizonY - 34, width * 0.34, horizonY + 10, width * 0.5, horizonY - 12);
+    renderCtx.bezierCurveTo(width * 0.68, horizonY - 38, width * 0.82, horizonY + 8, width, horizonY - 18);
+    renderCtx.lineTo(width, height);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.restore();
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1364,9 +2142,42 @@ function drawDuneScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.lineTo(width, height);
     renderCtx.closePath();
     renderCtx.fill();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.58;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineWidth = 0.9;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, horizonY + 8);
+    renderCtx.bezierCurveTo(width * 0.15, horizonY - 18, width * 0.28, horizonY + 22, width * 0.44, horizonY);
+    renderCtx.bezierCurveTo(width * 0.56, horizonY - 20, width * 0.76, horizonY + 16, width, horizonY - 8);
+    renderCtx.stroke();
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 20, height * 0.94, {
+        count: 8,
+        opacity: 0.34,
+        seedOffset: 53,
+        maxWidth: 0.38,
+        bend: 6
+    });
+    drawTerrainRocks(renderCtx, scene, width, horizonY + 42, height * 0.96, {
+        count: 5,
+        opacity: 0.24,
+        seedOffset: 59,
+        maxSize: 3.8
+    });
 }
 
 function drawMountainScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 92,
+        baseOffset: 22,
+        pointCount: 13,
+        opacity: 0.34,
+        seedOffset: 61
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1382,6 +2193,43 @@ function drawMountainScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.62;
+    renderCtx.fillStyle = scene.detailColor;
+    const mountainFacets = [
+        [0.28, -92, 0.22, -46, 0.34, -54],
+        [0.58, -110, 0.5, -58, 0.64, -50],
+        [0.9, -84, 0.84, -42, 0.95, -38]
+    ];
+    for (const [peakX, peakY, leftX, leftY, rightX, rightY] of mountainFacets) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * peakX, horizonY + peakY);
+        renderCtx.lineTo(width * leftX, horizonY + leftY);
+        renderCtx.lineTo(width * rightX, horizonY + rightY);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.32;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    const snowCaps = [
+        [0.28, -92, 0.245, -68, 0.302, -72],
+        [0.58, -110, 0.548, -82, 0.608, -84],
+        [0.9, -84, 0.872, -62, 0.928, -64]
+    ];
+    for (const [peakX, peakY, leftX, leftY, rightX, rightY] of snowCaps) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * peakX, horizonY + peakY);
+        renderCtx.lineTo(width * leftX, horizonY + leftY);
+        renderCtx.lineTo(width * peakX, horizonY + leftY + 6);
+        renderCtx.lineTo(width * rightX, horizonY + rightY);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
     renderCtx.fillStyle = scene.detailColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1395,9 +2243,32 @@ function drawMountainScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.lineTo(width, height);
     renderCtx.closePath();
     renderCtx.fill();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 26, height * 0.96, {
+        count: 5,
+        opacity: 0.3,
+        seedOffset: 67,
+        maxWidth: 0.3,
+        bend: 5
+    });
+    drawTerrainRocks(renderCtx, scene, width, horizonY + 34, height * 0.97, {
+        count: 9,
+        opacity: 0.28,
+        seedOffset: 71,
+        maxSize: 5.5
+    });
 }
 
 function drawShorelineScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 30,
+        baseOffset: 2,
+        pointCount: 12,
+        opacity: 0.36,
+        seedOffset: 79,
+        smooth: true
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1411,9 +2282,82 @@ function drawShorelineScene(renderCtx, scene, width, height, horizonY) {
 
     renderCtx.fillStyle = scene.detailColor;
     renderCtx.fillRect(0, horizonY + 12, width, height - horizonY - 12);
+    drawWaterRipples(renderCtx, scene, width, horizonY + 18, height * 0.94, 11, 0.58);
+
+    renderCtx.save();
+    renderCtx.fillStyle = scene.groundColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, height);
+    renderCtx.lineTo(0, horizonY + 34);
+    renderCtx.bezierCurveTo(
+        width * 0.12,
+        horizonY + 30,
+        width * 0.24,
+        horizonY + 64,
+        width * 0.42,
+        height
+    );
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.beginPath();
+    renderCtx.moveTo(width, height);
+    renderCtx.lineTo(width, horizonY + 28);
+    renderCtx.quadraticCurveTo(width * 0.9, horizonY + 24, width * 0.82, height);
+    renderCtx.closePath();
+    renderCtx.fill();
+
+    renderCtx.globalAlpha *= 0.54;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.9;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, horizonY + 34);
+    renderCtx.bezierCurveTo(
+        width * 0.12,
+        horizonY + 30,
+        width * 0.24,
+        horizonY + 64,
+        width * 0.42,
+        height
+    );
+    renderCtx.stroke();
+    renderCtx.beginPath();
+    renderCtx.moveTo(width, horizonY + 28);
+    renderCtx.quadraticCurveTo(width * 0.9, horizonY + 24, width * 0.82, height);
+    renderCtx.stroke();
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, height);
+    renderCtx.lineTo(0, horizonY + 34);
+    renderCtx.bezierCurveTo(
+        width * 0.12,
+        horizonY + 30,
+        width * 0.24,
+        horizonY + 64,
+        width * 0.42,
+        height
+    );
+    renderCtx.lineTo(0, height);
+    renderCtx.clip();
+    drawTerrainRocks(renderCtx, scene, width * 0.44, horizonY + 42, height * 0.97, {
+        count: 9,
+        opacity: 0.36,
+        seedOffset: 83,
+        maxSize: 5
+    });
+    renderCtx.restore();
 }
 
 function drawVolcanoScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 34,
+        baseOffset: 10,
+        pointCount: 11,
+        opacity: 0.3,
+        seedOffset: 97
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1426,32 +2370,97 @@ function drawVolcanoScene(renderCtx, scene, width, height, horizonY) {
 
     renderCtx.fillStyle = scene.detailColor;
     renderCtx.beginPath();
-    renderCtx.moveTo(width * 0.16, horizonY + 22);
-    renderCtx.lineTo(width * 0.38, horizonY + 22);
-    renderCtx.lineTo(width * 0.54, horizonY - 122);
-    renderCtx.lineTo(width * 0.7, horizonY + 22);
-    renderCtx.lineTo(width * 0.9, horizonY + 22);
+    renderCtx.moveTo(width * 0.12, horizonY + 26);
+    renderCtx.lineTo(width * 0.34, horizonY + 14);
+    renderCtx.lineTo(width * 0.47, horizonY - 102);
+    renderCtx.quadraticCurveTo(width * 0.54, horizonY - 128, width * 0.61, horizonY - 106);
+    renderCtx.lineTo(width * 0.73, horizonY + 14);
+    renderCtx.lineTo(width * 0.92, horizonY + 28);
     renderCtx.lineTo(width * 0.9, height);
-    renderCtx.lineTo(width * 0.16, height);
+    renderCtx.lineTo(width * 0.12, height);
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.48;
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.54, horizonY - 123);
+    renderCtx.lineTo(width * 0.47, horizonY - 102);
+    renderCtx.lineTo(width * 0.38, horizonY + 12);
+    renderCtx.lineTo(width * 0.52, horizonY - 72);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.restore();
+
     renderCtx.fillStyle = scene.accentColor || scene.detailColor;
     renderCtx.beginPath();
-    renderCtx.moveTo(width * 0.5, horizonY - 108);
-    renderCtx.lineTo(width * 0.54, horizonY - 122);
-    renderCtx.lineTo(width * 0.58, horizonY - 108);
-    renderCtx.quadraticCurveTo(width * 0.54, horizonY - 96, width * 0.5, horizonY - 108);
+    renderCtx.moveTo(width * 0.48, horizonY - 104);
+    renderCtx.quadraticCurveTo(width * 0.54, horizonY - 116, width * 0.6, horizonY - 106);
+    renderCtx.quadraticCurveTo(width * 0.54, horizonY - 96, width * 0.48, horizonY - 104);
     renderCtx.fill();
 
-    renderCtx.fillStyle = 'rgba(42, 49, 60, 0.26)';
-    renderCtx.beginPath();
-    renderCtx.ellipse(width * 0.54, horizonY - 142, 52, 18, 0.08, 0, Math.PI * 2);
-    renderCtx.ellipse(width * 0.48, horizonY - 156, 42, 12, -0.16, 0, Math.PI * 2);
-    renderCtx.fill();
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.5;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 1.15;
+    const lavaChannels = [
+        [0.525, -101, 0.49, -48, 0.44, 16],
+        [0.565, -102, 0.6, -42, 0.67, 18]
+    ];
+    for (const [startX, startY, midX, midY, endX, endY] of lavaChannels) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * startX, horizonY + startY);
+        renderCtx.quadraticCurveTo(width * midX, horizonY + midY, width * endX, horizonY + endY);
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 28, height * 0.96, {
+        count: 5,
+        opacity: 0.28,
+        seedOffset: 101,
+        maxWidth: 0.3,
+        bend: 4
+    });
+    drawTerrainRocks(renderCtx, scene, width, horizonY + 28, height * 0.97, {
+        count: 12,
+        opacity: 0.34,
+        seedOffset: 103,
+        maxSize: 6
+    });
+
+    drawFeatheredEllipse(
+        renderCtx,
+        width * 0.54,
+        horizonY - 142,
+        58,
+        19,
+        'rgba(68, 78, 94, 0.24)',
+        0.72,
+        0.18
+    );
+    drawFeatheredEllipse(
+        renderCtx,
+        width * 0.48,
+        horizonY - 158,
+        46,
+        14,
+        'rgba(72, 82, 98, 0.2)',
+        0.56,
+        0.12
+    );
 }
 
 function drawFjordScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 76,
+        baseOffset: 16,
+        pointCount: 13,
+        opacity: 0.34,
+        seedOffset: 113
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY + 8, width, height - horizonY - 8);
 
@@ -1473,6 +2482,43 @@ function drawFjordScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.52;
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.18, horizonY - 120);
+    renderCtx.lineTo(width * 0.12, horizonY - 40);
+    renderCtx.lineTo(width * 0.31, horizonY + 6);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.78, horizonY - 112);
+    renderCtx.lineTo(width * 0.66, horizonY - 32);
+    renderCtx.lineTo(width * 0.58, horizonY + 10);
+    renderCtx.closePath();
+    renderCtx.fill();
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.44;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineWidth = 0.9;
+    const cliffStriations = [
+        [0.05, -34, 0.11, 46],
+        [0.11, -62, 0.18, 32],
+        [0.19, -84, 0.28, 18],
+        [0.82, -76, 0.68, 24],
+        [0.9, -46, 0.76, 42],
+        [0.96, -20, 0.84, 54]
+    ];
+    for (const [startX, startY, endX, endY] of cliffStriations) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * startX, horizonY + startY);
+        renderCtx.lineTo(width * endX, horizonY + endY);
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+
     renderCtx.fillStyle = scene.detailColor;
     renderCtx.beginPath();
     renderCtx.moveTo(width * 0.26, height);
@@ -1484,9 +2530,33 @@ function drawFjordScene(renderCtx, scene, width, height, horizonY) {
 
     renderCtx.fillStyle = scene.accentColor || scene.detailColor;
     renderCtx.fillRect(width * 0.34, horizonY + 22, width * 0.32, 3);
+    drawWaterRipples(renderCtx, scene, width, horizonY + 18, height * 0.94, 9, 0.52);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.32;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 1;
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.19, horizonY - 48);
+    renderCtx.lineTo(width * 0.23, horizonY + 7);
+    renderCtx.stroke();
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.8, horizonY - 44);
+    renderCtx.lineTo(width * 0.75, horizonY + 8);
+    renderCtx.stroke();
+    renderCtx.restore();
 }
 
 function drawTundraScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 28,
+        baseOffset: 4,
+        pointCount: 13,
+        opacity: 0.36,
+        seedOffset: 137,
+        smooth: true
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
@@ -1509,18 +2579,68 @@ function drawTundraScene(renderCtx, scene, width, height, horizonY) {
         renderCtx.lineTo(x + lerp(-6, 6, hash01(seed + 2)), y - lerp(6, 14, hash01(seed + 3)));
         renderCtx.stroke();
     }
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.54;
+    renderCtx.fillStyle = scene.detailColor;
+    for (let index = 0; index < 9; index++) {
+        const seed = scene.seed * 1009 + index * 23.7;
+        const x = hash01(seed) * width;
+        const y = horizonY + lerp(24, 72, hash01(seed + 1));
+        const radiusX = lerp(5, 14, hash01(seed + 2));
+        const radiusY = radiusX * lerp(0.28, 0.5, hash01(seed + 3));
+        renderCtx.beginPath();
+        renderCtx.ellipse(x, y, radiusX, radiusY, -0.2 + hash01(seed + 4) * 0.4, 0, Math.PI * 2);
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 20, height * 0.96, {
+        count: 5,
+        opacity: 0.28,
+        seedOffset: 139,
+        maxWidth: 0.28,
+        bend: 3
+    });
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.24;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    for (let index = 0; index < 7; index++) {
+        const seed = scene.seed * 1301 + index * 27.1;
+        const x = hash01(seed) * width;
+        const y = horizonY + lerp(34, 80, hash01(seed + 1));
+        const radiusX = lerp(10, 28, hash01(seed + 2));
+        renderCtx.beginPath();
+        renderCtx.ellipse(x, y, radiusX, radiusX * 0.18, 0, 0, Math.PI * 2);
+        renderCtx.fill();
+    }
+    renderCtx.restore();
 }
 
 function drawCanyonScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 48,
+        baseOffset: 12,
+        pointCount: 12,
+        opacity: 0.32,
+        seedOffset: 151
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
     renderCtx.lineTo(0, horizonY - 10);
-    renderCtx.lineTo(width * 0.18, horizonY - 46);
-    renderCtx.lineTo(width * 0.34, horizonY - 18);
-    renderCtx.lineTo(width * 0.46, horizonY - 74);
-    renderCtx.lineTo(width * 0.62, horizonY - 16);
-    renderCtx.lineTo(width * 0.78, horizonY - 54);
+    renderCtx.lineTo(width * 0.11, horizonY - 48);
+    renderCtx.lineTo(width * 0.27, horizonY - 48);
+    renderCtx.lineTo(width * 0.31, horizonY - 22);
+    renderCtx.lineTo(width * 0.41, horizonY - 22);
+    renderCtx.lineTo(width * 0.46, horizonY - 72);
+    renderCtx.lineTo(width * 0.58, horizonY - 72);
+    renderCtx.lineTo(width * 0.63, horizonY - 18);
+    renderCtx.lineTo(width * 0.77, horizonY - 18);
+    renderCtx.lineTo(width * 0.82, horizonY - 54);
+    renderCtx.lineTo(width * 0.94, horizonY - 54);
     renderCtx.lineTo(width, horizonY - 20);
     renderCtx.lineTo(width, height);
     renderCtx.closePath();
@@ -1536,39 +2656,189 @@ function drawCanyonScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
-    renderCtx.fillRect(width * 0.1, horizonY + 18, width * 0.18, 4);
-    renderCtx.fillRect(width * 0.62, horizonY + 24, width * 0.22, 4);
+    renderCtx.fillRect(width * 0.1, horizonY + 18, width * 0.18, 1.5);
+    renderCtx.fillRect(width * 0.62, horizonY + 24, width * 0.22, 1.5);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.56;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineWidth = 1;
+    const strata = [
+        [0.02, 0.29, -30],
+        [0.04, 0.31, -16],
+        [0.13, 0.4, 8],
+        [0.45, 0.61, -48],
+        [0.47, 0.63, -34],
+        [0.64, 0.94, 2],
+        [0.7, 0.98, 18]
+    ];
+    for (const [startX, endX, offsetY] of strata) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * startX, horizonY + offsetY);
+        renderCtx.lineTo(width * endX, horizonY + offsetY + 2);
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 32, height * 0.96, {
+        count: 5,
+        opacity: 0.32,
+        seedOffset: 157,
+        maxWidth: 0.3,
+        bend: 4
+    });
+    drawTerrainRocks(renderCtx, scene, width, horizonY + 34, height * 0.97, {
+        count: 11,
+        opacity: 0.34,
+        seedOffset: 163,
+        maxSize: 6
+    });
 }
 
 function drawJungleScene(renderCtx, scene, width, height, horizonY) {
+    const treeScale = clamp(height / 720, 0.78, 1.45);
+
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 34,
+        baseOffset: 2,
+        pointCount: 16,
+        opacity: 0.3,
+        seedOffset: 173,
+        smooth: true
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY + 24, width, height - horizonY - 24);
 
-    renderCtx.fillStyle = scene.detailColor;
-    for (let i = 0; i < 18; i++) {
-        const seed = scene.seed * 709 + i * 13.3;
-        const x = hash01(seed) * width;
-        const canopyY = horizonY - lerp(8, 42, hash01(seed + 1));
-        const radiusX = lerp(18, 46, hash01(seed + 2));
-        const radiusY = radiusX * lerp(0.5, 0.8, hash01(seed + 3));
-        renderCtx.beginPath();
-        renderCtx.ellipse(x, canopyY, radiusX, radiusY, 0, 0, Math.PI * 2);
-        renderCtx.fill();
+    const distantTrees = [];
+    const distantTreeCount = Math.round(clamp(width / 78, 11, 18));
+    for (let index = 0; index < distantTreeCount; index++) {
+        const seed = scene.seed * 1321 + index * 23.9;
+        distantTrees.push({
+            seed,
+            x: ((index + hash01(seed) * 0.86) / distantTreeCount) * width,
+            baseY: horizonY + lerp(30, 54, hash01(seed + 1)) * treeScale,
+            height: lerp(48, 86, hash01(seed + 2)) * treeScale,
+            canopyWidth: lerp(34, 64, hash01(seed + 3)) * treeScale
+        });
     }
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.48;
+    for (const tree of distantTrees) {
+        drawBroadleafTreeSilhouette(
+            renderCtx,
+            scene,
+            tree.x,
+            tree.baseY,
+            tree.height,
+            tree.canopyWidth,
+            tree.seed
+        );
+    }
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.46;
     renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
-    renderCtx.lineWidth = 2;
-    for (let i = 0; i < 12; i++) {
-        const seed = scene.seed * 743 + i * 11.1;
-        const x = hash01(seed) * width;
+    renderCtx.lineCap = 'round';
+    renderCtx.lineWidth = Math.max(0.7, treeScale);
+    const vineCount = Math.min(9, distantTrees.length);
+    for (let index = 0; index < vineCount; index++) {
+        const tree = distantTrees[(index * 2 + 1) % distantTrees.length];
+        const seed = scene.seed * 743 + index * 11.1;
+        const anchorX = tree.x + (hash01(seed) - 0.5) * tree.canopyWidth * 0.72;
+        const anchorY = tree.baseY - tree.height * 0.78 +
+            (hash01(seed + 1) - 0.5) * tree.canopyWidth * 0.18;
+        const drop = lerp(28, 74, hash01(seed + 2)) * treeScale;
+        const sway = lerp(-18, 18, hash01(seed + 3)) * treeScale;
         renderCtx.beginPath();
-        renderCtx.moveTo(x, horizonY + 32);
-        renderCtx.lineTo(x + lerp(-6, 6, hash01(seed + 1)), horizonY - lerp(20, 64, hash01(seed + 2)));
+        renderCtx.moveTo(anchorX, anchorY);
+        renderCtx.bezierCurveTo(
+            anchorX - sway * 0.15,
+            anchorY + drop * 0.32,
+            anchorX + sway,
+            anchorY + drop * 0.68,
+            anchorX + sway * 0.58,
+            anchorY + drop
+        );
         renderCtx.stroke();
     }
+    renderCtx.restore();
+
+    const foregroundTreeCount = Math.round(clamp(width / 190, 5, 9));
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.7;
+    for (let index = 0; index < foregroundTreeCount; index++) {
+        const seed = scene.seed * 709 + index * 31.3;
+        const x = ((index + hash01(seed) * 0.8) / foregroundTreeCount) * width;
+        drawBroadleafTreeSilhouette(
+            renderCtx,
+            scene,
+            x,
+            horizonY + lerp(44, 76, hash01(seed + 1)) * treeScale,
+            lerp(72, 122, hash01(seed + 2)) * treeScale,
+            lerp(58, 96, hash01(seed + 3)) * treeScale,
+            seed
+        );
+    }
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.42;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    for (let index = 0; index < 16; index++) {
+        const seed = scene.seed * 1361 + index * 19.7;
+        const side = index % 2;
+        const edgeSpan = width * lerp(0.12, 0.24, hash01(seed + 1));
+        const x = side === 0 ? hash01(seed) * edgeSpan : width - hash01(seed) * edgeSpan;
+        const y = horizonY + lerp(30, 84, hash01(seed + 2)) * treeScale;
+        const leafLength = lerp(7, 18, hash01(seed + 3)) * treeScale;
+        const angle = lerp(-1.15, 1.15, hash01(seed + 3));
+
+        renderCtx.beginPath();
+        renderCtx.ellipse(
+            x,
+            y,
+            leafLength,
+            leafLength * 0.34,
+            angle,
+            0,
+            Math.PI * 2
+        );
+        renderCtx.fill();
+        renderCtx.beginPath();
+        renderCtx.ellipse(
+            x + Math.cos(angle) * leafLength * 0.65,
+            y + Math.sin(angle) * leafLength * 0.65,
+            leafLength * 0.72,
+            leafLength * 0.26,
+            -angle,
+            0,
+            Math.PI * 2
+        );
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 34, height * 0.96, {
+        count: 4,
+        opacity: 0.22,
+        seedOffset: 179,
+        maxWidth: 0.24,
+        bend: 5
+    });
 }
 
 function drawGlacierScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 42,
+        baseOffset: 10,
+        pointCount: 14,
+        opacity: 0.32,
+        seedOffset: 191
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY + 10, width, height - horizonY - 10);
 
@@ -1590,9 +2860,91 @@ function drawGlacierScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.fillStyle = scene.accentColor || scene.detailColor;
     renderCtx.fillRect(width * 0.08, horizonY + 28, width * 0.28, 3);
     renderCtx.fillRect(width * 0.5, horizonY + 20, width * 0.34, 3);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.56;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    const iceFacets = [
+        [0.12, -12, 0.05, 22, 0.2, 12],
+        [0.4, -28, 0.3, 10, 0.49, 4],
+        [0.72, -20, 0.62, 12, 0.8, 8]
+    ];
+    for (const [peakX, peakY, leftX, leftY, rightX, rightY] of iceFacets) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * peakX, horizonY + peakY);
+        renderCtx.lineTo(width * leftX, horizonY + leftY);
+        renderCtx.lineTo(width * rightX, horizonY + rightY);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.8;
+    for (let index = 0; index < 7; index++) {
+        const seed = scene.seed * 1031 + index * 19.9;
+        const x = width * lerp(0.08, 0.92, hash01(seed));
+        const y = horizonY + lerp(18, 64, hash01(seed + 1));
+        renderCtx.beginPath();
+        renderCtx.moveTo(x, y);
+        renderCtx.lineTo(x + lerp(-18, 18, hash01(seed + 2)), y + lerp(8, 22, hash01(seed + 3)));
+        renderCtx.lineTo(x + lerp(-10, 10, hash01(seed + 4)), y + lerp(18, 34, hash01(seed + 5)));
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.5;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.9;
+    renderCtx.beginPath();
+    renderCtx.moveTo(0, horizonY + 20);
+    renderCtx.lineTo(width * 0.12, horizonY - 12);
+    renderCtx.lineTo(width * 0.24, horizonY + 6);
+    renderCtx.lineTo(width * 0.4, horizonY - 28);
+    renderCtx.lineTo(width * 0.56, horizonY + 10);
+    renderCtx.lineTo(width * 0.72, horizonY - 20);
+    renderCtx.lineTo(width * 0.9, horizonY + 14);
+    renderCtx.lineTo(width, horizonY - 4);
+    renderCtx.stroke();
+    renderCtx.restore();
+
+    drawGroundContours(renderCtx, scene, width, horizonY + 30, height * 0.95, {
+        count: 5,
+        opacity: 0.3,
+        seedOffset: 197,
+        maxWidth: 0.28,
+        bend: 2.5
+    });
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.32;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    for (let index = 0; index < 6; index++) {
+        const seed = scene.seed * 1381 + index * 37.7;
+        const x = hash01(seed) * width;
+        const y = horizonY + lerp(42, 86, hash01(seed + 1));
+        const size = lerp(5, 14, hash01(seed + 2));
+        renderCtx.beginPath();
+        renderCtx.moveTo(x - size, y);
+        renderCtx.lineTo(x - size * 0.3, y - size * 0.42);
+        renderCtx.lineTo(x + size * 0.78, y - size * 0.18);
+        renderCtx.lineTo(x + size, y);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+    renderCtx.restore();
 }
 
 function drawMarshScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 20,
+        baseOffset: 2,
+        pointCount: 14,
+        opacity: 0.32,
+        seedOffset: 211,
+        smooth: true
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY + 6, width, height - horizonY - 6);
 
@@ -1607,6 +2959,34 @@ function drawMarshScene(renderCtx, scene, width, height, horizonY) {
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.72;
+    renderCtx.fillStyle = scene.groundColor;
+    renderCtx.beginPath();
+    renderCtx.ellipse(width * 0.22, horizonY + 34, width * 0.16, 9, -0.05, 0, Math.PI * 2);
+    renderCtx.ellipse(width * 0.58, horizonY + 46, width * 0.2, 11, 0.03, 0, Math.PI * 2);
+    renderCtx.ellipse(width * 0.86, horizonY + 28, width * 0.11, 7, -0.08, 0, Math.PI * 2);
+    renderCtx.fill();
+    renderCtx.restore();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.46;
+    renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+    const marshIslands = [
+        [0.1, 24, 0.11, 5],
+        [0.39, 32, 0.13, 6],
+        [0.74, 22, 0.1, 5],
+        [0.91, 46, 0.08, 4]
+    ];
+    for (const [x, yOffset, radiusX, radiusY] of marshIslands) {
+        renderCtx.beginPath();
+        renderCtx.ellipse(width * x, horizonY + yOffset, width * radiusX, radiusY, 0, 0, Math.PI * 2);
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
+    drawWaterRipples(renderCtx, scene, width, horizonY + 14, height * 0.9, 9, 0.44);
+
     renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
     renderCtx.lineWidth = 1.2;
     for (let i = 0; i < 28; i++) {
@@ -1618,18 +2998,51 @@ function drawMarshScene(renderCtx, scene, width, height, horizonY) {
         renderCtx.moveTo(x, baseY);
         renderCtx.lineTo(x + lerp(-4, 4, hash01(seed + 3)), tipY);
         renderCtx.stroke();
+
+        if (i < 12) {
+            renderCtx.fillStyle = scene.accentColor || scene.detailColor;
+            renderCtx.beginPath();
+            renderCtx.ellipse(
+                x + lerp(-4, 4, hash01(seed + 3)),
+                tipY + 2,
+                1.5,
+                3.8,
+                -0.12 + hash01(seed + 4) * 0.24,
+                0,
+                Math.PI * 2
+            );
+            renderCtx.fill();
+        }
     }
+
+    drawGrassTufts(renderCtx, scene, width, horizonY + 24, height * 0.94, {
+        count: 12,
+        opacity: 0.3,
+        seedOffset: 223,
+        maxHeight: 13
+    });
 }
 
 function drawCliffScene(renderCtx, scene, width, height, horizonY) {
+    drawDistantRidge(renderCtx, scene, width, horizonY, {
+        amplitude: 54,
+        baseOffset: 10,
+        pointCount: 12,
+        opacity: 0.3,
+        seedOffset: 233
+    });
+
     renderCtx.fillStyle = scene.groundColor;
     renderCtx.fillRect(0, horizonY + 12, width, height - horizonY - 12);
 
     renderCtx.beginPath();
     renderCtx.moveTo(0, height);
-    renderCtx.lineTo(0, horizonY - 86);
+    renderCtx.lineTo(0, horizonY - 70);
+    renderCtx.lineTo(width * 0.08, horizonY - 94);
     renderCtx.lineTo(width * 0.18, horizonY - 124);
-    renderCtx.lineTo(width * 0.24, horizonY - 12);
+    renderCtx.lineTo(width * 0.21, horizonY - 86);
+    renderCtx.lineTo(width * 0.23, horizonY - 24);
+    renderCtx.lineTo(width * 0.28, horizonY - 8);
     renderCtx.lineTo(width * 0.32, horizonY + 12);
     renderCtx.lineTo(width * 0.32, height);
     renderCtx.closePath();
@@ -1637,21 +3050,91 @@ function drawCliffScene(renderCtx, scene, width, height, horizonY) {
 
     renderCtx.beginPath();
     renderCtx.moveTo(width * 0.58, height);
-    renderCtx.lineTo(width * 0.58, horizonY - 72);
+    renderCtx.lineTo(width * 0.58, horizonY - 48);
+    renderCtx.lineTo(width * 0.64, horizonY - 72);
     renderCtx.lineTo(width * 0.74, horizonY - 106);
-    renderCtx.lineTo(width * 0.82, horizonY - 8);
+    renderCtx.lineTo(width * 0.78, horizonY - 74);
+    renderCtx.lineTo(width * 0.81, horizonY - 18);
+    renderCtx.lineTo(width * 0.86, horizonY - 6);
     renderCtx.lineTo(width * 0.9, horizonY + 12);
     renderCtx.lineTo(width * 0.9, height);
     renderCtx.closePath();
     renderCtx.fill();
 
+    renderCtx.beginPath();
+    renderCtx.moveTo(width * 0.43, height);
+    renderCtx.lineTo(width * 0.45, horizonY + 10);
+    renderCtx.lineTo(width * 0.48, horizonY - 18);
+    renderCtx.lineTo(width * 0.51, horizonY + 8);
+    renderCtx.lineTo(width * 0.54, height);
+    renderCtx.closePath();
+    renderCtx.fill();
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.34;
     renderCtx.fillStyle = scene.detailColor;
-    renderCtx.fillRect(width * 0.32, horizonY + 20, width * 0.26, 3);
-    renderCtx.fillRect(width * 0.9, horizonY + 18, width * 0.1, 2);
+    const cliffFacets = [
+        [0.08, -94, 0.18, -124, 0.2, -12],
+        [0.18, -124, 0.23, -24, 0.28, -8],
+        [0.64, -72, 0.74, -106, 0.77, -6],
+        [0.74, -106, 0.81, -18, 0.86, -6]
+    ];
+    for (const [ax, ay, bx, by, cx, cy] of cliffFacets) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * ax, horizonY + ay);
+        renderCtx.lineTo(width * bx, horizonY + by);
+        renderCtx.lineTo(width * cx, horizonY + cy);
+        renderCtx.closePath();
+        renderCtx.fill();
+    }
+    renderCtx.restore();
+
+    renderCtx.fillStyle = scene.detailColor;
+    renderCtx.fillRect(width * 0.32, horizonY + 20, width * 0.11, 1.5);
+    renderCtx.fillRect(width * 0.54, horizonY + 18, width * 0.04, 1.5);
+    renderCtx.fillRect(width * 0.9, horizonY + 18, width * 0.1, 1.5);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.56;
+    renderCtx.strokeStyle = scene.detailColor;
+    renderCtx.lineWidth = 1;
+    const cliffMarks = [
+        [0.06, -78, 0.1, 18],
+        [0.15, -102, 0.2, -8],
+        [0.64, -72, 0.7, 6],
+        [0.74, -94, 0.79, -10]
+    ];
+    for (const [startX, startY, endX, endY] of cliffMarks) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * startX, horizonY + startY);
+        renderCtx.lineTo(width * endX, horizonY + endY);
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
+    drawWaterRipples(renderCtx, scene, width, horizonY + 20, height * 0.92, 7, 0.36);
+
+    renderCtx.save();
+    renderCtx.globalAlpha *= 0.34;
+    renderCtx.strokeStyle = scene.accentColor || scene.detailColor;
+    renderCtx.lineWidth = 0.8;
+    const ledges = [
+        [0.01, 0.2, -66],
+        [0.04, 0.22, -42],
+        [0.6, 0.8, -44],
+        [0.66, 0.82, -24]
+    ];
+    for (const [startX, endX, offsetY] of ledges) {
+        renderCtx.beginPath();
+        renderCtx.moveTo(width * startX, horizonY + offsetY);
+        renderCtx.lineTo(width * endX, horizonY + offsetY + 2);
+        renderCtx.stroke();
+    }
+    renderCtx.restore();
 }
 
 function drawSceneScenery(renderCtx, scene, width, height) {
     const horizonY = height * scene.horizon;
+    drawLandscapeHaze(renderCtx, scene, width, height, horizonY);
 
     switch (scene.scenery) {
         case 'lake':
@@ -1701,29 +3184,69 @@ function drawSceneScenery(renderCtx, scene, width, height) {
             renderCtx.fillRect(0, horizonY, width, height - horizonY);
             break;
     }
+
+    drawForegroundShade(renderCtx, width, height, horizonY);
 }
 
 function drawSceneLightning(renderCtx, scene, sceneIndex, width, height) {
     const state = weatherSceneStates[sceneIndex];
-    if (!state || state.flash < 0.06) return;
+    if (!state || state.flash < 0.025) return;
 
-    renderCtx.fillStyle = `rgba(218, 230, 255, ${state.flash * 0.14})`;
+    const intensity = clamp(state.flash, 0, 1);
+    const boltStartX = width * state.boltX;
+    const glowRadius = Math.max(width, height) * 0.62;
+    const glow = renderCtx.createRadialGradient(
+        boltStartX,
+        height * 0.08,
+        0,
+        boltStartX,
+        height * 0.08,
+        glowRadius
+    );
+    glow.addColorStop(0, `rgba(164, 190, 230, ${intensity * 0.055})`);
+    glow.addColorStop(0.46, `rgba(126, 158, 206, ${intensity * 0.018})`);
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    renderCtx.fillStyle = glow;
     renderCtx.fillRect(0, 0, width, height);
 
-    renderCtx.strokeStyle = `rgba(236, 242, 255, ${state.flash * 0.9})`;
-    renderCtx.lineWidth = 2 + state.flash * 2.4;
-    renderCtx.beginPath();
-
-    let x = width * state.boltX;
+    const points = [];
+    let x = boltStartX;
     let y = height * 0.04;
-    renderCtx.moveTo(x, y);
+    points.push({ x, y });
 
     for (let step = 0; step < 7; step++) {
         x += width * (state.boltLean * 0.06 + (hash01(scene.seed * 733 + step * 1.91) - 0.5) * 0.07);
         y += height * (0.06 + hash01(scene.seed * 811 + step * 2.17) * 0.06);
-        renderCtx.lineTo(x, y);
+        points.push({ x, y });
     }
 
+    const strokeBolt = (color, lineWidth) => {
+        renderCtx.strokeStyle = color;
+        renderCtx.lineWidth = lineWidth;
+        renderCtx.beginPath();
+        renderCtx.moveTo(points[0].x, points[0].y);
+        for (let index = 1; index < points.length; index++) {
+            renderCtx.lineTo(points[index].x, points[index].y);
+        }
+        renderCtx.stroke();
+    };
+
+    strokeBolt(`rgba(150, 180, 225, ${intensity * 0.09})`, 5 + intensity * 2);
+    strokeBolt(`rgba(222, 232, 248, ${intensity * 0.46})`, 1.1 + intensity * 0.75);
+
+    const branchStart = points[3];
+    renderCtx.strokeStyle = `rgba(205, 220, 243, ${intensity * 0.2})`;
+    renderCtx.lineWidth = 0.8 + intensity * 0.35;
+    renderCtx.beginPath();
+    renderCtx.moveTo(branchStart.x, branchStart.y);
+    renderCtx.lineTo(
+        branchStart.x + width * (state.boltLean * 0.035 - 0.035),
+        branchStart.y + height * 0.07
+    );
+    renderCtx.lineTo(
+        branchStart.x + width * (state.boltLean * 0.05 - 0.018),
+        branchStart.y + height * 0.13
+    );
     renderCtx.stroke();
 }
 
@@ -1742,9 +3265,9 @@ function drawWeatherScene(renderCtx, sceneIndex, ts, alpha) {
     drawSceneStars(renderCtx, scene, width, height, timeSeconds);
     drawSceneMoon(renderCtx, scene, width, height);
     drawSceneClouds(renderCtx, scene, width, height, timeSeconds);
-    drawSceneRain(renderCtx, scene, width, height, timeSeconds);
     drawSceneFog(renderCtx, scene, width, height, timeSeconds);
     drawSceneScenery(renderCtx, scene, width, height);
+    drawSceneRain(renderCtx, scene, width, height, timeSeconds);
     drawSceneLightning(renderCtx, scene, sceneIndex, width, height);
 
     renderCtx.restore();
@@ -1786,7 +3309,7 @@ function drawWeatherBackdrop(ts) {
         Math.max(width, height) * 0.72
     );
     vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.48)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.43)');
     weatherCtx.fillStyle = vignette;
     weatherCtx.fillRect(0, 0, width, height);
 }
@@ -1863,18 +3386,22 @@ function init() {
 
     tetrisCanvas = document.getElementById('tetris-board');
     nextCanvas = document.getElementById('next-canvas');
+    stowCanvas = document.getElementById('stow-canvas');
     weatherCanvas = document.getElementById('weather-backdrop');
-    if (!tetrisCanvas || !nextCanvas || !weatherCanvas) return;
+    if (!tetrisCanvas || !nextCanvas || !stowCanvas || !weatherCanvas) return;
 
     ctx = tetrisCanvas.getContext('2d');
     nextCtx = nextCanvas.getContext('2d');
+    stowCtx = stowCanvas.getContext('2d');
     weatherCtx = weatherCanvas.getContext('2d');
 
     resizeWeatherCanvas();
     syncTouchDeviceState();
+    syncGameCanvasResolution();
     syncTouchControlsMetrics();
     window.addEventListener('resize', resizeWeatherCanvas);
     window.addEventListener('resize', syncTouchDeviceState);
+    window.addEventListener('resize', scheduleGameCanvasResolutionSync);
     window.addEventListener('resize', syncTouchControlsMetrics);
     window.visualViewport?.addEventListener('resize', syncTouchControlsMetrics);
     window.visualViewport?.addEventListener('scroll', syncTouchControlsMetrics);
@@ -1913,6 +3440,7 @@ function activateCurrentPiece(playEyeAnimation = false) {
     const w = currentPiece.shape[0].length;
     currentPiece.position.x = Math.floor(COLS / 2 - w / 2);
     currentPiece.position.y = 0;
+    resetPieceLockState();
     if (playEyeAnimation) triggerEyeUp();
 }
 
@@ -1928,9 +3456,18 @@ function resetGame() {
     level = 1;
     lines = 0;
     rowsClearedSinceLastChange = 0;
+    clearingRows = null;
+    pendingScoreData = null;
+    isFlashing = false;
+    flashCount = 0;
+    lastFlashTime = 0;
+    nextFlashing = false;
+    nextFlashCount = 0;
+    lastNextFlashTime = 0;
     gameOver = false;
     isPaused = true;
     gameSpeed = 1000;
+    resetPieceLockState();
     updateStats();
     if (isColliding()) gameOver = true;
     ghostPiece = null;
@@ -1961,6 +3498,7 @@ function updatePauseButton() {
 function updatePauseOverlay() {
     if (!pauseOverlay) return;
     pauseOverlay.hidden = !isPaused || gameOver;
+    updateGameZoomControls();
 }
 
 function togglePause() {
@@ -1985,7 +3523,7 @@ function updateStats() {
 
 /* ────────────────────── DRAWING FUNCTIONS ─────────────── */
 function drawBoard(){
-    ctx.clearRect(0,0,tetrisCanvas.width,tetrisCanvas.height);
+    ctx.clearRect(0,0,BOARD_LOGICAL_WIDTH,BOARD_LOGICAL_HEIGHT);
     for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)
         if(board[y][x]){
             ctx.fillStyle=COLORS[board[y][x]];
@@ -2004,17 +3542,17 @@ function drawBoard(){
                 if(isFlashing&&flashCount%2===1&&clearingRows){
                     ctx.fillStyle='rgba(255,255,255,0.8)';
                     for(const row of clearingRows)
-                        ctx.fillRect(0,row*BLOCK_SIZE,tetrisCanvas.width,BLOCK_SIZE);
+                        ctx.fillRect(0,row*BLOCK_SIZE,BOARD_LOGICAL_WIDTH,BLOCK_SIZE);
                 }
 }
 function drawNextPiece(){
-    nextCtx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
+    nextCtx.clearRect(0,0,PREVIEW_LOGICAL_SIZE,PREVIEW_LOGICAL_SIZE);
     if(!nextPiece)return;
     const shape = nextPiece.shape;
     const shapeWidth = shape[0].length;
     const shapeHeight = shape.length;
-    const offsetX=Math.floor((nextCanvas.width - BLOCK_SIZE*shapeWidth)/2);
-    const offsetY=Math.floor((nextCanvas.height - BLOCK_SIZE*shapeHeight)/2);
+    const offsetX=Math.floor((PREVIEW_LOGICAL_SIZE - BLOCK_SIZE*shapeWidth)/2);
+    const offsetY=Math.floor((PREVIEW_LOGICAL_SIZE - BLOCK_SIZE*shapeHeight)/2);
     for(let y=0;y<shape.length;y++){
         for(let x=0;x<shape[y].length;x++){
             if(shape[y][x]){
@@ -2025,23 +3563,21 @@ function drawNextPiece(){
     }
     if(nextFlashing&&nextFlashCount%2===1){
         nextCtx.fillStyle='rgba(255,255,255,0.4)';
-        nextCtx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+        nextCtx.fillRect(0,0,PREVIEW_LOGICAL_SIZE,PREVIEW_LOGICAL_SIZE);
     }
 }
 /* ────────────────────── STOW BOX DRAWING ───────────────────── */
 function drawStowPiece(){
-    const stowCanvas = document.getElementById('stow-canvas');
-    if (!stowCanvas) return;
-    const ctx = stowCanvas.getContext('2d');
+    if (!stowCanvas || !stowCtx) return;
 
-    ctx.clearRect(0, 0, stowCanvas.width, stowCanvas.height);
+    stowCtx.clearRect(0, 0, PREVIEW_LOGICAL_SIZE, PREVIEW_LOGICAL_SIZE);
 
     if (gameOver) {
-        ctx.font = 'bold 18px Arial';
-        ctx.fillStyle = 'red';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('GAME OVER', stowCanvas.width / 2, stowCanvas.height / 2);
+        stowCtx.font = 'bold 18px Arial';
+        stowCtx.fillStyle = 'red';
+        stowCtx.textAlign = 'center';
+        stowCtx.textBaseline = 'middle';
+        stowCtx.fillText('GAME OVER', PREVIEW_LOGICAL_SIZE / 2, PREVIEW_LOGICAL_SIZE / 2);
         return;   // skip the rest of the function
     }
 
@@ -2049,16 +3585,16 @@ function drawStowPiece(){
         const shape = stowedPiece.shape;
         const shapeWidth = shape[0].length;
         const shapeHeight = shape.length;
-        const offsetX = Math.floor((stowCanvas.width - BLOCK_SIZE * shapeWidth) / 2);
-        const offsetY = Math.floor((stowCanvas.height - BLOCK_SIZE * shapeHeight) / 2);
+        const offsetX = Math.floor((PREVIEW_LOGICAL_SIZE - BLOCK_SIZE * shapeWidth) / 2);
+        const offsetY = Math.floor((PREVIEW_LOGICAL_SIZE - BLOCK_SIZE * shapeHeight) / 2);
 
         for (let y = 0; y < shape.length; y++) {
             for (let x = 0; x < shape[y].length; x++) {
                 if (shape[y][x]) {
-                    ctx.fillStyle = COLORS[shape[y][x]];
-                    ctx.fillRect(offsetX + x * BLOCK_SIZE,
-                                 offsetY + y * BLOCK_SIZE,
-                                 BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+                    stowCtx.fillStyle = COLORS[shape[y][x]];
+                    stowCtx.fillRect(offsetX + x * BLOCK_SIZE,
+                                     offsetY + y * BLOCK_SIZE,
+                                     BLOCK_SIZE - 1, BLOCK_SIZE - 1);
                 }
             }
         }
@@ -2067,16 +3603,18 @@ function drawStowPiece(){
     /* Countdown when a piece is held  */
     if (!stowedPiece && holdLockActive) {
         const remaining = Math.max(0, Math.ceil((holdLockEndTime - performance.now()) / 1000));
-        ctx.font = 'bold 24px Arial';
-        ctx.fillStyle = 'red';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(remaining.toString(), stowCanvas.width / 2, stowCanvas.height / 2);
+        stowCtx.font = 'bold 24px Arial';
+        stowCtx.fillStyle = 'red';
+        stowCtx.textAlign = 'center';
+        stowCtx.textBaseline = 'middle';
+        stowCtx.fillText(remaining.toString(), PREVIEW_LOGICAL_SIZE / 2, PREVIEW_LOGICAL_SIZE / 2);
     }
 }
 
 /* ────────────────────── GAME LOGIC ───────────────────── */
 function rotate(){
+    if(!currentPiece)return;
+    const wasGrounded=isGrounded();
     const orig=JSON.parse(JSON.stringify(currentPiece.shape));
     for(let y=0;y<currentPiece.shape.length;y++)
         for(let x=0;x<y;x++){
@@ -2084,7 +3622,10 @@ function rotate(){
         }
         currentPiece.shape=currentPiece.shape.map(r=>r.reverse());
     if(isColliding()) currentPiece.shape = orig;
-    else playSound('ROTATE');
+    else {
+        noteGroundAdjustment(wasGrounded);
+        playSound('ROTATE');
+    }
 }
 
 /**
@@ -2097,6 +3638,7 @@ function rotate(){
 function movePiece(dx,dy,suppressDropSound = false){
     if(!currentPiece)return false;
 
+    const wasGrounded=dx!==0&&dy===0&&isGrounded();
     currentPiece.position.x+=dx;
     currentPiece.position.y+=dy;
 
@@ -2106,8 +3648,44 @@ function movePiece(dx,dy,suppressDropSound = false){
         return false;
     }
 
+    if(dx!==0&&dy===0)noteGroundAdjustment(wasGrounded);
     if (!suppressDropSound) playSound('DROP');
     return true;
+}
+
+function resetPieceLockState(){
+    groundedAt=null;
+    lockResetCount=0;
+}
+
+function isGrounded(piece=currentPiece){
+    if(!piece)return false;
+    piece.position.y++;
+    const grounded=isColliding(piece);
+    piece.position.y--;
+    return grounded;
+}
+
+function noteGroundAdjustment(wasGrounded){
+    if(!wasGrounded||groundedAt===null||lockResetCount>=MAX_LOCK_RESETS)return;
+    groundedAt=performance.now();
+    lockResetCount++;
+}
+
+function updatePieceLock(ts){
+    if(!currentPiece)return;
+    if(!isGrounded()){
+        groundedAt=null;
+        return;
+    }
+
+    if(groundedAt===null){
+        groundedAt=ts;
+        return;
+    }
+
+    const effectiveLockDelay=Math.max(LOCK_DELAY_MS,gameSpeed);
+    if(ts-groundedAt>=effectiveLockDelay)lockPiece();
 }
 
 function hardDrop(){
@@ -2115,6 +3693,24 @@ function hardDrop(){
     while(movePiece(0,1,true)){}
     lockPiece();               // finally drop the piece into place
 }
+
+function finishGame(){
+    if(gameOver)return;
+    gameOver=true;
+    triggerEyeDown();
+    playSound('GAME_OVER');
+    updatePauseOverlay();
+}
+
+function advancePieceQueue(){
+    currentPiece=nextPiece;
+    activateCurrentPiece();
+    nextPiece=generateRandomPiece();
+    lastStowTime=0;
+    dropStart=performance.now();
+    if(isColliding())finishGame();
+}
+
 function lockPiece(){
     if(!currentPiece)return;
     for(let y=0;y<currentPiece.shape.length;y++) {
@@ -2126,14 +3722,17 @@ function lockPiece(){
         }
     }
 
-    checkLines();
-    currentPiece=nextPiece;
-    activateCurrentPiece();
-    nextPiece=generateRandomPiece();
-    lastStowTime=0;
+    const hasPendingClear=checkLines();
+    resetPieceLockState();
+    if(hasPendingClear){
+        currentPiece=null;
+        ghostPiece=null;
+        return;
+    }
+    advancePieceQueue();
 }
 function stowOrUnstowPiece(){
-    if(!currentPiece)return;
+    if(!currentPiece||isFlashing)return;
     const now=performance.now();
     if(!stowedPiece&&holdLockActive)return;
 
@@ -2146,9 +3745,7 @@ function stowOrUnstowPiece(){
             position:{x:0,y:0},
             type:currentPiece.type
         };
-        currentPiece=nextPiece;
-        nextPiece=generateRandomPiece();
-        activateCurrentPiece();
+        advancePieceQueue();
         ghostPiece=null;updateGhostPiece();drawStowPiece();lastStowTime=now;
         triggerEyeDown();return;
     }
@@ -2187,7 +3784,9 @@ function checkLines() {
         } else {
             triggerDizzyEye();
         }
+        return true;
     }
+    return false;
 }
 
 function finalizeClearing(){
@@ -2204,6 +3803,7 @@ function finalizeClearing(){
         updateStats();
     }
     clearingRows=null;isFlashing=false;flashCount=0;lastFlashTime=0;pendingScoreData=null;
+    advancePieceQueue();
 }
 
 /* ────────────────────── GAME LOOP ───────────────────── */
@@ -2211,19 +3811,6 @@ function gameLoop(ts){
     requestAnimationFrame(gameLoop);
     drawWeatherBackdrop(ts);
     if(isPaused||gameOver)return;
-
-    if(ts - dropStart > gameSpeed){
-        if(!movePiece(0,1)){
-            lockPiece();
-            if(isColliding()){
-                gameOver      = true;   // we couldn't spawn a fresh piece
-                triggerEyeDown();
-                playSound('GAME_OVER');
-                updatePauseOverlay();
-            }
-        }
-        dropStart = ts;
-    }
 
     if(holdLockActive&&performance.now()>=holdLockEndTime)holdLockActive=false;
     if(nextFlashing&&ts-lastNextFlashTime>FLASH_INTERVAL_MS){
@@ -2233,19 +3820,27 @@ function gameLoop(ts){
     if(isFlashing){drawBoard();drawNextPiece();drawStowPiece();
         if(ts-lastFlashTime>FLASH_INTERVAL_MS){flashCount++;lastFlashTime=ts; if(flashCount>=4)finalizeClearing();}
         return;}
-        const dt=ts-lastTime;lastTime=ts;
-        if(!currentPiece&&stowedPiece){
-            currentPiece=JSON.parse(JSON.stringify(stowedPiece));
-            stowedPiece=null;drawStowPiece();updateGhostPiece();
-        }
-        if(ts-dropStart>gameSpeed){if(!movePiece(0,1)){lockPiece();if(isColliding()){gameOver=true;updatePauseOverlay();}}dropStart=ts;}
-        updateGhostPiece();drawBoard();drawNextPiece();drawStowPiece();
+
+    lastTime=ts;
+    if(!currentPiece&&stowedPiece){
+        currentPiece=JSON.parse(JSON.stringify(stowedPiece));
+        stowedPiece=null;
+        activateCurrentPiece();
+        if(isColliding())finishGame();
+        drawStowPiece();
+    }
+    if(currentPiece&&ts-dropStart>gameSpeed){
+        movePiece(0,1);
+        dropStart=ts;
+    }
+    updatePieceLock(ts);
+    updateGhostPiece();drawBoard();drawNextPiece();drawStowPiece();
 }
 
 /* ────────────────────── INPUT HANDLING ───────────────── */
 function setupInput() {
     document.addEventListener('keydown', e => {
-        if (isPaused || gameOver) return;
+        if (isPaused || gameOver || isFlashing || !currentPiece) return;
 
         const action = KEY_MAP[e.key];
         if (!action) return;

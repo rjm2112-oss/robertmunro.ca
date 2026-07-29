@@ -1,8 +1,17 @@
 const MODES = [
     { id: "large", label: "Medium", rows: 16, cols: 24, mines: 80 },
     { id: "extra-large", label: "Large", rows: 22, cols: 32, mines: 147 },
-    { id: "extreme", label: "Extra Large", rows: 26, cols: 38, mines: 206 }
+    { id: "extreme", label: "Extra Large", rows: 26, cols: 38, mines: 206 },
+    { id: "fill-board", label: "Fill Board", rows: 26, cols: 38, mines: 206, dynamic: true }
 ];
+
+const FILL_BOARD_MODE_ID = "fill-board";
+const FILL_BOARD_MINE_DENSITY = 1 / 6;
+const FILL_BOARD_NORMAL_CELL_SIZE = 30;
+const FILL_BOARD_FULLSCREEN_CELL_SIZE = 32;
+const FILL_BOARD_MIN_ROWS = 6;
+const FILL_BOARD_MIN_COLS = 10;
+const FILL_BOARD_MAX_CELLS = 4795;
 
 const NUMBER_COLORS = {
     1: "#0000fe",
@@ -53,7 +62,7 @@ const TOUCH_LONG_PRESS_DELAY = 425;
 const TOUCH_LONG_PRESS_MOVE_TOLERANCE = 14;
 
 const state = {
-    modeId: MODES[0].id,
+    modeId: FILL_BOARD_MODE_ID,
     board: [],
     started: false,
     finished: false,
@@ -69,7 +78,8 @@ const state = {
     suppressBoardClickUntil: 0,
     boardFitFrame: null,
     boardScrollFrame: null,
-    transientFace: null
+    transientFace: null,
+    fillBoardMode: null
 };
 
 const refs = {
@@ -81,6 +91,7 @@ const refs = {
     faceBtn: null,
     flagModeBtn: null,
     fullscreenBtn: null,
+    titlebarActions: [],
     modeButtons: []
 };
 
@@ -93,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.faceBtn = document.getElementById("face-btn");
     refs.flagModeBtn = document.getElementById("flag-mode-btn");
     refs.fullscreenBtn = document.getElementById("fullscreen-btn");
+    refs.titlebarActions = Array.from(document.querySelectorAll("[data-titlebar-action]"));
     refs.modeButtons = Array.from(document.querySelectorAll("[data-mode]"));
 
     refs.faceBtn.addEventListener("click", resetGame);
@@ -105,6 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("pointermove", handleBoardPointerMove);
     window.addEventListener("pointerup", handleBoardPointerEnd);
     window.addEventListener("pointercancel", handleBoardPointerEnd);
+    refs.titlebarActions.forEach(action => {
+        action.addEventListener("pointerdown", handleTitlebarActionPointerDown);
+    });
 
     refs.modeButtons.forEach(button => {
         button.addEventListener("click", () => {
@@ -115,6 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             state.modeId = modeId;
             resetGame();
+            syncResponsiveLayout();
         });
     });
 
@@ -138,7 +154,45 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function getCurrentMode() {
+    if (state.modeId === FILL_BOARD_MODE_ID && state.fillBoardMode) {
+        return state.fillBoardMode;
+    }
+
     return MODES.find(mode => mode.id === state.modeId) || MODES[0];
+}
+
+function createFillBoardMode() {
+    const fallback = MODES.find(mode => mode.id === FILL_BOARD_MODE_ID) || MODES[MODES.length - 1];
+    const viewportSize = getBoardViewportAvailableSize();
+    if (viewportSize.width <= 0 || viewportSize.height <= 0) {
+        return { ...fallback };
+    }
+
+    const preferredCellSize = state.websiteFullscreenActive
+        ? FILL_BOARD_FULLSCREEN_CELL_SIZE
+        : FILL_BOARD_NORMAL_CELL_SIZE;
+    const budgetCellSize = Math.sqrt(
+        (viewportSize.width * viewportSize.height) / FILL_BOARD_MAX_CELLS
+    );
+    const targetCellSize = Math.max(preferredCellSize, budgetCellSize);
+    const cols = Math.max(FILL_BOARD_MIN_COLS, Math.floor(viewportSize.width / targetCellSize));
+    const rows = Math.max(FILL_BOARD_MIN_ROWS, Math.floor(viewportSize.height / targetCellSize));
+    const cellCount = rows * cols;
+    const mines = Math.min(
+        999,
+        Math.max(1, cellCount - 9),
+        Math.round(cellCount * FILL_BOARD_MINE_DENSITY)
+    );
+
+    return {
+        id: FILL_BOARD_MODE_ID,
+        label: "Fill Board",
+        rows,
+        cols,
+        mines,
+        dynamic: true,
+        targetCellSize
+    };
 }
 
 function resetGame() {
@@ -153,6 +207,9 @@ function resetGame() {
     state.flagMode = false;
     state.suppressBoardClickUntil = 0;
     state.transientFace = null;
+    state.fillBoardMode = state.modeId === FILL_BOARD_MODE_ID
+        ? createFillBoardMode()
+        : null;
     state.board = createBoard(getCurrentMode());
 
     updateModeButtons();
@@ -324,6 +381,14 @@ function handleBoardPointerDown(event) {
 
     setTransientFace("surprised");
     startTouchLongPress(event, button);
+}
+
+function handleTitlebarActionPointerDown(event) {
+    if (state.finished || event.button !== 0) {
+        return;
+    }
+
+    setTransientFace("surprised");
 }
 
 function handleBoardPointerMove(event) {
@@ -683,7 +748,9 @@ function shuffle(array) {
 
 function handleViewportLayoutChange() {
     syncResponsiveLayout();
-    scheduleBoardFit();
+    if (!refreshIdleFillBoardMode()) {
+        scheduleBoardFit();
+    }
 }
 
 function scheduleBoardFit() {
@@ -709,6 +776,34 @@ function updateBoardFit() {
 
     refs.board.style.setProperty("--cell-size", `${nextSize}px`);
     scheduleBoardViewportScroll(boardIsRotated);
+}
+
+function refreshIdleFillBoardMode() {
+    if (
+        state.modeId !== FILL_BOARD_MODE_ID ||
+        state.started ||
+        state.finished ||
+        state.flagsUsed !== 0
+    ) {
+        return false;
+    }
+
+    const nextMode = createFillBoardMode();
+    const currentMode = state.fillBoardMode;
+    if (
+        currentMode &&
+        currentMode.rows === nextMode.rows &&
+        currentMode.cols === nextMode.cols &&
+        currentMode.mines === nextMode.mines
+    ) {
+        return false;
+    }
+
+    state.fillBoardMode = nextMode;
+    state.board = createBoard(nextMode);
+    updateMinesCounter();
+    renderBoard();
+    return true;
 }
 
 function toggleWebsiteFullscreen() {
@@ -821,7 +916,11 @@ function applyWebsiteFullscreenState(expanded) {
             <span>${expanded ? "Exit Fullscreen" : "Fullscreen"}</span>
         </span>
     `;
-    scheduleBoardFit();
+    window.requestAnimationFrame(() => {
+        if (!refreshIdleFillBoardMode()) {
+            scheduleBoardFit();
+        }
+    });
 }
 
 function getParentWindow() {
@@ -858,41 +957,29 @@ function syncResponsiveLayout() {
     const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
     const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
     const isMobileDevice = isTouchCapable && isPhoneLikeViewport;
-    const useMobileLandscapeLayout =
-        state.websiteFullscreenActive &&
-        isMobileDevice &&
-        isLandscape &&
-        isPhoneLikeViewport;
 
+    document.body.classList.toggle("is-mobile-device", isMobileDevice);
     applyMobileModeRestriction(isMobileDevice);
     const mode = getCurrentMode();
     const viewportSize = getBoardViewportAvailableSize();
     const defaultCellSize = getFittedCellSize(mode, viewportSize, false);
     const rotatedCellSize = getFittedCellSize(mode, viewportSize, true);
     const usePortraitRotatedLayout =
-        !useMobileLandscapeLayout &&
+        mode.id !== FILL_BOARD_MODE_ID &&
         !isLandscape &&
         rotatedCellSize > defaultCellSize;
-    const useCompactTitlebar =
-        isMobileDevice &&
-        (
-            useMobileLandscapeLayout ||
-            usePortraitRotatedLayout ||
-            viewportWidth <= 430
-        );
+    const useCompactTitlebar = isMobileDevice;
 
-    document.body.classList.toggle("is-mobile-device", isMobileDevice);
     document.body.classList.toggle("is-compact-titlebar", useCompactTitlebar);
-    document.body.classList.toggle("is-mobile-landscape-fullscreen", useMobileLandscapeLayout);
     document.body.classList.toggle("is-portrait-rotated", usePortraitRotatedLayout);
 }
 
 function applyMobileModeRestriction(enabled) {
-    if (!enabled || state.modeId === MODES[0].id) {
+    if (!enabled || state.modeId === FILL_BOARD_MODE_ID) {
         return;
     }
 
-    state.modeId = MODES[0].id;
+    state.modeId = FILL_BOARD_MODE_ID;
     resetGame();
 }
 
@@ -902,12 +989,19 @@ function getBoardViewportAvailableSize() {
     }
 
     const viewportStyles = window.getComputedStyle(refs.boardViewport);
-    const width = refs.boardViewport.clientWidth
-        - parseFloat(viewportStyles.paddingLeft || 0)
-        - parseFloat(viewportStyles.paddingRight || 0);
-    const height = refs.boardViewport.clientHeight
-        - parseFloat(viewportStyles.paddingTop || 0)
-        - parseFloat(viewportStyles.paddingBottom || 0);
+    const viewportRect = refs.boardViewport.getBoundingClientRect();
+    const horizontalInsets =
+        (parseFloat(viewportStyles.paddingLeft) || 0) +
+        (parseFloat(viewportStyles.paddingRight) || 0) +
+        (parseFloat(viewportStyles.borderLeftWidth) || 0) +
+        (parseFloat(viewportStyles.borderRightWidth) || 0);
+    const verticalInsets =
+        (parseFloat(viewportStyles.paddingTop) || 0) +
+        (parseFloat(viewportStyles.paddingBottom) || 0) +
+        (parseFloat(viewportStyles.borderTopWidth) || 0) +
+        (parseFloat(viewportStyles.borderBottomWidth) || 0);
+    const width = viewportRect.width - horizontalInsets;
+    const height = viewportRect.height - verticalInsets;
 
     return {
         width: Math.max(width, 0),
@@ -926,7 +1020,9 @@ function getFittedCellSize(mode, viewportSize, rotated) {
     const sizeFromHeight = Math.floor(viewportSize.height / visibleRows);
     const minSize = getMinimumCellSize(mode, rotated);
     const maxSize = state.websiteFullscreenActive ? 33 : 30.8;
-    const widthFirstMobileFit = shouldPrioritizeBoardWidth(rotated);
+    const widthFirstMobileFit =
+        mode.id !== FILL_BOARD_MODE_ID &&
+        shouldPrioritizeBoardWidth(rotated);
 
     return Math.max(
         minSize,
@@ -937,6 +1033,13 @@ function getFittedCellSize(mode, viewportSize, rotated) {
 }
 
 function getMinimumCellSize(mode, rotated) {
+    if (
+        mode.id === FILL_BOARD_MODE_ID &&
+        document.body.classList.contains("is-mobile-device")
+    ) {
+        return 1;
+    }
+
     if (mode.id === "extreme") {
         return 13;
     }

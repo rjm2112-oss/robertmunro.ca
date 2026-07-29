@@ -73,16 +73,17 @@
     <button type="button" id="fireworks-btn">Restart Celebration</button>
     <div class="test-status" id="test-status">Loading won-game celebration preview</div>
 </div>
-<iframe id="solitaire-frame" src="solitaire.html?lateGamePreview=1&celebrationTest=1" title="Solitaire Celebration Preview"></iframe>
+<iframe id="solitaire-frame" src="solitaire.html?lateGamePreview=1&celebrationTest=1&assets=animals-v8" title="Solitaire Celebration Preview"></iframe>
 <script>
     const frame = document.getElementById("solitaire-frame");
     const fireworksBtn = document.getElementById("fireworks-btn");
     const testStatus = document.getElementById("test-status");
     const TEST_SRC_BASE = "solitaire.html";
-    let currentPreviewUrl = `${TEST_SRC_BASE}?lateGamePreview=1&celebrationTest=1`;
+    const TEST_ASSET_REVISION = "animals-v8";
+    let currentPreviewUrl = `${TEST_SRC_BASE}?lateGamePreview=1&celebrationTest=1&assets=${TEST_ASSET_REVISION}`;
 
     function startFireworks() {
-        const triggerUrl = `${TEST_SRC_BASE}?lateGamePreview=1&celebrationTest=1&run=${Date.now()}`;
+        const triggerUrl = `${TEST_SRC_BASE}?lateGamePreview=1&celebrationTest=1&assets=${TEST_ASSET_REVISION}&run=${Date.now()}`;
         currentPreviewUrl = triggerUrl;
         testStatus.textContent = "Restarting celebration on a won board";
         frame.src = triggerUrl;

@@ -81,7 +81,7 @@ const DRONE_SHOW_OUTRO_FADE_MS = 1000;
 const SHOULD_LOAD_LATE_GAME_PREVIEW = new URLSearchParams(window.location.search).get("lateGamePreview") === "1";
 const DRONE_SHOW_DURATION_MIN_MS = 26000;
 const DRONE_SHOW_DURATION_MAX_MS = 32000;
-const DRONE_SHOW_DRONE_COUNT = 240;
+const DRONE_SHOW_DRONE_COUNT = 384;
 const DRONE_SHOW_FIGURES_PER_DISPLAY = 4;
 const DRONE_SHOW_BOAT_POSITIONS = [0.22, 0.74];
 const DRONE_SHOW_BIRD_TIERS = [
@@ -91,10 +91,11 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Western Sandpiper",
         rarity: "shoreline common",
         palette: [
-            { hue: 32, sat: 58, light: 88 },
-            { hue: 176, sat: 78, light: 76 },
-            { hue: 198, sat: 92, light: 70 },
-            { hue: 252, sat: 90, light: 80 }
+            { hue: 32, sat: 74, light: 70 },
+            { hue: 24, sat: 64, light: 58 },
+            { hue: 42, sat: 62, light: 78 },
+            { hue: 48, sat: 54, light: 90 },
+            { hue: 48, sat: 92, light: 72 }
         ]
     },
     {
@@ -103,13 +104,11 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Rufous Hummingbird",
         rarity: "coastal flash",
         palette: [
-            { hue: 24, sat: 92, light: 82 },
-            { hue: 48, sat: 94, light: 78 },
-            { hue: 102, sat: 88, light: 72 },
-            { hue: 148, sat: 88, light: 72 },
-            { hue: 188, sat: 92, light: 74 },
-            { hue: 226, sat: 90, light: 76 },
-            { hue: 320, sat: 84, light: 78 }
+            { hue: 20, sat: 90, light: 67 },
+            { hue: 144, sat: 78, light: 64 },
+            { hue: 205, sat: 36, light: 70 },
+            { hue: 218, sat: 54, light: 64 },
+            { hue: 48, sat: 96, light: 80 }
         ]
     },
     {
@@ -118,9 +117,11 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Great Blue Heron",
         rarity: "coastal familiar",
         palette: [
-            { hue: 206, sat: 52, light: 84 },
-            { hue: 216, sat: 84, light: 72 },
-            { hue: 196, sat: 62, light: 62 }
+            { hue: 211, sat: 62, light: 72 },
+            { hue: 220, sat: 48, light: 60 },
+            { hue: 195, sat: 58, light: 76 },
+            { hue: 48, sat: 40, light: 90 },
+            { hue: 44, sat: 94, light: 68 }
         ]
     },
     {
@@ -129,10 +130,11 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Bald Eagle",
         rarity: "iconic raptor",
         palette: [
-            { hue: 46, sat: 88, light: 88 },
-            { hue: 28, sat: 84, light: 72 },
-            { hue: 14, sat: 82, light: 66 },
-            { hue: 214, sat: 90, light: 74 }
+            { hue: 48, sat: 26, light: 95 },
+            { hue: 208, sat: 54, light: 88 },
+            { hue: 24, sat: 70, light: 62 },
+            { hue: 17, sat: 58, light: 52 },
+            { hue: 45, sat: 96, light: 68 }
         ]
     },
     {
@@ -141,10 +143,10 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Barred Owl",
         rarity: "nocturnal uncommon",
         palette: [
-            { hue: 40, sat: 74, light: 84 },
-            { hue: 26, sat: 72, light: 72 },
-            { hue: 12, sat: 68, light: 66 },
-            { hue: 232, sat: 76, light: 76 }
+            { hue: 35, sat: 78, light: 73 },
+            { hue: 43, sat: 58, light: 88 },
+            { hue: 24, sat: 67, light: 61 },
+            { hue: 48, sat: 68, light: 92 }
         ]
     },
     {
@@ -153,9 +155,10 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Beaver",
         rarity: "creekside bonus",
         palette: [
-            { hue: 26, sat: 54, light: 82 },
-            { hue: 34, sat: 62, light: 68 },
-            { hue: 196, sat: 70, light: 72 }
+            { hue: 32, sat: 68, light: 77 },
+            { hue: 24, sat: 72, light: 60 },
+            { hue: 18, sat: 54, light: 49 },
+            { hue: 48, sat: 72, light: 88 }
         ]
     },
     {
@@ -164,10 +167,10 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Steller's Jay",
         rarity: "bonus regional prize",
         palette: [
-            { hue: 236, sat: 94, light: 82 },
-            { hue: 214, sat: 96, light: 72 },
-            { hue: 198, sat: 98, light: 66 },
-            { hue: 168, sat: 100, light: 72 }
+            { hue: 232, sat: 52, light: 57 },
+            { hue: 220, sat: 92, light: 66 },
+            { hue: 196, sat: 96, light: 67 },
+            { hue: 178, sat: 88, light: 80 }
         ]
     },
     {
@@ -176,9 +179,10 @@ const DRONE_SHOW_BIRD_TIERS = [
         name: "Spirit Bear",
         rarity: "highest prestige",
         palette: [
-            { hue: 194, sat: 56, light: 94 },
-            { hue: 208, sat: 84, light: 84 },
-            { hue: 176, sat: 70, light: 76 }
+            { hue: 48, sat: 28, light: 95 },
+            { hue: 205, sat: 66, light: 84 },
+            { hue: 38, sat: 56, light: 87 },
+            { hue: 210, sat: 48, light: 56 }
         ]
     }
 ];
@@ -1460,10 +1464,10 @@ function getDroneShowFigureLayout(id) {
     switch (id) {
         case "western-sandpiper":
             return {
-                flapA: -0.02,
-                flapB: 0.01,
-                flapC: -0.008,
-                flapD: 0.012,
+                flapA: -0.08,
+                flapB: 0.055,
+                flapC: -0.035,
+                flapD: 0.07,
                 flapDriftA: 0.005,
                 flapDriftB: 0.004,
                 flapDriftC: 0.002,
@@ -1526,18 +1530,18 @@ function getDroneShowFigureLayout(id) {
                 bankB: -0.01,
                 bankC: 0.028,
                 bankD: 0.06,
-                centerXA: 0.38,
-                centerXB: 0.44,
-                centerXC: 0.5,
-                centerXD: 0.56,
-                centerYA: 0.37,
-                centerYB: 0.35,
-                centerYC: 0.34,
-                centerYD: 0.325,
-                scaleA: 0.355,
-                scaleB: 0.367,
-                scaleC: 0.363,
-                scaleD: 0.355
+                centerXA: 0.34,
+                centerXB: 0.38,
+                centerXC: 0.42,
+                centerXD: 0.46,
+                centerYA: 0.415,
+                centerYB: 0.41,
+                centerYC: 0.405,
+                centerYD: 0.4,
+                scaleA: 0.323,
+                scaleB: 0.333,
+                scaleC: 0.33,
+                scaleD: 0.323
             };
         case "bald-eagle":
             return {
@@ -1561,10 +1565,10 @@ function getDroneShowFigureLayout(id) {
                 centerYB: 0.38,
                 centerYC: 0.376,
                 centerYD: 0.368,
-                scaleA: 0.255,
-                scaleB: 0.265,
-                scaleC: 0.262,
-                scaleD: 0.255
+                scaleA: 0.29,
+                scaleB: 0.302,
+                scaleC: 0.299,
+                scaleD: 0.29
             };
         case "barred-owl":
             return {
@@ -1588,10 +1592,10 @@ function getDroneShowFigureLayout(id) {
                 centerYB: 0.39,
                 centerYC: 0.386,
                 centerYD: 0.378,
-                scaleA: 0.255,
-                scaleB: 0.265,
-                scaleC: 0.262,
-                scaleD: 0.255
+                scaleA: 0.29,
+                scaleB: 0.302,
+                scaleC: 0.299,
+                scaleD: 0.29
             };
         case "beaver":
             return {
@@ -1759,53 +1763,55 @@ function getDroneShowReferenceShape(bird, pose) {
         const colorIndex = point[2];
         const alpha = point[3];
         const size = point[4];
+        const detail = point[5] ?? (alpha < 0.95 ? 1 : 0);
+        const isHummingbirdEye = bird.id === "rufous-hummingbird" && detail > 0.82;
         const flapStrength = getDroneShowFlapStrength(bird.id);
-        const wingWarp = bird.id === "spirit-bear"
-            ? 0
-            : pose.flap * (Math.abs(x) * flapStrength - flapStrength * 0.18);
-        const bodyLift = bird.id === "spirit-bear" ? 0 : pose.flap * x * flapStrength * 0.18;
+        const wingWeight = getDroneShowWingWeight(bird.id, x);
+        const wingWarp = pose.flap * wingWeight * flapStrength;
 
         return {
-            x: x * (1 + pose.flap * 0.03) + bodyLift,
+            x: x * (1 + pose.flap * wingWeight * 0.025),
             y: y + wingWarp,
             colorIndex,
-            alpha,
-            size
+            alpha: isHummingbirdEye ? alpha * 0.28 : alpha,
+            size: isHummingbirdEye ? size * 0.78 : size,
+            detail: isHummingbirdEye ? 0.72 : detail
         };
     });
 }
 
 function getDroneShowFlapStrength(id) {
     switch (id) {
-        case "western-sandpiper":
-            return 0;
         case "rufous-hummingbird":
-            return 0;
-        case "great-blue-heron":
-            return 0.026;
-        case "bald-eagle":
-            return 0;
-        case "barred-owl":
-            return 0;
-        case "beaver":
-            return 0;
+            return 0.82;
         case "stellers-jay":
-            return 0.018;
+            return 0.56;
         default:
             return 0;
     }
 }
 
-function stylizeDroneShowPoints(id, points) {
+function getDroneShowWingWeight(id, x) {
     if (
-        id === "western-sandpiper" ||
-        id === "great-blue-heron" ||
-        id === "beaver" ||
-        id === "stellers-jay"
+        id !== "western-sandpiper" &&
+        id !== "rufous-hummingbird" &&
+        id !== "great-blue-heron" &&
+        id !== "stellers-jay"
     ) {
+        return 0;
+    }
+
+    return smoothstep(0.06, 0.92, clamp(0.22 - x, 0, 1));
+}
+
+function stylizeDroneShowPoints(id, points) {
+    if (id === "stellers-jay") {
         return emphasizeDroneShowOutline(id, points);
     }
-    return emphasizeDroneShowPortrait(id, points);
+    if (id === "rufous-hummingbird") {
+        return emphasizeDroneShowPortrait(id, points);
+    }
+    return points;
 }
 
 function emphasizeDroneShowPortrait(id, points) {
@@ -1822,7 +1828,7 @@ function emphasizeDroneShowPortrait(id, points) {
     const config = getDroneShowPortraitConfig(id);
 
     return points.map((point) => {
-        const isEdge = point.alpha >= 0.95;
+        const isEdge = (point.detail ?? (point.alpha < 0.95 ? 1 : 0)) <= 0.12;
         const dx = point.x - center.x;
         const dy = point.y - center.y;
         const distance = Math.hypot(dx, dy) || 1;
@@ -2017,7 +2023,7 @@ function emphasizeDroneShowOutline(id, points) {
     const config = getDroneShowOutlineConfig(id);
 
     return points.map((point) => {
-        const isEdge = point.alpha >= 0.95;
+        const isEdge = (point.detail ?? (point.alpha < 0.95 ? 1 : 0)) <= 0.12;
         let x = point.x;
         let y = point.y;
         let size = point.size;
@@ -2486,56 +2492,71 @@ function drawDroneShow(elapsed, progress) {
         for (let index = 0; index < victoryFx.drones.length; index += 1) {
             const drone = victoryFx.drones[index];
             const detailFactor = clamp(drone.detail ?? 0, 0, 1);
+            const isFeatureLight = detailFactor > 0.82;
             const isDetailPass = detailFactor > 0.35;
             if ((pass === 0 && isDetailPass) || (pass === 1 && !isDetailPass)) {
                 continue;
             }
 
-            const shimmer = 0.965 + 0.035 * Math.sin(elapsed * 0.0032 + drone.phase);
+            const shimmer = 0.95 + 0.05 * Math.sin(elapsed * 0.0032 + drone.phase);
             const alpha = Math.max(0, Math.min(1, drone.alpha * shimmer));
             if (alpha <= 0.01) {
                 continue;
             }
 
-            const baseRadius = isOutlineFigure ? 0.62 : 0.76;
-            const sizeFactor = isOutlineFigure ? 0.66 + shimmer * 0.025 : 0.84 + shimmer * 0.045;
-            const detailRadius = Math.max(0.24, drone.size * (0.34 + shimmer * 0.018));
-            const radius = mix(
-                Math.max(baseRadius, drone.size * sizeFactor),
-                detailRadius,
-                detailFactor
-            );
-            const baseSat = Math.max(18, drone.sat - 10);
-            const baseLight = Math.min(92, drone.light + 2);
-            const droneSat = mix(baseSat, Math.max(10, baseSat - 14), detailFactor);
-            const droneLight = mix(baseLight, Math.min(98, baseLight + 10), detailFactor);
-            const fillAlpha = alpha * mix(1, 0.54, detailFactor);
-            const glowAlpha = Math.min(
-                isOutlineFigure ? 0.055 : 0.11,
-                fillAlpha * mix(isOutlineFigure ? 0.06 : 0.095, 0.01, detailFactor)
-            );
-            ctx.shadowColor = `hsla(${drone.hue}, ${droneSat}%, ${droneLight}%, ${glowAlpha})`;
-            ctx.shadowBlur = mix(
-                isOutlineFigure ? 0.08 + radius * 0.08 : 0.38 + radius * 0.24,
-                0.02 + radius * 0.035,
-                detailFactor
-            );
+            const baseRadius = isOutlineFigure ? 0.56 : 0.64;
+            const sizeFactor = isOutlineFigure ? 0.66 + shimmer * 0.025 : 0.72 + shimmer * 0.035;
+            const outlineRadius = Math.max(baseRadius, drone.size * sizeFactor);
+            const surfaceRadius = Math.max(0.42, drone.size * (0.56 + shimmer * 0.018));
+            const featureRadius = Math.max(0.46, drone.size * (0.54 + shimmer * 0.014));
+            const radius = detailFactor <= 0.82
+                ? mix(outlineRadius, surfaceRadius, detailFactor / 0.82)
+                : mix(surfaceRadius, featureRadius, (detailFactor - 0.82) / 0.18);
+            const droneSat = Math.min(100, drone.sat + (isFeatureLight ? 7 : 0));
+            const droneLight = Math.min(98, drone.light + (isFeatureLight ? 12 : 3));
+            const fillAlpha = alpha * (isFeatureLight ? 1 : mix(1, 0.84, detailFactor));
+            const hasLightCore = detailFactor <= 0.12 || isFeatureLight;
+            const glowAlpha = Math.min(0.48, fillAlpha * (isFeatureLight ? 0.46 : 0.3));
+            const hoverAmount = isFeatureLight ? 0.07 : 0.14;
+            const drawX = drone.x + Math.sin(elapsed * 0.0017 + drone.phase) * hoverAmount;
+            const drawY = drone.y + Math.cos(elapsed * 0.0014 + drone.phase * 1.17) * hoverAmount;
+            ctx.shadowColor = hasLightCore
+                ? `hsla(${drone.hue}, ${droneSat}%, ${droneLight}%, ${glowAlpha})`
+                : "transparent";
+            ctx.shadowBlur = hasLightCore ? (isFeatureLight ? 3.8 : 2.6) + radius * 0.7 : 0;
             ctx.fillStyle = `hsla(${drone.hue}, ${droneSat}%, ${droneLight}%, ${Math.min(1, fillAlpha)})`;
             ctx.beginPath();
-            ctx.arc(drone.x, drone.y, radius, 0, Math.PI * 2);
+            ctx.arc(drawX, drawY, radius, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
 
-            if (drone.y < waterline - 8) {
+            if (hasLightCore) {
+                const coreAlpha = Math.min(0.86, fillAlpha * (isFeatureLight ? 0.72 : 0.42));
+                ctx.fillStyle = `hsla(${drone.hue}, ${Math.max(12, droneSat - 20)}%, ${Math.min(99, droneLight + 15)}%, ${coreAlpha})`;
+                ctx.beginPath();
+                ctx.arc(
+                    drawX - radius * 0.15,
+                    drawY - radius * 0.16,
+                    Math.max(0.2, radius * (isFeatureLight ? 0.32 : 0.25)),
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+
+            const shouldReflect =
+                (detailFactor <= 0.12 && index % 4 === 0) ||
+                (isFeatureLight && index % 2 === 0);
+            if (shouldReflect && drawY < waterline - 8) {
                 const reflectionAlpha = fillAlpha
-                    * mix(isOutlineFigure ? 0.003 : 0.005, 0.0018, detailFactor)
-                    * (1 - (waterline - drone.y) / Math.max(120, waterline));
-                if (reflectionAlpha > 0.01) {
+                    * mix(0.022, 0.012, detailFactor)
+                    * (1 - (waterline - drawY) / Math.max(120, waterline));
+                if (reflectionAlpha > 0.002) {
                     ctx.fillStyle = `hsla(${drone.hue}, ${droneSat}%, ${Math.min(88, droneLight)}%, ${reflectionAlpha})`;
                     ctx.beginPath();
                     ctx.ellipse(
-                        drone.x,
-                        waterline + (waterline - drone.y) * 0.16,
+                        drawX,
+                        waterline + (waterline - drawY) * 0.16,
                         radius * mix(0.28, 0.2, detailFactor),
                         radius * mix(0.85, 0.56, detailFactor),
                         0,
@@ -2802,8 +2823,8 @@ function transformFormationPoints(points, palette, pose) {
     const scale = Math.min(victoryFx.width, victoryFx.height) * pose.scale;
     const cos = Math.cos(pose.bank);
     const sin = Math.sin(pose.bank);
-    const paletteEntry = palette[Math.floor(palette.length / 2)] ?? palette[0];
     return points.map((point) => {
+        const paletteEntry = palette[point.colorIndex] ?? palette[Math.floor(palette.length / 2)] ?? palette[0];
         const px = point.x * scale;
         const py = point.y * scale;
         const x = px * cos - py * sin + victoryFx.width * pose.centerX;
@@ -2811,9 +2832,9 @@ function transformFormationPoints(points, palette, pose) {
         return {
             x,
             y,
-            size: Math.max(0.7, point.size * (0.9 + scale * 0.0086)),
+            size: Math.max(0.7, point.size * (0.9 + scale * 0.0072)),
             alpha: point.alpha,
-            detail: point.alpha < 0.95 ? 1 : 0,
+            detail: point.detail ?? (point.alpha < 0.95 ? 1 : 0),
             colorIndex: point.colorIndex,
             hue: paletteEntry.hue,
             sat: paletteEntry.sat,
