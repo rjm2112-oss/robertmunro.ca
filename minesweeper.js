@@ -6,9 +6,10 @@ const MODES = [
 ];
 
 const FILL_BOARD_MODE_ID = "fill-board";
-const FILL_BOARD_MINE_DENSITY = 1 / 6;
+const FILL_BOARD_MINE_DENSITY = 0.185;
 const FILL_BOARD_NORMAL_CELL_SIZE = 30;
 const FILL_BOARD_FULLSCREEN_CELL_SIZE = 32;
+const FILL_BOARD_MOBILE_CELL_SIZE = 28;
 const FILL_BOARD_MIN_ROWS = 6;
 const FILL_BOARD_MIN_COLS = 10;
 const FILL_BOARD_MAX_CELLS = 4795;
@@ -168,9 +169,11 @@ function createFillBoardMode() {
         return { ...fallback };
     }
 
-    const preferredCellSize = state.websiteFullscreenActive
-        ? FILL_BOARD_FULLSCREEN_CELL_SIZE
-        : FILL_BOARD_NORMAL_CELL_SIZE;
+    const preferredCellSize = isMobileDeviceViewport()
+        ? FILL_BOARD_MOBILE_CELL_SIZE
+        : state.websiteFullscreenActive
+            ? FILL_BOARD_FULLSCREEN_CELL_SIZE
+            : FILL_BOARD_NORMAL_CELL_SIZE;
     const budgetCellSize = Math.sqrt(
         (viewportSize.width * viewportSize.height) / FILL_BOARD_MAX_CELLS
     );
@@ -954,9 +957,7 @@ function syncResponsiveLayout() {
     const viewportWidth = viewport ? viewport.width : window.innerWidth;
     const viewportHeight = viewport ? viewport.height : window.innerHeight;
     const isLandscape = viewportWidth > viewportHeight;
-    const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
-    const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
-    const isMobileDevice = isTouchCapable && isPhoneLikeViewport;
+    const isMobileDevice = isMobileDeviceViewport();
 
     document.body.classList.toggle("is-mobile-device", isMobileDevice);
     applyMobileModeRestriction(isMobileDevice);
@@ -1055,15 +1056,23 @@ function shouldPrioritizeBoardWidth(rotated) {
     return isPhonePortraitViewport() && !rotated;
 }
 
+function isMobileDeviceViewport() {
+    const viewport = window.visualViewport;
+    const viewportWidth = viewport ? viewport.width : window.innerWidth;
+    const viewportHeight = viewport ? viewport.height : window.innerHeight;
+    const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
+    const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
+
+    return isTouchCapable && isPhoneLikeViewport;
+}
+
 function isPhonePortraitViewport() {
     const viewport = window.visualViewport;
     const viewportWidth = viewport ? viewport.width : window.innerWidth;
     const viewportHeight = viewport ? viewport.height : window.innerHeight;
     const isLandscape = viewportWidth > viewportHeight;
-    const isTouchCapable = navigator.maxTouchPoints > 0 || "ontouchstart" in window;
-    const isPhoneLikeViewport = Math.min(viewportWidth, viewportHeight) <= 540 && viewportWidth <= 960;
 
-    return isTouchCapable && isPhoneLikeViewport && !isLandscape;
+    return isMobileDeviceViewport() && !isLandscape;
 }
 
 function syncBoardViewportScroll(rotated) {
