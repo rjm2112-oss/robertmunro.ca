@@ -59,7 +59,7 @@ const ICONS = {
 const WEBSITE_FULLSCREEN_CLASS = "minesweeper-website-fullscreen";
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
-const TOUCH_LONG_PRESS_DELAY = 425;
+const TOUCH_LONG_PRESS_DELAY = 300;
 
 const state = {
     modeId: FILL_BOARD_MODE_ID,
