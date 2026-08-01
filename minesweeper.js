@@ -60,7 +60,6 @@ const WEBSITE_FULLSCREEN_CLASS = "minesweeper-website-fullscreen";
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
 const TOUCH_LONG_PRESS_DELAY = 425;
-const TOUCH_LONG_PRESS_MOVE_TOLERANCE = 14;
 
 const state = {
     modeId: FILL_BOARD_MODE_ID,
@@ -115,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.board.addEventListener("click", handleBoardClick);
     refs.board.addEventListener("contextmenu", handleBoardContextMenu);
     refs.board.addEventListener("pointerdown", handleBoardPointerDown);
-    window.addEventListener("pointermove", handleBoardPointerMove);
     window.addEventListener("pointerup", handleBoardPointerEnd);
     window.addEventListener("pointercancel", handleBoardPointerEnd);
     refs.titlebarActions.forEach(action => {
@@ -394,21 +392,6 @@ function handleTitlebarActionPointerDown(event) {
     setTransientFace("surprised");
 }
 
-function handleBoardPointerMove(event) {
-    const activeTouchPress = state.activeTouchPress;
-    if (!activeTouchPress || activeTouchPress.pointerId !== event.pointerId || activeTouchPress.triggered) {
-        return;
-    }
-
-    const deltaX = event.clientX - activeTouchPress.startX;
-    const deltaY = event.clientY - activeTouchPress.startY;
-    if (Math.hypot(deltaX, deltaY) < TOUCH_LONG_PRESS_MOVE_TOLERANCE) {
-        return;
-    }
-
-    clearActiveTouchPress();
-}
-
 function handleBoardPointerEnd(event) {
     if (state.activeTouchPress && state.activeTouchPress.pointerId !== event.pointerId) {
         return;
@@ -456,8 +439,6 @@ function startTouchLongPress(event, button) {
 
     state.activeTouchPress = {
         pointerId: event.pointerId,
-        startX: event.clientX,
-        startY: event.clientY,
         timerId,
         triggered: false
     };
