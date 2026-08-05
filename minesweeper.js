@@ -427,6 +427,14 @@ function startTouchLongPress(event, button) {
         return;
     }
 
+    if (typeof button.setPointerCapture === "function") {
+        try {
+            button.setPointerCapture(event.pointerId);
+        } catch {
+            // Pointer capture is best-effort on older mobile browsers.
+        }
+    }
+
     const timerId = window.setTimeout(() => {
         const activeTouchPress = state.activeTouchPress;
         if (!activeTouchPress || activeTouchPress.pointerId !== event.pointerId || state.finished) {
