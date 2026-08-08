@@ -115,11 +115,12 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.board.addEventListener("click", handleBoardClick);
     refs.board.addEventListener("contextmenu", handleBoardContextMenu);
     document.addEventListener("pointerdown", handleBoardPointerDown, true);
-    document.addEventListener("touchstart", handleBoardTouchStart, { capture: true, passive: true });
+    document.addEventListener("touchstart", handleBoardTouchStart, { capture: true, passive: false });
+    document.addEventListener("touchmove", handleBoardTouchMove, { capture: true, passive: false });
     window.addEventListener("pointerup", handleBoardPointerEnd);
     window.addEventListener("pointercancel", handleBoardPointerEnd);
-    window.addEventListener("touchend", handleBoardTouchEnd, { passive: true });
-    window.addEventListener("touchcancel", handleBoardTouchEnd, { passive: true });
+    window.addEventListener("touchend", handleBoardTouchEnd, { passive: false });
+    window.addEventListener("touchcancel", handleBoardTouchEnd, { passive: false });
     refs.titlebarActions.forEach(action => {
         action.addEventListener("pointerdown", handleTitlebarActionPointerDown);
     });
@@ -347,6 +348,10 @@ function handleBoardClick(event) {
         clearActiveTouchPress();
     }
 
+    activateBoardButton(button);
+}
+
+function activateBoardButton(button) {
     if (!button || state.finished) {
         return;
     }
@@ -412,7 +417,10 @@ function handleBoardPointerDown(event) {
     }
 
     setTransientFace("surprised");
-    startTouchLongPress(event, button);
+    const activeTouchPress = startTouchLongPress(event, button);
+    if (isTouchPointer && activeTouchPress && event.cancelable) {
+        event.preventDefault();
+    }
 }
 
 function handleBoardTouchStart(event) {
@@ -432,7 +440,24 @@ function handleBoardTouchStart(event) {
     }
 
     setTransientFace("surprised");
-    startTouchLongPressFromTouch(event, touch, button);
+    const activeTouchPress = startTouchLongPressFromTouch(event, touch, button);
+    if (activeTouchPress && event.cancelable) {
+        event.preventDefault();
+    }
+}
+
+function handleBoardTouchMove(event) {
+    const activeTouchPress = state.activeTouchPress;
+    if (!activeTouchPress || activeTouchPress.touchIdentifier === null) {
+        return;
+    }
+
+    const activeTouch = Array.from(event.touches).find(
+        touch => touch.identifier === activeTouchPress.touchIdentifier
+    );
+    if (activeTouch && event.cancelable) {
+        event.preventDefault();
+    }
 }
 
 function getBoardPressButton(target, clientX, clientY, allowEdgeSnap) {
@@ -502,12 +527,23 @@ function handleBoardPointerEnd(event) {
         return;
     }
 
-    if (
-        event.type === "pointerup" &&
-        activeTouchPress.wasCanceled &&
-        activeTouchPress.touchIdentifier !== null
-    ) {
-        // Keep an iOS edge-canceled hold alive until its touch sequence finishes.
+    if (activeTouchPress.touchIdentifier !== null) {
+        if (event.type === "pointercancel") {
+            activeTouchPress.wasCanceled = true;
+            if (
+                !activeTouchPress.triggered &&
+                getTouchPressElapsed(activeTouchPress, event) >= TOUCH_LONG_PRESS_DELAY
+            ) {
+                triggerTouchLongPress(activeTouchPress);
+            }
+            if (activeTouchPress.triggered) {
+                state.suppressBoardClickUntil = Date.now() + 700;
+                clearActiveTouchPress();
+                clearTransientFace();
+            }
+        }
+
+        // Touch events own completion once iOS has supplied a touch identifier.
         return;
     }
 
@@ -527,6 +563,9 @@ function handleBoardTouchEnd(event) {
         return;
     }
 
+    if (event.cancelable) {
+        event.preventDefault();
+    }
     finishTouchPress(activeTouchPress, event);
 }
 
@@ -548,6 +587,7 @@ function finishTouchPress(activeTouchPress, event) {
 
         if (activeTouchPress.triggered) {
             state.suppressBoardClickUntil = Date.now() + 700;
+            clearActiveTouchPress();
             clearTransientFace();
         }
         return;
@@ -560,12 +600,16 @@ function finishTouchPress(activeTouchPress, event) {
         triggerTouchLongPress(activeTouchPress);
     }
 
-    if (activeTouchPress.triggered) {
-        state.suppressBoardClickUntil = Date.now() + 700;
-    }
+    const shouldActivateTap = !activeTouchPress.triggered;
+    const button = activeTouchPress.button;
+    state.suppressBoardClickUntil = Date.now() + 700;
 
     clearActiveTouchPress();
     clearTransientFace();
+
+    if (shouldActivateTap) {
+        activateBoardButton(button);
+    }
 }
 
 function getCellFromButton(button) {
@@ -580,14 +624,14 @@ function getCellFromButton(button) {
 
 function startTouchLongPress(event, button) {
     if (event.pointerType !== "touch") {
-        return;
+        return null;
     }
 
     const activeTouchPress = beginTouchLongPress(button, {
         pointerId: event.pointerId
     }, event);
     if (!activeTouchPress) {
-        return;
+        return null;
     }
 
     if (typeof button.setPointerCapture === "function") {
@@ -597,10 +641,12 @@ function startTouchLongPress(event, button) {
             // Pointer capture is best-effort on older mobile browsers.
         }
     }
+
+    return activeTouchPress;
 }
 
 function startTouchLongPressFromTouch(event, touch, button) {
-    beginTouchLongPress(button, {
+    return beginTouchLongPress(button, {
         touchIdentifier: touch.identifier
     }, event);
 }
@@ -702,6 +748,7 @@ function triggerTouchLongPress(activeTouchPress) {
     state.suppressBoardClickUntil = Date.now() + 700;
 
     if (activeTouchPress.wasCanceled) {
+        clearActiveTouchPress();
         clearTransientFace();
     }
 }
