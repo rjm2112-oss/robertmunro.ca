@@ -60,6 +60,7 @@ const WEBSITE_FULLSCREEN_CLASS = "minesweeper-website-fullscreen";
 const IS_FILE_ORIGIN = window.location.protocol === "file:";
 const MESSAGE_TARGET_ORIGIN = window.location.origin === "null" || IS_FILE_ORIGIN ? "*" : window.location.origin;
 const TOUCH_LONG_PRESS_DELAY = 250;
+const TOUCH_EDGE_HIT_SLOP = 12;
 
 const state = {
     modeId: FILL_BOARD_MODE_ID,
@@ -113,9 +114,12 @@ document.addEventListener("DOMContentLoaded", () => {
     refs.fullscreenBtn.addEventListener("touchend", handleFullscreenButtonTouch, { passive: false });
     refs.board.addEventListener("click", handleBoardClick);
     refs.board.addEventListener("contextmenu", handleBoardContextMenu);
-    refs.board.addEventListener("pointerdown", handleBoardPointerDown);
+    document.addEventListener("pointerdown", handleBoardPointerDown, true);
+    document.addEventListener("touchstart", handleBoardTouchStart, { capture: true, passive: true });
     window.addEventListener("pointerup", handleBoardPointerEnd);
     window.addEventListener("pointercancel", handleBoardPointerEnd);
+    window.addEventListener("touchend", handleBoardTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", handleBoardTouchEnd, { passive: true });
     refs.titlebarActions.forEach(action => {
         action.addEventListener("pointerdown", handleTitlebarActionPointerDown);
     });
@@ -316,17 +320,31 @@ function handleBoardClick(event) {
     clearTransientFace();
 
     const button = event.target.closest(".ms-cell");
-    const isCanceledLongPressClick =
-        state.activeTouchPress?.triggered &&
-        state.activeTouchPress.button === button;
+    const activeTouchPress = state.activeTouchPress;
+    const isActiveTouchPressClick = activeTouchPress?.button === button;
 
-    if (isCanceledLongPressClick || Date.now() < state.suppressBoardClickUntil) {
+    if (
+        isActiveTouchPressClick &&
+        !activeTouchPress.triggered &&
+        getTouchPressElapsed(activeTouchPress, event) >= TOUCH_LONG_PRESS_DELAY
+    ) {
+        triggerTouchLongPress(activeTouchPress);
+    }
+
+    const shouldSuppressTouchClick =
+        isActiveTouchPressClick && activeTouchPress.triggered;
+
+    if (shouldSuppressTouchClick || Date.now() < state.suppressBoardClickUntil) {
         state.suppressBoardClickUntil = 0;
-        if (isCanceledLongPressClick) {
+        if (isActiveTouchPressClick) {
             clearActiveTouchPress();
         }
         event.preventDefault();
         return;
+    }
+
+    if (isActiveTouchPressClick) {
+        clearActiveTouchPress();
     }
 
     if (!button || state.finished) {
@@ -378,17 +396,87 @@ function handleBoardContextMenu(event) {
 }
 
 function handleBoardPointerDown(event) {
-    if (state.finished || event.button !== 0) {
+    const isTouchPointer = event.pointerType === "touch";
+    if (state.finished || (!isTouchPointer && event.button !== 0)) {
         return;
     }
 
-    const button = event.target.closest(".ms-cell");
+    const button = getBoardPressButton(
+        event.target,
+        event.clientX,
+        event.clientY,
+        isTouchPointer
+    );
     if (!button) {
         return;
     }
 
     setTransientFace("surprised");
     startTouchLongPress(event, button);
+}
+
+function handleBoardTouchStart(event) {
+    if (state.finished || event.touches.length !== 1 || event.changedTouches.length === 0) {
+        return;
+    }
+
+    const touch = event.changedTouches[0];
+    const button = getBoardPressButton(
+        event.target,
+        touch.clientX,
+        touch.clientY,
+        true
+    );
+    if (!button) {
+        return;
+    }
+
+    setTransientFace("surprised");
+    startTouchLongPressFromTouch(event, touch, button);
+}
+
+function getBoardPressButton(target, clientX, clientY, allowEdgeSnap) {
+    const directButton = target instanceof Element
+        ? target.closest(".ms-cell")
+        : null;
+    if (directButton) {
+        return directButton;
+    }
+
+    if (
+        !allowEdgeSnap ||
+        !refs.board ||
+        !Number.isFinite(clientX) ||
+        !Number.isFinite(clientY)
+    ) {
+        return null;
+    }
+
+    const boardRect = refs.board.getBoundingClientRect();
+    if (
+        boardRect.width <= 0 ||
+        boardRect.height <= 0 ||
+        clientX < boardRect.left - TOUCH_EDGE_HIT_SLOP ||
+        clientX > boardRect.right + TOUCH_EDGE_HIT_SLOP ||
+        clientY < boardRect.top - TOUCH_EDGE_HIT_SLOP ||
+        clientY > boardRect.bottom + TOUCH_EDGE_HIT_SLOP
+    ) {
+        return null;
+    }
+
+    const snappedX = Math.min(
+        Math.max(clientX, boardRect.left + 0.5),
+        boardRect.right - 0.5
+    );
+    const snappedY = Math.min(
+        Math.max(clientY, boardRect.top + 0.5),
+        boardRect.bottom - 0.5
+    );
+    const snappedTarget = document.elementFromPoint(snappedX, snappedY);
+
+    return snappedTarget instanceof Element
+        ? snappedTarget.closest(".ms-cell")
+        : null;
 }
 
 function handleTitlebarActionPointerDown(event) {
@@ -401,7 +489,11 @@ function handleTitlebarActionPointerDown(event) {
 
 function handleBoardPointerEnd(event) {
     const activeTouchPress = state.activeTouchPress;
-    if (activeTouchPress && activeTouchPress.pointerId !== event.pointerId) {
+    if (
+        activeTouchPress &&
+        activeTouchPress.pointerId !== null &&
+        activeTouchPress.pointerId !== event.pointerId
+    ) {
         return;
     }
 
@@ -410,11 +502,46 @@ function handleBoardPointerEnd(event) {
         return;
     }
 
-    if (event.type === "pointercancel") {
+    if (
+        event.type === "pointerup" &&
+        activeTouchPress.wasCanceled &&
+        activeTouchPress.touchIdentifier !== null
+    ) {
+        // Keep an iOS edge-canceled hold alive until its touch sequence finishes.
+        return;
+    }
+
+    finishTouchPress(activeTouchPress, event);
+}
+
+function handleBoardTouchEnd(event) {
+    const activeTouchPress = state.activeTouchPress;
+    if (!activeTouchPress || activeTouchPress.touchIdentifier === null) {
+        return;
+    }
+
+    const endedTouch = Array.from(event.changedTouches).find(
+        touch => touch.identifier === activeTouchPress.touchIdentifier
+    );
+    if (!endedTouch) {
+        return;
+    }
+
+    finishTouchPress(activeTouchPress, event);
+}
+
+function finishTouchPress(activeTouchPress, event) {
+    if (state.activeTouchPress !== activeTouchPress) {
+        return;
+    }
+
+    const wasCanceled = event.type === "pointercancel" || event.type === "touchcancel";
+
+    if (wasCanceled) {
         activeTouchPress.wasCanceled = true;
         if (
             !activeTouchPress.triggered &&
-            performance.now() - activeTouchPress.startedAt >= TOUCH_LONG_PRESS_DELAY
+            getTouchPressElapsed(activeTouchPress, event) >= TOUCH_LONG_PRESS_DELAY
         ) {
             triggerTouchLongPress(activeTouchPress);
         }
@@ -428,7 +555,7 @@ function handleBoardPointerEnd(event) {
 
     if (
         !activeTouchPress.triggered &&
-        performance.now() - activeTouchPress.startedAt >= TOUCH_LONG_PRESS_DELAY
+        getTouchPressElapsed(activeTouchPress, event) >= TOUCH_LONG_PRESS_DELAY
     ) {
         triggerTouchLongPress(activeTouchPress);
     }
@@ -452,14 +579,14 @@ function getCellFromButton(button) {
 }
 
 function startTouchLongPress(event, button) {
-    clearActiveTouchPress();
-
     if (event.pointerType !== "touch") {
         return;
     }
 
-    const cell = getCellFromButton(button);
-    if (!cell || cell.revealed) {
+    const activeTouchPress = beginTouchLongPress(button, {
+        pointerId: event.pointerId
+    }, event);
+    if (!activeTouchPress) {
         return;
     }
 
@@ -470,10 +597,42 @@ function startTouchLongPress(event, button) {
             // Pointer capture is best-effort on older mobile browsers.
         }
     }
+}
+
+function startTouchLongPressFromTouch(event, touch, button) {
+    beginTouchLongPress(button, {
+        touchIdentifier: touch.identifier
+    }, event);
+}
+
+function beginTouchLongPress(button, identifiers, event) {
+    const eventStartedAt = getInteractionEventTime(event);
+    const existingTouchPress = state.activeTouchPress;
+    if (existingTouchPress?.button === button) {
+        if (identifiers.pointerId !== undefined) {
+            existingTouchPress.pointerId = identifiers.pointerId;
+        }
+        if (identifiers.touchIdentifier !== undefined) {
+            existingTouchPress.touchIdentifier = identifiers.touchIdentifier;
+        }
+        if (!existingTouchPress.triggered && eventStartedAt < existingTouchPress.startedAt) {
+            existingTouchPress.startedAt = eventStartedAt;
+            scheduleTouchLongPress(existingTouchPress);
+        }
+        return existingTouchPress;
+    }
+
+    clearActiveTouchPress();
+
+    const cell = getCellFromButton(button);
+    if (!cell || cell.revealed) {
+        return null;
+    }
 
     const activeTouchPress = {
-        pointerId: event.pointerId,
-        startedAt: performance.now(),
+        pointerId: identifiers.pointerId ?? null,
+        touchIdentifier: identifiers.touchIdentifier ?? null,
+        startedAt: eventStartedAt,
         timerId: null,
         triggered: false,
         wasCanceled: false,
@@ -481,10 +640,52 @@ function startTouchLongPress(event, button) {
         cell
     };
     state.activeTouchPress = activeTouchPress;
+    scheduleTouchLongPress(activeTouchPress);
+
+    return activeTouchPress;
+}
+
+function scheduleTouchLongPress(activeTouchPress) {
+    if (activeTouchPress.timerId !== null) {
+        window.clearTimeout(activeTouchPress.timerId);
+    }
+
+    const remainingDelay = Math.max(
+        0,
+        TOUCH_LONG_PRESS_DELAY - getTouchPressElapsed(activeTouchPress)
+    );
     activeTouchPress.timerId = window.setTimeout(() => {
         activeTouchPress.timerId = null;
         triggerTouchLongPress(activeTouchPress);
-    }, TOUCH_LONG_PRESS_DELAY);
+    }, remainingDelay);
+}
+
+function getInteractionEventTime(event) {
+    const now = performance.now();
+    const eventTime = Number(event?.timeStamp);
+    if (!Number.isFinite(eventTime) || eventTime <= 0) {
+        return now;
+    }
+
+    const clockTolerance = 60_000;
+    if (Math.abs(now - eventTime) <= clockTolerance) {
+        return Math.min(eventTime, now);
+    }
+
+    const timeOrigin = Number.isFinite(performance.timeOrigin)
+        ? performance.timeOrigin
+        : Date.now() - now;
+    const relativeEventTime = eventTime - timeOrigin;
+    if (Math.abs(now - relativeEventTime) <= clockTolerance) {
+        return Math.min(relativeEventTime, now);
+    }
+
+    return now;
+}
+
+function getTouchPressElapsed(activeTouchPress, event = null) {
+    const endedAt = event ? getInteractionEventTime(event) : performance.now();
+    return Math.max(0, endedAt - activeTouchPress.startedAt);
 }
 
 function triggerTouchLongPress(activeTouchPress) {

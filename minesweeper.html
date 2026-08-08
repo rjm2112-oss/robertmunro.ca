@@ -465,11 +465,20 @@
         margin-left: 0;
     }
 
+    body.is-mobile-device .ms-window {
+        border: 0;
+    }
+
     body.is-mobile-device .ms-client {
         padding-top: 6px;
-        padding-left: 3px;
-        padding-right: 3px;
+        padding-left: 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: 16px;
+        padding-right: max(16px, env(safe-area-inset-right));
         padding-bottom: 6px;
+        padding-bottom: max(6px, env(safe-area-inset-bottom));
+        touch-action: none;
+        overscroll-behavior: none;
     }
 
     body.is-mobile-device .ms-game-layout {
@@ -496,7 +505,11 @@
         background: transparent;
     }
 
-    body.is-mobile-device .ms-board {
+    body.is-mobile-device .ms-board-panel,
+    body.is-mobile-device .ms-board-viewport,
+    body.is-mobile-device .ms-board-shell,
+    body.is-mobile-device .ms-board,
+    body.is-mobile-device .ms-cell {
         touch-action: none;
     }
 
@@ -600,6 +613,6 @@
     </div>
 </div>
 
-<script src="minesweeper.js?v=20260804-17"></script>
+<script src="minesweeper.js?v=20260808-20"></script>
 </body>
 </html>
